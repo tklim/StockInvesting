@@ -1,0 +1,8 @@
+node_modules
+.pnpm-store
+dist
+.env.local
+.env
+.DS_Store
+*.local
+alphavantage_usage.json
