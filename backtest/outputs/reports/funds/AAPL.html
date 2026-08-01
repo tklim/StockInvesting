@@ -78,42 +78,55 @@
         <p class="eyebrow">Ticker intelligence</p><h1>AAPL</h1>
         <p class="hero-copy">The winning walk-forward schedule is reproduced from its archived
           source data, then adaptively continued on newer prices. Data source: AAPL-4Y.csv · through
-          n/a.</p>
+          2026-07-31.</p>
       </div>
-      <div class="signal neutral"><span>Current GA signal</span><strong>n/a</strong></div>
+      <div class="signal neutral"><span>Current GA signal</span><strong>SELL/CASH</strong></div>
     </section>
 
     <section class="metrics" aria-label="Latest metrics">
-      <div class="metric"><span>Strategy annualized</span><strong>n/a</strong></div>
-      <div class="metric"><span>Excess annualized</span><strong>n/a</strong></div>
-      <div class="metric"><span>Strategy total</span><strong>n/a</strong></div>
-      <div class="metric"><span>Buy &amp; hold annualized</span><strong>n/a</strong></div>
-      <div class="metric"><span>Max drawdown</span><strong>n/a</strong></div>
-      <div class="metric"><span>Last trade</span><strong>n/a</strong></div>
+      <div class="metric"><span>Strategy annualized</span><strong>+47.89%</strong></div>
+      <div class="metric"><span>Excess annualized</span><strong>+3.36%</strong></div>
+      <div class="metric"><span>Strategy total</span><strong>+49.44%</strong></div>
+      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+44.53%</strong></div>
+      <div class="metric"><span>Max drawdown</span><strong>9.17%</strong></div>
+      <div class="metric"><span>Last trade</span><strong>2026-07-31</strong></div>
     </section>
 
     <section class="compare">
       <article class="compare-card"><h2>Final window parameters</h2><dl>
-        <dt>EMA pair</dt><dd>n/a / n/a</dd>
-        <dt>Stop loss</dt><dd>0.00%</dd>
-        <dt>Cooldown</dt><dd>n/a days</dd>
-        <dt>RSI bounds</dt><dd>n/a / n/a</dd>
+        <dt>EMA pair</dt><dd>15 / 62</dd>
+        <dt>Stop loss</dt><dd>10.48%</dd>
+        <dt>Cooldown</dt><dd>1 days</dd>
+        <dt>RSI bounds</dt><dd>39 / 62</dd>
         <dt>Exposure</dt><dd>1.00×</dd>
       </dl></article>
       <article class="compare-card"><h2>Calibration versus latest replay</h2><dl>
-        <dt>Historical annualized</dt><dd>n/a</dd>
-        <dt>Latest annualized</dt><dd>n/a</dd>
+        <dt>Historical annualized</dt><dd>+60.80%</dd>
+        <dt>Latest annualized</dt><dd>+47.89%</dd>
         <dt>Best excess annualized</dt><dd>+6.26%</dd>
-        <dt>Latest excess</dt><dd>n/a</dd>
+        <dt>Latest excess</dt><dd>+3.36%</dd>
         <dt>Best excess run</dt><dd>20260724214913_AAPL-4Y_e88fdb67</dd>
-        <dt>Historical replay</dt><dd>source_unavailable</dd>
-        <dt>Latest replay</dt><dd>source_unavailable</dd>
-        <dt>Schedule windows</dt><dd>n/a + 0 continuation</dd>
+        <dt>Historical replay</dt><dd>exact_replay</dd>
+        <dt>Latest replay</dt><dd>adaptive_continuation</dd>
+        <dt>Schedule windows</dt><dd>1 + 1 continuation</dd>
       </dl></article>
     </section>
 
     <section class="charts-grid" aria-label="Chart views">
-      <section class="chart-panel missing"><h2>Latest replay · through n/a</h2><p>Chart unavailable.</p></section>
+      
+      <section class="chart-panel">
+        <div class="section-heading">
+          <div><p class="eyebrow">Chart view</p><h2>Latest replay · through 2026-07-31</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned at each original offset boundary.</p>
+        </div>
+        <button class="chart-button" type="button" data-src="../../charts/AAPL-final-latest-20260801-225705.png"
+                data-title="AAPL — Latest replay · through 2026-07-31"
+                aria-label="Open Latest replay · through 2026-07-31 chart for AAPL">
+          <img src="../../charts/AAPL-final-latest-20260801-225705.png" alt="AAPL Latest replay · through 2026-07-31 chart" loading="lazy">
+          <span>Open full screen</span>
+        </button>
+      </section>
+    
       
       <section class="chart-panel">
         <div class="section-heading">
@@ -134,18 +147,31 @@
           <div><p class="eyebrow">Chart view</p><h2>Final technical</h2></div>
           <p>Exact walk-forward reproduction with the recorded parameter schedule over the winning historical window.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png"
+        <button class="chart-button" type="button" data-src="../../charts/AAPL-final-technical-20260801-225705.png"
                 data-title="AAPL — Final technical"
                 aria-label="Open Final technical chart for AAPL">
-          <img src="../../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png" alt="AAPL Final technical chart" loading="lazy">
+          <img src="../../charts/AAPL-final-technical-20260801-225705.png" alt="AAPL Final technical chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
     
-      <section class="chart-panel missing"><h2>Final simple</h2><p>Chart unavailable.</p></section>
+      
+      <section class="chart-panel">
+        <div class="section-heading">
+          <div><p class="eyebrow">Chart view</p><h2>Final simple</h2></div>
+          <p>A focused view of the same exact walk-forward historical reproduction.</p>
+        </div>
+        <button class="chart-button" type="button" data-src="../../charts/AAPL-final-simple-20260801-225705.png"
+                data-title="AAPL — Final simple"
+                aria-label="Open Final simple chart for AAPL">
+          <img src="../../charts/AAPL-final-simple-20260801-225705.png" alt="AAPL Final simple chart" loading="lazy">
+          <span>Open full screen</span>
+        </button>
+      </section>
+    
     </section>
 
-    <footer>Generated 2026-08-01 21:52:02 from final_backtest_summary_20260801_214934.csv.</footer>
+    <footer>Generated 2026-08-01 22:58:58 from final_backtest_summary_20260801_225618.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>
