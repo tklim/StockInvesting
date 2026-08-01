@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fund Backtest Dashboard — Top Annualized Return</title>
+  <style>
+    :root{--ink:#172033;--muted:#667085;--line:#dce2ea;--surface:#fff;--accent:#176b5b;--accent-soft:#e8f4f1;--bg:#f3f5f7;--pos:#12855b;--neg:#c9362c}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+    header{position:sticky;top:0;z-index:10;padding:20px clamp(18px,4vw,52px);background:rgba(243,245,247,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    header h1{margin:0 0 5px;font-size:clamp(1.45rem,3vw,2.2rem)}
+    header p{margin:0;color:var(--muted)}
+    .source{margin-top:6px!important;font-size:.82rem}
+    .source code{padding:1px 5px;border-radius:5px;background:var(--accent-soft);color:var(--accent);font-size:.8rem}
+    main{display:grid;gap:22px;padding:28px clamp(16px,3vw,42px) 56px;max-width:1900px;margin:auto}
+    .fund-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 26px rgba(19,33,55,.06)}
+    .card-heading,.card-heading>div,.metrics{display:flex;align-items:center}
+    .card-heading{justify-content:space-between;gap:18px;margin-bottom:13px}
+    .card-heading>div:first-child{gap:10px;min-width:0}
+    .rank{display:grid;place-items:center;min-width:38px;height:30px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:800}
+    h2{font-size:clamp(1rem,2vw,1.35rem);margin:0;overflow-wrap:anywhere}
+    .headline{display:flex;flex-direction:column!important;align-items:flex-end!important;white-space:nowrap}
+    .headline span{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .headline strong{font-size:1.35rem}
+    .headline.pos strong{color:var(--pos)}
+    .headline.neg strong{color:var(--neg)}
+    .badge{display:inline-block;margin-left:8px;padding:3px 9px;border-radius:999px;background:#eef1f5;color:#4a5568;font-size:.72rem;font-weight:700;text-transform:none;letter-spacing:0;vertical-align:middle}
+    .badge.strategy{background:#e8f4f1;color:#176b5b}
+    .badge.market{background:#fdf0e6;color:#96591f}
+    .metrics{flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    .metrics span{padding:7px 10px;border-radius:9px;background:#f7f8fa;color:var(--muted);font-size:.84rem}
+    .metrics b{color:var(--ink)}
+    .chart-button{display:block;position:relative;width:100%;padding:0;border:0;border-radius:12px;overflow:hidden;background:#e8ebef;cursor:zoom-in}
+    .chart-button img{display:block;width:100%;height:auto}
+    .zoom-hint{position:absolute;right:12px;bottom:12px;padding:7px 10px;border-radius:8px;background:rgba(16,24,40,.78);color:#fff;font-size:.78rem;opacity:0;transition:opacity .18s}
+    .chart-button:hover .zoom-hint,.chart-button:focus-visible .zoom-hint{opacity:1}
+    dialog{width:calc(100vw - 24px);height:calc(100vh - 24px);max-width:none;max-height:none;padding:0;border:0;border-radius:16px;background:#111827;overflow:hidden}
+    dialog::backdrop{background:rgba(3,8,18,.82)}
+    .viewer-bar{position:absolute;inset:0 0 auto 0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(17,24,39,.9);color:white}
+    .viewer-bar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .controls{display:flex;gap:7px}
+    .controls button{border:1px solid #667085;background:#263246;color:white;border-radius:8px;padding:7px 11px;cursor:pointer}
+    .viewport{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}
+    .viewport.dragging{cursor:grabbing}
+    #viewerImage{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}
+    @media (min-width:1200px){main{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @page{size:A4 landscape;margin:8mm}
+    @media print{
+      body{background:#fff}
+      header,dialog,.zoom-hint{display:none!important}
+      main{display:block;max-width:none;padding:0;margin:0}
+      .fund-card{height:194mm;margin:0;padding:4mm;border:0;border-radius:0;box-shadow:none;overflow:hidden;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always}
+      .fund-card:last-child{break-after:auto;page-break-after:auto}
+      .card-heading{margin-bottom:2mm}
+      .metrics{margin-bottom:2mm;gap:1.5mm}
+      .metrics span{padding:1.5mm 2mm}
+      .chart-button{height:158mm;border-radius:0;cursor:default;overflow:hidden}
+      .chart-button img{width:100%;height:100%;object-fit:contain}
+    }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Fund Backtest Dashboard — Top Annualized Return</h1>
+    <p>11 funds · ranked by best of strategy or buy &amp; hold, whichever is higher · slices pooled per ticker · generated 2026-08-01 17:30:04</p>
+    <p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-01 17:23:16 — ranking computed here from 1694 run(s) in this file, so it is current with it.</p>
+  </header>
+  <main>
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#1</span><h2>NVDA</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+93.57%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+93.57%</b></span><span>Buy &amp; hold ann. <b>+88.36%</b></span><span>Excess ann. <b>+5.21%</b></span><span>Max drawdown <b>36.88%</b></span><span>Run years <b>4.0Y</b></span><span>Through <b>2026-07-24</b></span><span>Winning run <b>1Y/6M · generic-bh-reachable</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/NVDA-1.0Y-6M-generic-bh-reachable-ga10-tuned-20260726-220520.png" data-title="NVDA" aria-label="Open zoomable chart for NVDA">
+                <img src="../charts/NVDA-1.0Y-6M-generic-bh-reachable-ga10-tuned-20260726-220520.png" alt="Strategy chart for NVDA" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#2</span><h2>TSM</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+66.63%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+23.13%</b></span><span>Buy &amp; hold ann. <b>+66.63%</b></span><span>Excess ann. <b>-43.50%</b></span><span>Max drawdown <b>39.72%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-31</b></span><span>Winning run <b>TSM-5Y · 3Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/TSM-5Y-3.0Y-12M-generic-ga10-tuned-20260801-124051.png" data-title="TSM" aria-label="Open zoomable chart for TSM">
+                <img src="../charts/TSM-5Y-3.0Y-12M-generic-ga10-tuned-20260801-124051.png" alt="Strategy chart for TSM" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#3</span><h2>AAPL</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+60.80%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+60.80%</b></span><span>Buy &amp; hold ann. <b>+54.54%</b></span><span>Excess ann. <b>+6.26%</b></span><span>Max drawdown <b>6.62%</b></span><span>Run years <b>1.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>AAPL-4Y · 3Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png" data-title="AAPL" aria-label="Open zoomable chart for AAPL">
+                <img src="../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png" alt="Strategy chart for AAPL" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#4</span><h2>META</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+55.00%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+55.00%</b></span><span>Buy &amp; hold ann. <b>+39.36%</b></span><span>Excess ann. <b>+15.63%</b></span><span>Max drawdown <b>25.81%</b></span><span>Run years <b>4.0Y</b></span><span>Through <b>2026-07-27</b></span><span>Winning run <b>1Y/9M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/META-1.0Y-9M-generic-ga10-tuned-20260729-235713.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-1.0Y-9M-generic-ga10-tuned-20260729-235713.png" alt="Strategy chart for META" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#5</span><h2>GOOGL</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+48.79%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+48.79%</b></span><span>Buy &amp; hold ann. <b>+41.26%</b></span><span>Excess ann. <b>+7.53%</b></span><span>Max drawdown <b>21.05%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-30</b></span><span>Winning run <b>GOOGL-5Y · 3Y/3M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/GOOGL-5Y-3.0Y-3M-generic-ga10-tuned-20260801-002041.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
+                <img src="../charts/GOOGL-5Y-3.0Y-3M-generic-ga10-tuned-20260801-002041.png" alt="Strategy chart for GOOGL" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#6</span><h2>JNJ</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+37.03%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+37.03%</b></span><span>Buy &amp; hold ann. <b>+32.07%</b></span><span>Excess ann. <b>+4.96%</b></span><span>Max drawdown <b>10.96%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>3Y/3M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3.0Y-3M-generic-ga10-tuned-20260728-201608.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3.0Y-3M-generic-ga10-tuned-20260728-201608.png" alt="Strategy chart for JNJ" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#7</span><h2>JPM</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+36.16%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+26.76%</b></span><span>Buy &amp; hold ann. <b>+36.16%</b></span><span>Excess ann. <b>-9.40%</b></span><span>Max drawdown <b>24.42%</b></span><span>Run years <b>4.0Y</b></span><span>Through <b>2026-07-24</b></span><span>Winning run <b>1Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/JPM-1.0Y-12M-generic-ga10-tuned-20260728-170148.png" data-title="JPM" aria-label="Open zoomable chart for JPM">
+                <img src="../charts/JPM-1.0Y-12M-generic-ga10-tuned-20260728-170148.png" alt="Strategy chart for JPM" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#8</span><h2>AMZN</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+24.40%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+17.50%</b></span><span>Buy &amp; hold ann. <b>+24.40%</b></span><span>Excess ann. <b>-6.90%</b></span><span>Max drawdown <b>21.59%</b></span><span>Run years <b>3.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>2Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/AMZN-2.0Y-12M-generic-ga10-tuned-20260722-223347.png" data-title="AMZN" aria-label="Open zoomable chart for AMZN">
+                <img src="../charts/AMZN-2.0Y-12M-generic-ga10-tuned-20260722-223347.png" alt="Strategy chart for AMZN" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#9</span><h2>TSLA</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+24.11%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>-9.19%</b></span><span>Buy &amp; hold ann. <b>+24.11%</b></span><span>Excess ann. <b>-33.30%</b></span><span>Max drawdown <b>45.00%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>3Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/TSLA-3.0Y-12M-generic-ga10-tuned-20260724-024319.png" data-title="TSLA" aria-label="Open zoomable chart for TSLA">
+                <img src="../charts/TSLA-3.0Y-12M-generic-ga10-tuned-20260724-024319.png" alt="Strategy chart for TSLA" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#10</span><h2>V</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+21.97%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+14.96%</b></span><span>Buy &amp; hold ann. <b>+21.97%</b></span><span>Excess ann. <b>-7.02%</b></span><span>Max drawdown <b>34.52%</b></span><span>Run years <b>17.4Y</b></span><span>Through <b>2026-07-30</b></span><span>Winning run <b>1Y/6M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/V-1.0Y-6M-generic-ga10-tuned-20260731-192800.png" data-title="V" aria-label="Open zoomable chart for V">
+                <img src="../charts/V-1.0Y-6M-generic-ga10-tuned-20260731-192800.png" alt="Strategy chart for V" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#11</span><h2>MSFT</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+20.27%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+7.85%</b></span><span>Buy &amp; hold ann. <b>+20.27%</b></span><span>Excess ann. <b>-12.42%</b></span><span>Max drawdown <b>31.59%</b></span><span>Run years <b>17.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>3Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/MSFT-3.0Y-12M-generic-ga10-tuned-20260723-200901.png" data-title="MSFT" aria-label="Open zoomable chart for MSFT">
+                <img src="../charts/MSFT-3.0Y-12M-generic-ga10-tuned-20260723-200901.png" alt="Strategy chart for MSFT" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            </main>
+  <dialog id="viewer">
+    <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><div class="controls"><button id="zoomOut" type="button">−</button><button id="resetZoom" type="button">Reset</button><button id="zoomIn" type="button">+</button><button id="closeViewer" type="button">Close</button></div></div>
+    <div class="viewport" id="viewport"><img id="viewerImage" alt=""></div>
+  </dialog>
+  <script>
+    const viewer=document.getElementById('viewer'), viewport=document.getElementById('viewport'), image=document.getElementById('viewerImage');
+    let scale=1,x=0,y=0,drag=false,startX=0,startY=0;
+    function render(){image.style.transform=`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${scale})`}
+    function fit(){if(!image.naturalWidth)return;scale=Math.min(1,(viewport.clientWidth-36)/image.naturalWidth,(viewport.clientHeight-86)/image.naturalHeight);x=0;y=0;render()}
+    function reset(){fit()}
+    function zoom(factor){scale=Math.min(8,Math.max(.5,scale*factor));render()}
+    image.addEventListener('load',fit);
+    document.querySelectorAll('.chart-button').forEach(button=>button.addEventListener('click',()=>{image.src=button.dataset.src;image.alt=button.dataset.title;document.getElementById('viewerTitle').textContent=button.dataset.title;viewer.showModal();if(image.complete)fit()}));
+    document.getElementById('closeViewer').onclick=()=>viewer.close();
+    document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('resetZoom').onclick=reset;
+    viewport.addEventListener('wheel',event=>{event.preventDefault();zoom(event.deltaY<0?1.15:.87)},{passive:false});
+    viewport.addEventListener('pointerdown',event=>{drag=true;startX=event.clientX-x;startY=event.clientY-y;viewport.setPointerCapture(event.pointerId);viewport.classList.add('dragging')});
+    viewport.addEventListener('pointermove',event=>{if(!drag)return;x=event.clientX-startX;y=event.clientY-startY;render()});
+    viewport.addEventListener('pointerup',()=>{drag=false;viewport.classList.remove('dragging')});
+    viewer.addEventListener('click',event=>{if(event.target===viewer)viewer.close()});
+</script>
+</body>
+</html>
