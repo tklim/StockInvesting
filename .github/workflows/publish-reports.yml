@@ -25,10 +25,16 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare dashboard site
+        run: |
+          mkdir -p _site
+          cp -R backtest/outputs/reports/. _site/
+          cp backtest/outputs/reports/dashboard.html _site/index.html
+
       - name: Upload dashboard reports
         uses: actions/upload-pages-artifact@v3
         with:
-          path: backtest/outputs/reports
+          path: _site
 
       - name: Deploy dashboard reports
         id: deployment
