@@ -123,7 +123,7 @@ export const healthDashboard = query({
   args: { dateKey: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const dateKey = args.dateKey ?? dateKeyFor(Date.now());
-    const [usage, events] = await Promise.all([
+    const [usage, events, stocks, signals] = await Promise.all([
       ctx.db
         .query("dailyApiUsage")
         .withIndex("by_dateKey", (q) => q.eq("dateKey", dateKey))
@@ -133,12 +133,27 @@ export const healthDashboard = query({
         .withIndex("by_calledAt")
         .order("desc")
         .take(25),
+      ctx.db.query("stocks").take(100),
+      ctx.db.query("stockSignals").take(100),
     ]);
+
+    const signalTickers = new Set(signals.map((signal) => signal.ticker));
 
     return {
       dateKey,
       usage,
       events,
+      signalHealth: {
+        trackedStocks: stocks.length,
+        signalCount: signals.length,
+        missingSignals: stocks.filter((stock) => !signalTickers.has(stock.ticker)).length,
+        readySignals: signals.filter((signal) => signal.dataStatus === "ready").length,
+        provisionalSignals: signals.filter((signal) => signal.provisional).length,
+        staleSignals: signals.filter((signal) => signal.dataStatus === "stale").length,
+        errorSignals: signals.filter((signal) => signal.dataStatus === "error").length,
+        lastComputedAt: Math.max(0, ...signals.map((signal) => signal.computedAt)),
+        modelVersions: Array.from(new Set(signals.map((signal) => signal.modelVersion))),
+      },
     };
   },
 });

@@ -22,6 +22,8 @@ type AiResearchReport = {
   bearPoints: string[];
   thesisPoints: string[];
   watchItems: string[];
+  signalScore?: number;
+  signalRationale?: string;
 };
 
 const normalizeTicker = (ticker: string) => ticker.trim().toUpperCase();
@@ -66,6 +68,14 @@ const parseAiReport = (text: string): AiResearchReport => {
     watchItems: Array.isArray(parsed.watchItems)
       ? parsed.watchItems.filter((item): item is string => typeof item === "string").slice(0, 3)
       : [],
+    signalScore:
+      typeof parsed.signalScore === "number" && Number.isFinite(parsed.signalScore)
+        ? Math.min(100, Math.max(0, parsed.signalScore))
+        : undefined,
+    signalRationale:
+      typeof parsed.signalRationale === "string"
+        ? parsed.signalRationale.trim().slice(0, 240)
+        : undefined,
   };
 };
 
@@ -134,7 +144,7 @@ export const generateReport = action({
               {
                 type: "input_text",
                 text:
-                  "You are an equity research assistant. Produce a concise investing brief using only the supplied data. Return valid JSON with keys: summary, bullPoints, bearPoints, thesisPoints, watchItems. Each list should have exactly 3 short items. Be balanced, specific, and avoid hype.",
+                  "You are an equity research assistant. Produce a concise investing brief using only the supplied data. Return valid JSON with keys: summary, bullPoints, bearPoints, thesisPoints, watchItems, signalScore, signalRationale. Each list should have exactly 3 short items. signalScore must be 0 (bearish) to 100 (bullish), with 50 neutral, for a six-month general research outlook. signalRationale must be one concise evidence-grounded sentence. Be balanced, specific, avoid hype, and do not provide personalized financial advice.",
               },
             ],
           },
@@ -166,6 +176,8 @@ export const generateReport = action({
       bearPoints: report.bearPoints,
       thesisPoints: report.thesisPoints,
       watchItems: report.watchItems,
+      signalScore: report.signalScore,
+      signalRationale: report.signalRationale,
       provider: baseUrl.includes("openai.com") ? "OpenAI" : "OpenAI-compatible",
       model,
       generatedAt,

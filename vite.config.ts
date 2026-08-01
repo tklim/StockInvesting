@@ -42,6 +42,8 @@ type LocalAiBridgeRequest = {
     watchItems?: string[];
     provider?: string;
     model?: string;
+    signalScore?: number;
+    signalRationale?: string;
     generatedAt?: number;
   };
   investmentThesis?: {
@@ -80,6 +82,8 @@ const parseStructuredReport = (text: string) => {
     bearPoints?: string[];
     thesisPoints?: string[];
     watchItems?: string[];
+    signalScore?: number;
+    signalRationale?: string;
   };
 
   const cleanPointList = (items?: string[]) =>
@@ -98,6 +102,14 @@ const parseStructuredReport = (text: string) => {
     bearPoints: cleanPointList(parsed.bearPoints),
     thesisPoints: cleanPointList(parsed.thesisPoints),
     watchItems: cleanPointList(parsed.watchItems),
+    signalScore:
+      typeof parsed.signalScore === "number" && Number.isFinite(parsed.signalScore)
+        ? Math.min(100, Math.max(0, parsed.signalScore))
+        : undefined,
+    signalRationale:
+      typeof parsed.signalRationale === "string"
+        ? parsed.signalRationale.trim().slice(0, 240)
+        : undefined,
   };
 
   if (
@@ -203,7 +215,7 @@ export default defineConfig(({ mode }) => {
                       role: "system",
                       content:
                         mode === "report"
-                          ? "You are a skeptical equity research analyst. Use only the supplied data and never invent metrics, events, or certainty. Return valid JSON only with keys: summary, bullPoints, bearPoints, thesisPoints, watchItems. The summary must be exactly 2 concise sentences that state the current setup and the central tension. Each list must contain exactly 3 concise, non-duplicative strings. Bull and bear points should cite a specific supplied fact or clearly label an inference. Thesis points should express testable drivers, not recommendations. Watch items must be measurable validation or invalidation signals and include a threshold, date, filing, or event when the supplied data supports one. Explicitly say when important evidence is unavailable. Do not include markdown fences, investment advice, price predictions, or hidden reasoning."
+                          ? "You are a skeptical equity research analyst. Use only the supplied data and never invent metrics, events, or certainty. Return valid JSON only with keys: summary, bullPoints, bearPoints, thesisPoints, watchItems, signalScore, signalRationale. The summary must be exactly 2 concise sentences that state the current setup and the central tension. Each list must contain exactly 3 concise, non-duplicative strings. Bull and bear points should cite a specific supplied fact or clearly label an inference. Thesis points should express testable drivers, not recommendations. Watch items must be measurable validation or invalidation signals and include a threshold, date, filing, or event when the supplied data supports one. signalScore must be a number from 0 (bearish) to 100 (bullish), with 50 neutral, for a six-month general research outlook; signalRationale must be one concise sentence grounded in the supplied evidence. Explicitly say when important evidence is unavailable. Do not include markdown fences, personalized investment advice, price predictions, or hidden reasoning."
                           : mode === "thesis"
                             ? "You are an investment thesis assistant. Return valid JSON only with keys: summary, thesisPoints, watchItems. The summary should be 2-3 sentences. thesisPoints should have exactly 4 concise points. watchItems should have exactly 4 concise validation or invalidation signals. Do not include markdown fences. Do not include hidden reasoning."
                             : "You are an investing research chief-of-staff. Think carefully about the supplied company profile, latest news, existing notes, AI report, saved thesis, financial report, and snapshots. Return valid JSON only with key notes. notes must contain exactly 5 objects with title, body, tag. Make each note practical, specific, non-duplicative, and useful for an investor's next action. Prefer concrete follow-up checks, thesis validation questions, financial watchpoints, and risk triggers over generic summaries. Use tags from: AI Note, News, Financials, Risk, Follow-up, Thesis. Do not include markdown fences. Do not include hidden reasoning.",

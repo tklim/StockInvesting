@@ -1,6 +1,8 @@
 import argparse
+import hashlib
 import html
 import importlib.util
+import json
 import os
 import re
 from datetime import datetime
@@ -15,7 +17,17 @@ import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
-from common import fund_label_from_data_file
+from common import fund_group_from_label
+from dashboard_master import build_dashboard_suite
+from walk_forward_replay import (
+    assert_metrics_match,
+    load_replay_artifacts,
+    load_recorded_schedule,
+    normalize_schedule,
+    replay_parameter_schedule,
+    save_replay_artifacts,
+    sha256_file,
+)
 
 # DO NOT REMOVE: GOAL: To identify best performing result for each fund so that it can be used for future decision making. Review past tuning history results from backtest_run_history.csv, identify the best performing result (annualize excess) for each fund, capture the key info into ga_tuning_summary_XXXXXX.csv, and then generate final-simple*png and final-technical*png chart to visually display the best performer.
 
@@ -25,12 +37,16 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 # matching common.py and backtest_stocks.py (REPO_ROOT = SCRIPT_DIR, not its parent).
 REPO_ROOT = SCRIPT_DIR
 DATA_DIR = REPO_ROOT / "data"
+DATA_LONG_DIR = REPO_ROOT / "data_long"
 OUTPUTS_DIR = REPO_ROOT / "outputs"
 LOGS_DIR = OUTPUTS_DIR / "logs"
 CHARTS_DIR = OUTPUTS_DIR / "charts"
 TUNINGS_DIR = OUTPUTS_DIR / "tunings"
 REPORTS_DIR = OUTPUTS_DIR / "reports"
 DEFAULT_RUN_HISTORY_FILE = TUNINGS_DIR / "backtest_run_history.csv"
+TUNING_HISTORY_FILE = TUNINGS_DIR / "backtest_tuning_history.csv"
+WINDOW_HISTORY_FILE = TUNINGS_DIR / "backtest_window_history.csv"
+ZERO_EXCESS_EPSILON = 1e-9
 
 
 def load_backtester_module():
@@ -99,6 +115,60 @@ def safe_float(row, key, default=0.0):
 
 def safe_int(row, key, default=0):
     return int(round(safe_float(row, key, default)))
+
+
+def is_blank(value):
+    return value is None or pd.isna(value) or not str(value).strip()
+
+
+def year_span(start_date, end_date):
+    """Return the elapsed time between two data points as decimal years."""
+    start_ts = pd.Timestamp(start_date)
+    end_ts = pd.Timestamp(end_date)
+    return max(0.0, (end_ts - start_ts).days / 365.2425)
+
+
+def format_years(years):
+    return f"{max(0.0, float(years)):.1f}Y"
+
+
+def result_date_range(df_result):
+    """Return the first and last valid dates represented in a chart result."""
+    dates = (
+        pd.to_datetime(df_result["Date"], errors="coerce")
+        if "Date" in df_result.columns
+        else pd.to_datetime(df_result.index, errors="coerce")
+    )
+    dates = pd.Series(dates).dropna()
+    if dates.empty:
+        raise ValueError("Cannot build a chart title without valid result dates")
+    return dates.min(), dates.max()
+
+
+def build_final_chart_title(fund_label, df_result, params,
+                            source_start_date, source_end_date):
+    """Describe the source and derive run years as source minus lookback."""
+    _, run_end_date = result_date_range(df_result)
+    lookback_years = safe_float(params, "lookback_years")
+    offset_months = safe_int(params, "offset_months")
+    source_years = year_span(source_start_date, source_end_date)
+    run_years = max(0.0, source_years - lookback_years)
+    return (
+        f"{fund_label} Final Technical Backtest "
+        f"Src{format_years(source_years)} "
+        f"{lookback_years:.1f}Y-{offset_months}M "
+        f"Run{format_years(run_years)} "
+        f"{pd.Timestamp(run_end_date).strftime('%Y-%m-%d')}"
+    )
+
+
+def build_final_simple_chart_title(fund_label, df_result):
+    """Return the simple-chart title with the latest plotted data date."""
+    _, latest_data_date = result_date_range(df_result)
+    return (
+        f"{fund_label}: Strategy vs Buy and Hold "
+        f"(latest data: {pd.Timestamp(latest_data_date).strftime('%Y-%m-%d')})"
+    )
 
 
 def annualized_return_from_pct(total_return_pct, start_date, end_date):
@@ -230,10 +300,10 @@ def normalize_run_history(run_history_df):
         df["price_column"] = "Adj Close"
     if "strategy_profile" not in df.columns:
         df["strategy_profile"] = "generic"
-    df["canonical_fund_label"] = df.apply(
-        lambda row: data_prefix_from_path(row.get("data_file", "")) or row.get("fund_label", ""),
-        axis=1,
-    )
+    # Older histories can still contain a slice as the fund_label (for example
+    # AAPL-4Y). Always collapse those labels to the ticker group so one final
+    # backtest and one dashboard card are produced per stock.
+    df["canonical_fund_label"] = df["fund_label"].map(fund_group_from_label)
     return df
 
 
@@ -261,7 +331,16 @@ def select_best_run_rows(run_history_df, fund_label=None, top_funds=2):
         ["source_excess_annualized_return_pct", "run_started_at_sort"],
         ascending=[False, False],
     )
-    rank1 = sorted_runs.groupby("canonical_fund_label", sort=False, as_index=False).head(1).reset_index(drop=True)
+    # A zero metric is usually an incomplete/no-trade run, not a useful winning
+    # configuration. For each ticker, select the best non-zero annualized excess
+    # result first; retain a zero only when every eligible run is zero.
+    selected = []
+    for _, group in sorted_runs.groupby("canonical_fund_label", sort=False):
+        non_zero = group[
+            group["source_excess_annualized_return_pct"].abs() > ZERO_EXCESS_EPSILON
+        ]
+        selected.append((non_zero if not non_zero.empty else group).iloc[0])
+    rank1 = pd.DataFrame(selected).reset_index(drop=True)
     if not fund_label and top_funds and top_funds > 0:
         rank1 = rank1.head(top_funds).reset_index(drop=True)
     return rank1
@@ -355,6 +434,430 @@ def load_price_data(csv_path, price_column):
     return df
 
 
+def truthy(value):
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
+def parse_number_list(value, integer=False):
+    text = str(value or "").strip()
+    if not text or text.lower() in {"nan", "default", "default grid", "none"}:
+        return None
+    values = [
+        token
+        for token in re.split(r"[\s,;|]+", text.strip("[]()"))
+        if token
+    ]
+    return [int(round(float(token))) if integer else float(token) for token in values]
+
+
+def bounds_from_row(row, min_key, max_key, default):
+    lower = safe_float(row, min_key, np.nan)
+    upper = safe_float(row, max_key, np.nan)
+    if np.isfinite(lower) and np.isfinite(upper):
+        return (lower, upper)
+    return default
+
+
+def ensure_nav(data, price_column):
+    frame = data.copy()
+    if "NAV" not in frame.columns:
+        if price_column not in frame.columns:
+            raise ValueError(f"Replay data does not contain {price_column} or NAV")
+        frame["NAV"] = pd.to_numeric(frame[price_column], errors="coerce")
+    frame["NAV"] = pd.to_numeric(frame["NAV"], errors="coerce")
+    return frame.dropna(subset=["NAV"]).sort_index()
+
+
+def replay_once(snapshot, schedule, row, initial_capital, strategy_profile, price_column):
+    replay_data = ensure_nav(snapshot, price_column)
+    result = replay_parameter_schedule(
+        replay_data,
+        schedule,
+        initial_capital,
+        strategy_profile,
+        bt.backtest_enhanced_dual_ema,
+        bt.calculate_index_strategy_metrics,
+        bt.DEFAULT_RSI_PERIOD,
+    )
+    assert_metrics_match(result["metrics"], row)
+    return result
+
+
+def artifact_metadata_for_row(row, fund_label):
+    snapshot_value = row.get("source_snapshot_file", "")
+    schedule_value = row.get("parameter_schedule_file", "")
+    if not is_blank(snapshot_value) and not is_blank(schedule_value):
+        return {
+            "source_snapshot_file": snapshot_value,
+            "source_snapshot_sha256": row.get("source_snapshot_sha256", ""),
+            "parameter_schedule_file": schedule_value,
+            "parameter_schedule_sha256": row.get("parameter_schedule_sha256", ""),
+        }
+    run_id = row.get("source_run_id", "")
+    run_dir = OUTPUTS_DIR / "funds" / str(fund_label) / "runs" / str(run_id)
+    snapshot_path = run_dir / "source_snapshot.csv"
+    schedule_path = run_dir / "parameter_schedule.csv"
+    if snapshot_path.exists() and schedule_path.exists():
+        return {
+            "source_snapshot_file": snapshot_path.relative_to(REPO_ROOT).as_posix(),
+            "source_snapshot_sha256": sha256_file(snapshot_path),
+            "parameter_schedule_file": schedule_path.relative_to(REPO_ROOT).as_posix(),
+            "parameter_schedule_sha256": sha256_file(schedule_path),
+        }
+    return None
+
+
+def legacy_source_candidates(row, fund_label, preferred_file):
+    candidates = []
+    for value in [
+        preferred_file,
+        row.get("source_data_file", ""),
+        row.get("data_file", ""),
+        DATA_DIR / f"{fund_label}.csv",
+    ]:
+        if is_blank(value):
+            continue
+        path = Path(value)
+        if not path.is_absolute():
+            path = DATA_DIR / path.name
+        if path not in candidates:
+            candidates.append(path)
+    for path in sorted(DATA_DIR.glob(f"{fund_label}*.csv")):
+        if path not in candidates:
+            candidates.append(path)
+    for path in sorted(DATA_LONG_DIR.glob(f"{fund_label}*.csv")):
+        if path not in candidates:
+            candidates.append(path)
+    for pattern in [
+        f"_backfill_backup_*/data/{fund_label}*.csv",
+        f"_backfill_backup_*/data_long/{fund_label}*.csv",
+        f"funds/{fund_label}/runs/*/source_snapshot.csv",
+        f"_backfill_backup_*/funds/{fund_label}/runs/*/source_snapshot.csv",
+    ]:
+        for path in sorted(OUTPUTS_DIR.glob(pattern)):
+            if path not in candidates:
+                candidates.append(path)
+    return candidates
+
+
+def is_incrementally_merged_candidate(candidate, fund_label):
+    """Return whether mutable downloader provenance disqualifies exact replay."""
+    candidate = Path(candidate)
+    if candidate.name == "source_snapshot.csv":
+        return False
+    metadata_path = candidate.parent / f"{fund_label}.download-meta.json"
+    if not metadata_path.exists():
+        return False
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return True
+    if str(metadata.get("ticker", "")).upper() != str(fund_label).upper():
+        return True
+    return metadata.get("last_refresh_mode") != "full"
+
+
+def recover_legacy_replay(
+    row,
+    fund_label,
+    preferred_file,
+    price_column,
+    initial_capital,
+    strategy_profile,
+    persist=True,
+):
+    run_id = row.get("source_run_id", "")
+    schedule, schedule_source = load_recorded_schedule(
+        WINDOW_HISTORY_FILE,
+        TUNING_HISTORY_FILE,
+        run_id,
+        run_metadata=row,
+    )
+    source_start = pd.Timestamp(row.get("data_start"))
+    source_end = pd.Timestamp(row.get("data_end"))
+    expected_rows = safe_int(row, "row_count", 0)
+    failures = []
+    for candidate in legacy_source_candidates(row, fund_label, preferred_file):
+        if not candidate.exists():
+            continue
+        try:
+            if is_incrementally_merged_candidate(candidate, fund_label):
+                raise ValueError(
+                    "incrementally merged market data is not eligible for exact replay"
+                )
+            source = load_price_data(candidate, price_column)
+            snapshot = source[
+                (source.index >= source_start) & (source.index <= source_end)
+            ].copy()
+            if snapshot.empty:
+                raise ValueError("recorded date range is absent")
+            if snapshot.index.min() != source_start or snapshot.index.max() != source_end:
+                raise ValueError("recorded start/end dates do not match")
+            if expected_rows and len(snapshot) != expected_rows:
+                raise ValueError(
+                    f"row count {len(snapshot)} does not match {expected_rows}"
+                )
+            result = replay_once(
+                snapshot,
+                schedule,
+                row,
+                initial_capital,
+                strategy_profile,
+                price_column,
+            )
+            if persist:
+                metadata = save_replay_artifacts(
+                    snapshot,
+                    schedule,
+                    REPO_ROOT,
+                    fund_label,
+                    run_id,
+                )
+            else:
+                metadata = {
+                    "replay_schema_version": 1,
+                    "source_snapshot_file": "",
+                    "source_snapshot_sha256": "",
+                    "parameter_schedule_file": "",
+                    "parameter_schedule_sha256": "",
+                    "replay_status": "exact_replay_eligible",
+                    "schedule_window_count": len(schedule),
+                }
+            metadata["schedule_recovery_source"] = schedule_source
+            return snapshot, schedule, result, metadata, candidate
+        except Exception as exc:
+            failures.append(f"{candidate.name}: {exc}")
+    raise ValueError(
+        f"Could not recover exact replay for {run_id}: " + " | ".join(failures)
+    )
+
+
+def load_or_recover_exact_replay(row, fund_label, preferred_file, price_column, initial_capital, strategy_profile):
+    metadata = artifact_metadata_for_row(row, fund_label)
+    if metadata:
+        snapshot, schedule, _, _ = load_replay_artifacts(metadata, REPO_ROOT)
+        result = replay_once(
+            snapshot,
+            schedule,
+            row,
+            initial_capital,
+            strategy_profile,
+            price_column,
+        )
+        metadata = {
+            **metadata,
+            "replay_schema_version": row.get("replay_schema_version", 1),
+            "replay_status": "exact_replay",
+            "schedule_window_count": len(schedule),
+        }
+        return snapshot, schedule, result, metadata, "archived snapshot"
+    return recover_legacy_replay(
+        row,
+        fund_label,
+        preferred_file,
+        price_column,
+        initial_capital,
+        strategy_profile,
+    )
+
+
+def combined_latest_data(snapshot, latest):
+    archived = snapshot.copy()
+    live = latest.copy()
+    archived.index = pd.to_datetime(archived.index)
+    live.index = pd.to_datetime(live.index)
+    newer = live[live.index > archived.index.max()].copy()
+    return pd.concat([archived, newer]).sort_index()
+
+
+def latest_data_fingerprint(data):
+    frame = data.copy()
+    if "Date" not in frame.columns:
+        frame = frame.reset_index().rename(columns={"index": "Date"})
+    columns = ["Date"] + [
+        column for column in ["NAV", "Adj Close", "Close"] if column in frame.columns
+    ]
+    payload = frame[columns].to_csv(index=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def load_or_build_continuation_schedule(
+    source_schedule,
+    data,
+    row,
+    initial_capital,
+    strategy_profile,
+    fund_label,
+):
+    run_id = row.get("source_run_id", "")
+    data_hash = latest_data_fingerprint(data)
+    cache_dir = OUTPUTS_DIR / "funds" / str(fund_label) / "runs" / str(run_id)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / (
+        f"latest_schedule_{pd.Timestamp(data.index.max()):%Y%m%d}_{data_hash[:12]}.csv"
+    )
+    if cache_path.exists():
+        schedule = normalize_schedule(pd.read_csv(cache_path))
+        continuation_count = max(0, len(schedule) - len(source_schedule))
+    else:
+        schedule, continuation_count = build_adaptive_continuation_schedule(
+            source_schedule,
+            data,
+            row,
+            initial_capital,
+            strategy_profile,
+        )
+        schedule.to_csv(cache_path, index=False)
+    return schedule, continuation_count, {
+        "latest_schedule_file": cache_path.relative_to(REPO_ROOT).as_posix(),
+        "latest_schedule_sha256": sha256_file(cache_path),
+        "latest_data_sha256": data_hash,
+    }
+
+
+def build_adaptive_continuation_schedule(schedule, data, row, initial_capital, strategy_profile):
+    schedule_rows = normalize_schedule(schedule).to_dict("records")
+    latest_end = pd.Timestamp(data.index.max())
+    next_start = pd.Timestamp(schedule_rows[-1]["test_end_exclusive"])
+    if latest_end < next_start:
+        return normalize_schedule(schedule_rows), 0
+
+    lookback_months = int(round(safe_float(row, "lookback_years", 0) * 12))
+    offset_months = safe_int(row, "offset_months", 0)
+    if lookback_months <= 0 or offset_months <= 0:
+        raise ValueError("Adaptive continuation requires positive lookback and offset")
+
+    pop_values = parse_number_list(row.get("pop_ranges", ""), integer=True)
+    gen_values = parse_number_list(row.get("gen_ranges", ""), integer=True)
+    bt.pop_ranges = pop_values or [safe_int(row, "best_ga_pop_size", 10)]
+    bt.gen_ranges = gen_values or [safe_int(row, "best_ga_generations", 10)]
+    mutation_values = parse_number_list(row.get("mutation_rates", ""))
+    crossover_values = parse_number_list(row.get("crossover_rates", ""))
+    short_bounds = bounds_from_row(
+        row, "short_ema_min", "short_ema_max", bt.DEFAULT_SHORT_EMA_BOUNDS
+    )
+    long_bounds = bounds_from_row(
+        row, "long_ema_min", "long_ema_max", bt.DEFAULT_LONG_EMA_BOUNDS
+    )
+    rsi_low_bounds = bounds_from_row(
+        row, "rsi_oversold_min", "rsi_oversold_max", bt.DEFAULT_RSI_OVERSOLD_BOUNDS
+    )
+    rsi_high_bounds = bounds_from_row(
+        row, "rsi_overbought_min", "rsi_overbought_max", bt.DEFAULT_RSI_OVERBOUGHT_BOUNDS
+    )
+    stop_bounds = bounds_from_row(row, "stop_loss_min", "stop_loss_max", (8, 15))
+    cooldown_bounds = bounds_from_row(row, "cooldown_min", "cooldown_max", (0, 3))
+    drawdown_bounds = bounds_from_row(
+        row, "drawdown_exit_min", "drawdown_exit_max", (2.5, 4.0)
+    )
+    rebound_bounds = bounds_from_row(
+        row, "reentry_rebound_min", "reentry_rebound_max", (1.0, 3.0)
+    )
+    ga_seed = bt.normalize_ga_seed(row.get("ga_seed", None))
+    continuation_count = 0
+
+    while next_start <= latest_end:
+        train_start = next_start - pd.DateOffset(months=lookback_months)
+        test_end_exclusive = next_start + pd.DateOffset(months=offset_months)
+        tune_data = data[
+            (data.index >= train_start) & (data.index < next_start)
+        ].copy()
+        if len(tune_data) < 100:
+            raise ValueError(
+                f"Insufficient data to retune continuation at {next_start:%Y-%m-%d}"
+            )
+        best_combo, best_params = bt.tune_ga_hyperparams(
+            tune_data,
+            short_ema_bounds=short_bounds,
+            long_ema_bounds=long_bounds,
+            sl_bounds=stop_bounds,
+            cd_bounds=cooldown_bounds,
+            drawdown_exit_bounds=drawdown_bounds,
+            reentry_rebound_bounds=rebound_bounds,
+            rsi_oversold_bounds=rsi_low_bounds,
+            rsi_overbought_bounds=rsi_high_bounds,
+            initial_capital=initial_capital,
+            strategy_profile_name=strategy_profile,
+            ga_seed_value=ga_seed,
+            mutation_rates_value=mutation_values,
+            crossover_rates_value=crossover_values,
+            return_best_params=True,
+            record_history=False,
+        )
+        if best_params is None:
+            pop, generations, mutation, crossover = best_combo
+            best_params = bt.genetic_optimize_params(
+                tune_data,
+                short_bounds,
+                long_bounds,
+                stop_bounds,
+                cooldown_bounds,
+                drawdown_bounds,
+                rebound_bounds,
+                rsi_oversold_bounds=rsi_low_bounds,
+                rsi_overbought_bounds=rsi_high_bounds,
+                pop_size=pop,
+                generations=generations,
+                mutation_rate=mutation,
+                crossover_rate=crossover,
+                initial_capital=initial_capital,
+                strategy_profile_name=strategy_profile,
+                ga_seed_value=ga_seed,
+            )
+        if best_params is None:
+            raise ValueError(f"GA continuation failed at {next_start:%Y-%m-%d}")
+        continuation_count += 1
+        schedule_rows.append(
+            {
+                "window_sequence": len(schedule_rows) + 1,
+                "train_start": train_start,
+                "train_end": next_start,
+                "test_start": next_start,
+                "test_end": min(test_end_exclusive, latest_end),
+                "test_end_exclusive": test_end_exclusive,
+                "offset_months": offset_months,
+                "pop_size": best_combo[0],
+                "generations": best_combo[1],
+                "mutation_rate": best_combo[2],
+                "crossover_rate": best_combo[3],
+                "short_ema": best_params["short_ema"],
+                "long_ema": best_params["long_ema"],
+                "stop_loss": best_params["stop_loss"],
+                "cooldown": best_params["cooldown"],
+                "drawdown_exit_pct": best_params["drawdown_exit_pct"],
+                "reentry_rebound_pct": best_params["reentry_rebound_pct"],
+                "rsi_oversold": best_params["rsi_oversold"],
+                "rsi_overbought": best_params["rsi_overbought"],
+                "rsi_period": best_params.get("rsi_period", bt.DEFAULT_RSI_PERIOD),
+                "exposure_multiplier": best_params.get("exposure_multiplier", 1.0),
+            }
+        )
+        next_start = test_end_exclusive
+    return normalize_schedule(schedule_rows), continuation_count
+
+
+def params_with_final_window(row, schedule, replay_status):
+    params = dict(row)
+    final_window = normalize_schedule(schedule).iloc[-1]
+    for key in [
+        "short_ema",
+        "long_ema",
+        "stop_loss",
+        "cooldown",
+        "drawdown_exit_pct",
+        "reentry_rebound_pct",
+        "rsi_oversold",
+        "rsi_overbought",
+        "rsi_period",
+        "exposure_multiplier",
+    ]:
+        if key in final_window and not pd.isna(final_window[key]):
+            params[key] = final_window[key]
+    params["schedule_window_count"] = len(schedule)
+    params["replay_status"] = replay_status
+    return params
+
+
 def run_fixed_backtest(df, params, initial_capital, strategy_profile):
     return bt.backtest_enhanced_dual_ema(
         df,
@@ -425,7 +928,7 @@ def format_final_parameter_box(params, price_column, initial_capital):
         f"Source annualized: {safe_float(params, 'source_adaptive_annualized_return_pct', 0.0):.2f}% | "
         f"Source ann. excess: {safe_float(params, 'source_excess_annualized_return_pct', 0.0):.2f}%\n"
         f"{ga_line}\n\n"
-        "Best parameters\n"
+        "Final window parameters\n"
         f"EMA: {safe_int(params, 'short_ema')} / {safe_int(params, 'long_ema')} | "
         f"SL: {safe_float(params, 'stop_loss'):.2f} | CD: {safe_int(params, 'cooldown')}\n"
         f"DDX: {safe_float(params, 'drawdown_exit_pct'):.2f} | "
@@ -445,6 +948,9 @@ def plot_technical_chart(
     price_column,
     initial_capital,
     output_path,
+    source_start_date,
+    source_end_date,
+    schedule=None,
 ):
     short_ema = safe_int(params, "short_ema")
     long_ema = safe_int(params, "long_ema")
@@ -457,9 +963,25 @@ def plot_technical_chart(
     plt.subplot(grid[0])
     x_axis = df_result["Date"] if "Date" in df_result.columns else df_result.index
     plt.plot(x_axis, df_result["NAV"], label=price_column, linewidth=1.5, color="black")
-    if f"EMA_{short_ema}" in df_result.columns:
+    if schedule is not None and "Short_EMA_Value" in df_result.columns:
+        plt.plot(
+            x_axis,
+            df_result["Short_EMA_Value"],
+            label="Scheduled short EMA",
+            color="blue",
+            alpha=0.8,
+        )
+    elif f"EMA_{short_ema}" in df_result.columns:
         plt.plot(x_axis, df_result[f"EMA_{short_ema}"], label=f"Short EMA {short_ema}", color="blue", alpha=0.8)
-    if f"EMA_{long_ema}" in df_result.columns:
+    if schedule is not None and "Long_EMA_Value" in df_result.columns:
+        plt.plot(
+            x_axis,
+            df_result["Long_EMA_Value"],
+            label="Scheduled long EMA",
+            color="red",
+            alpha=0.8,
+        )
+    elif f"EMA_{long_ema}" in df_result.columns:
         plt.plot(x_axis, df_result[f"EMA_{long_ema}"], label=f"Long EMA {long_ema}", color="red", alpha=0.8)
 
     if "Position" in df_result.columns:
@@ -487,7 +1009,14 @@ def plot_technical_chart(
                 zorder=5,
             )
 
-    plt.title(f"{fund_label} Final Technical Backtest", fontsize=14, fontweight="bold")
+    chart_title = build_final_chart_title(
+        fund_label,
+        df_result,
+        params,
+        source_start_date,
+        source_end_date,
+    )
+    plt.title(chart_title, fontsize=14, fontweight="bold")
     plt.gca().text(
         0.01,
         0.98,
@@ -505,8 +1034,11 @@ def plot_technical_chart(
 
     plt.subplot(grid[1])
     plt.plot(x_axis, df_result["RSI"], label="RSI", color="orange")
-    plt.axhline(y=rsi_oversold, color="green", linestyle="--", alpha=0.7, label=f"Oversold Guard ({rsi_oversold})")
-    plt.axhline(y=rsi_overbought, color="red", linestyle="--", alpha=0.7, label=f"Overbought Guard ({rsi_overbought})")
+    if schedule is not None:
+        rsi_oversold = int(round(pd.to_numeric(schedule["rsi_oversold"]).mean()))
+        rsi_overbought = int(round(pd.to_numeric(schedule["rsi_overbought"]).mean()))
+    plt.axhline(y=rsi_oversold, color="green", linestyle="--", alpha=0.7, label=f"Avg oversold guard ({rsi_oversold})")
+    plt.axhline(y=rsi_overbought, color="red", linestyle="--", alpha=0.7, label=f"Avg overbought guard ({rsi_overbought})")
     plt.title("RSI Indicator", fontsize=12)
     plt.ylabel("RSI")
     plt.legend()
@@ -517,7 +1049,7 @@ def plot_technical_chart(
     plt.plot(
         x_axis,
         df_result["Portfolio_Value"],
-        label=f"Best-Parameter Strategy ({metrics['adaptive_return']:.2f}%)",
+        label=f"Walk-forward strategy ({metrics['adaptive_return']:.2f}%)",
         linewidth=2,
         color="green",
     )
@@ -579,7 +1111,7 @@ def plot_simple_chart(fund_label, df_result, buy_hold_series, buy_hold_return, m
     strategy_value = df_result["Portfolio_Value"]
 
     plt.figure(figsize=(13, 7))
-    plt.plot(x_axis, strategy_value, label="Best-parameter strategy", color="#1f8f4d", linewidth=3)
+    plt.plot(x_axis, strategy_value, label="Walk-forward strategy", color="#1f8f4d", linewidth=3)
     plt.plot(buy_hold_series.index, buy_hold_series, label="Buy and hold", color="#2f65d9", linewidth=3)
     plt.fill_between(x_axis, strategy_value, initial_capital, color="#1f8f4d", alpha=0.08)
 
@@ -632,7 +1164,7 @@ def plot_simple_chart(fund_label, df_result, buy_hold_series, buy_hold_return, m
             color=marker["color"],
             arrowprops={"arrowstyle": "->", "color": marker["color"], "lw": 1},
         )
-    plt.title(f"{fund_label}: Strategy vs Buy and Hold", fontsize=18, fontweight="bold")
+    plt.title(build_final_simple_chart_title(fund_label, df_result), fontsize=18, fontweight="bold")
     plt.ylabel("Portfolio Value")
     plt.legend(loc="lower right")
     plt.grid(True, alpha=0.22)
@@ -646,10 +1178,6 @@ def write_log(log_path, lines):
     with open(log_path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
         handle.write("\n")
-
-
-def output_label_for_data_file(data_file, fallback_label):
-    return data_prefix_from_path(data_file) or fallback_label
 
 
 def run_one_fund(row, args, run_timestamp):
@@ -675,7 +1203,10 @@ def run_one_fund(row, args, run_timestamp):
             "message": message,
         }
 
-    fund_label = output_label_for_data_file(data_file, source_fund_label)
+    # A source file may intentionally be a dated/sliced dataset such as
+    # AAPL-4Y.csv. It is still an AAPL backtest, not a separate stock, so use
+    # the canonical group for chart names and dashboard display.
+    fund_label = row.get("canonical_fund_label") or fund_group_from_label(source_fund_label)
     started_at = datetime.now()
     formatted = started_at.strftime("%Y%m%d_%H%M%S")
     chart_stamp = started_at.strftime("%Y%m%d-%H%M%S")
@@ -695,74 +1226,135 @@ def run_one_fund(row, args, run_timestamp):
         pass
     else:
         price_column = "Adj Close"
-
-    df = load_price_data(data_file, price_column)
-    df_full = df.copy()
-    backtest_start = row.get("backtest_start", "")
-    backtest_end = row.get("backtest_end", "")
-    if pd.notna(backtest_start) and str(backtest_start).strip():
-        start_date = pd.to_datetime(backtest_start)
-        df = df.loc[start_date:]
-    if pd.notna(backtest_end) and str(backtest_end).strip():
-        end_date = pd.to_datetime(backtest_end)
-        df = df.loc[:end_date]
-
-    result = run_fixed_backtest(df, row, args.initial_capital, strategy_profile)
-
-    result_latest = run_fixed_backtest(df_full, row, args.initial_capital, strategy_profile)
-    df_result_latest, total_return_latest, num_trades_latest, trades_latest, win_rate_latest, _, _, _, _ = result_latest
-    buy_hold_series_latest, buy_hold_return_latest = build_buy_hold_series(df_result_latest, args.initial_capital)
-    metrics_latest = bt.calculate_index_strategy_metrics(
-        df_result_latest,
-        trades_latest,
-        initial_capital=args.initial_capital,
-        long_ema=safe_int(row, "long_ema"),
+    rebuild_mode = str(row.get("rebuild_mode", "") or "").strip().lower()
+    historical_status = (
+        "rebuilt_latest_data"
+        if rebuild_mode == "latest_data"
+        else "exact_replay"
     )
-    metrics_latest["buy_hold_return"] = buy_hold_return_latest
-    metrics_latest["excess_return"] = metrics_latest["adaptive_return"] - buy_hold_return_latest
-    df_result, total_return, num_trades, trades, win_rate, avg_return, decisions_df, sharpe, max_dd = result
+
+    df_full = load_price_data(data_file, price_column)
+    try:
+        (
+            source_snapshot,
+            source_schedule,
+            source_replay,
+            replay_artifacts,
+            replay_source,
+        ) = load_or_recover_exact_replay(
+            row,
+            fund_label,
+            data_file,
+            price_column,
+            args.initial_capital,
+            strategy_profile,
+        )
+    except Exception as exc:
+        message = f"Exact replay unavailable for {fund_label}: {exc}"
+        print(f"WARNING: {message}")
+        write_log(
+            log_path,
+            [
+                "=== Exact Walk-Forward Replay Unavailable ===",
+                f"Fund: {fund_label}",
+                f"Source run ID: {row.get('source_run_id', '')}",
+                message,
+                "The original source chart was retained; no fixed-parameter fallback was run.",
+            ],
+        )
+        source_chart_file = row.get("chart_file", "")
+        return {
+            "run_id": f"{run_timestamp}_{fund_label}",
+            "status": "completed",
+            "fund_label": fund_label,
+            "source_fund_label": source_fund_label,
+            "data_file": str(data_file),
+            "price_column": price_column,
+            "strategy_profile": strategy_profile,
+            "source_run_id": row.get("source_run_id", ""),
+            "source_adaptive_return_pct": row.get("source_adaptive_return_pct", ""),
+            "source_buy_hold_return_pct": row.get("source_buy_hold_return_pct", ""),
+            "source_excess_return_pct": row.get("source_excess_return_pct", ""),
+            "source_adaptive_annualized_return_pct": row.get("source_adaptive_annualized_return_pct", ""),
+            "source_buy_hold_annualized_return_pct": row.get("source_buy_hold_annualized_return_pct", ""),
+            "source_excess_annualized_return_pct": row.get("source_excess_annualized_return_pct", ""),
+            "best_excess_annualized_return_pct": row.get("source_excess_annualized_return_pct", ""),
+            "best_excess_run_id": row.get("source_run_id", ""),
+            "best_excess_chart_file": source_chart_file,
+            "best_excess_data_end": row.get("data_end", row.get("backtest_end", "")),
+            "technical_chart_file": source_chart_file,
+            "simple_chart_file": "",
+            "latest_chart_file": "",
+            "historical_replay_status": "source_unavailable",
+            "latest_replay_status": "source_unavailable",
+            "replay_status": "source_unavailable",
+            "replay_error": str(exc),
+            "log_file": str(log_path),
+            "run_started_at": started_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "run_completed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+    df_result = source_replay["adaptive_df"]
+    trades = source_replay["trades"]
+    num_trades = source_replay["trade_count"]
+    metrics = source_replay["metrics"]
     buy_hold_series, buy_hold_return = build_buy_hold_series(df_result, args.initial_capital)
-    metrics = bt.calculate_index_strategy_metrics(
-        df_result,
-        trades,
-        initial_capital=args.initial_capital,
-        long_ema=safe_int(row, "long_ema"),
+    adaptive_annualized = metrics["adaptive_annualized_return"]
+    buy_hold_annualized = metrics["buy_hold_annualized_return"]
+    excess_annualized = metrics["excess_annualized_return"]
+    win_rate = safe_float(row, "win_rate_pct", 0.0)
+
+    latest_data = combined_latest_data(source_snapshot, df_full)
+    latest_schedule, continuation_count, latest_artifacts = load_or_build_continuation_schedule(
+        source_schedule,
+        latest_data,
+        row,
+        args.initial_capital,
+        strategy_profile,
+        fund_label,
     )
-    metrics["buy_hold_return"] = buy_hold_return
-    metrics["excess_return"] = metrics["adaptive_return"] - buy_hold_return
-    if "Date" in df_result.columns and len(df_result):
-        result_start_date = pd.to_datetime(df_result["Date"], errors="coerce").dropna().min()
-        result_end_date = pd.to_datetime(df_result["Date"], errors="coerce").dropna().max()
-    else:
-        result_start_date = df_result.index.min()
-        result_end_date = df_result.index.max()
-    adaptive_annualized = annualized_return_from_pct(
-        metrics["adaptive_return"], result_start_date, result_end_date
+    latest_replay = replay_parameter_schedule(
+        ensure_nav(latest_data, price_column),
+        latest_schedule,
+        args.initial_capital,
+        strategy_profile,
+        bt.backtest_enhanced_dual_ema,
+        bt.calculate_index_strategy_metrics,
+        bt.DEFAULT_RSI_PERIOD,
     )
-    buy_hold_annualized = annualized_return_from_pct(
-        buy_hold_return, result_start_date, result_end_date
+    df_result_latest = latest_replay["adaptive_df"]
+    metrics_latest = latest_replay["metrics"]
+    trades_latest = latest_replay["trades"]
+    buy_hold_series_latest, buy_hold_return_latest = build_buy_hold_series(
+        df_result_latest, args.initial_capital
     )
-    excess_annualized = adaptive_annualized - buy_hold_annualized
+    latest_status = (
+        "adaptive_continuation" if continuation_count else historical_status
+    )
     ga_signal, last_trade_date = current_position_context(df_result_latest)
 
     if use_original_chart:
         import shutil
-        shutil.copy(original_chart_file, technical_chart)
         source_chart_name = Path(original_chart_file).name
         source_chart_copy = CHARTS_DIR / f"{fund_label}-final-find-source-{source_chart_name}"
         shutil.copy(original_chart_file, source_chart_copy)
 
     if df_result is not None:
+        historical_params = params_with_final_window(
+            row, source_schedule, historical_status
+        )
         plot_technical_chart(
             fund_label,
             df_result,
             buy_hold_series,
             buy_hold_return,
             metrics,
-            row,
+            historical_params,
             price_column,
             args.initial_capital,
             technical_chart,
+            source_snapshot.index.min(),
+            source_snapshot.index.max(),
+            schedule=source_schedule,
         )
         plot_simple_chart(
             fund_label,
@@ -774,42 +1366,73 @@ def run_one_fund(row, args, run_timestamp):
             simple_chart,
         )
         if df_result_latest is not None:
+            latest_params = params_with_final_window(
+                row, latest_schedule, latest_status
+            )
             plot_technical_chart(
                 f"{fund_label} [Latest]",
                 df_result_latest,
                 buy_hold_series_latest,
                 buy_hold_return_latest,
                 metrics_latest,
-                row,
+                latest_params,
                 price_column,
                 args.initial_capital,
                 latest_chart,
+                latest_data.index.min(),
+                latest_data.index.max(),
+                schedule=latest_schedule,
             )
 
+    result_dates = pd.to_datetime(df_result["Date"], errors="coerce").dropna()
+    latest_dates = pd.to_datetime(
+        df_result_latest["Date"], errors="coerce"
+    ).dropna()
+    latest_price_rows = pd.DataFrame(
+        {
+            "Date": pd.to_datetime(df_result_latest["Date"], errors="coerce"),
+            "Price": pd.to_numeric(df_result_latest["NAV"], errors="coerce"),
+        }
+    ).dropna(subset=["Date", "Price"])
+    latest_price_rows = latest_price_rows.sort_values("Date")
+    if latest_price_rows.empty:
+        latest_stock_price = np.nan
+        latest_stock_price_date = ""
+    else:
+        latest_price_row = latest_price_rows.iloc[-1]
+        latest_stock_price = float(latest_price_row["Price"])
+        latest_stock_price_date = latest_price_row["Date"].strftime("%Y-%m-%d")
     completed_at = datetime.now()
     duration_seconds = int((completed_at - started_at).total_seconds())
     log_lines = [
-        "=== Final Backtest From Best Parameters ===",
+        "=== Exact Walk-Forward Replay From Winning Run ===",
         f"Fund: {fund_label}",
         f"Source run-history fund label: {source_fund_label}",
         f"Data file: {data_file}",
         f"Data file warning: {file_warning}" if file_warning else "Data file warning: (none)",
         f"Price column: {price_column}",
         f"Source run ID: {row.get('source_run_id', '')}",
+        f"Historical replay status: {historical_status}",
+        f"Replay source: {replay_source}",
+        f"Source snapshot SHA-256: {replay_artifacts.get('source_snapshot_sha256', 'n/a')}",
+        f"Historical schedule windows: {len(source_schedule)}",
+        f"Latest replay status: {latest_status}",
+        f"Continuation windows retuned: {continuation_count}",
+        f"Latest schedule SHA-256: {latest_artifacts.get('latest_schedule_sha256', 'n/a')}",
         f"Source adaptive return: {safe_float(row, 'source_adaptive_return_pct', 0.0):.2f}%",
         f"Source adaptive annualized return: {safe_float(row, 'source_adaptive_annualized_return_pct', 0.0):.2f}%",
         f"Started at: {started_at:%Y-%m-%d %H:%M:%S}",
         f"Completed at: {completed_at:%Y-%m-%d %H:%M:%S}",
         f"Duration seconds: {duration_seconds}",
         "",
-        "Selected parameters:",
-        f"EMA: {safe_int(row, 'short_ema')} / {safe_int(row, 'long_ema')}",
-        f"Stop loss: {safe_float(row, 'stop_loss'):.4f}",
-        f"Cooldown: {safe_int(row, 'cooldown')}",
-        f"Drawdown exit: {safe_float(row, 'drawdown_exit_pct'):.4f}",
-        f"Reentry rebound: {safe_float(row, 'reentry_rebound_pct'):.4f}",
-        f"RSI: {safe_int(row, 'rsi_oversold', 30)} / {safe_int(row, 'rsi_overbought', 70)}",
-        f"Exposure: {safe_float(row, 'exposure_multiplier', 1.0):.4f}x",
+        "Final window parameters:",
+        f"EMA: {safe_int(historical_params, 'short_ema')} / {safe_int(historical_params, 'long_ema')}",
+        f"Stop loss: {safe_float(historical_params, 'stop_loss'):.4f}",
+        f"Cooldown: {safe_int(historical_params, 'cooldown')}",
+        f"Drawdown exit: {safe_float(historical_params, 'drawdown_exit_pct'):.4f}",
+        f"Reentry rebound: {safe_float(historical_params, 'reentry_rebound_pct'):.4f}",
+        f"RSI: {safe_int(historical_params, 'rsi_oversold', 30)} / {safe_int(historical_params, 'rsi_overbought', 70)}",
+        f"Exposure: {safe_float(historical_params, 'exposure_multiplier', 1.0):.4f}x",
         "",
         "Results:",
         f"Strategy return: {metrics['adaptive_return']:.2f}%",
@@ -824,6 +1447,13 @@ def run_one_fund(row, args, run_timestamp):
         f"Win rate: {win_rate:.2f}%",
         f"Current GA signal: {ga_signal}",
         f"Last trade date: {last_trade_date or 'n/a'}",
+        "",
+        "Latest adaptive continuation:",
+        f"Strategy return: {metrics_latest['adaptive_return']:.2f}%",
+        f"Strategy annualized return: {metrics_latest['adaptive_annualized_return']:.2f}%",
+        f"Buy & hold return: {buy_hold_return_latest:.2f}%",
+        f"Buy & hold annualized return: {metrics_latest['buy_hold_annualized_return']:.2f}%",
+        f"Excess annualized return: {metrics_latest['excess_annualized_return']:.2f}%",
         "",
         f"Technical chart: {technical_chart}",
         f"Simple chart: {simple_chart}",
@@ -859,19 +1489,27 @@ def run_one_fund(row, args, run_timestamp):
         "price_column": price_column,
         "strategy_profile": strategy_profile,
         "initial_capital": args.initial_capital,
-        "data_start": df.index.min().strftime("%Y-%m-%d"),
-        "data_end": df.index.max().strftime("%Y-%m-%d"),
-        "row_count": len(df),
-        "short_ema": safe_int(row, "short_ema"),
-        "long_ema": safe_int(row, "long_ema"),
-        "stop_loss": safe_float(row, "stop_loss"),
-        "cooldown": safe_int(row, "cooldown"),
-        "drawdown_exit_pct": safe_float(row, "drawdown_exit_pct"),
-        "reentry_rebound_pct": safe_float(row, "reentry_rebound_pct"),
-        "rsi_oversold": safe_int(row, "rsi_oversold", 30),
-        "rsi_overbought": safe_int(row, "rsi_overbought", 70),
-        "rsi_period": bt.DEFAULT_RSI_PERIOD,
-        "exposure_multiplier": safe_float(row, "exposure_multiplier", 1.0),
+        "data_start": result_dates.min().strftime("%Y-%m-%d"),
+        "data_end": result_dates.max().strftime("%Y-%m-%d"),
+        "row_count": len(result_dates),
+        "short_ema": safe_int(historical_params, "short_ema"),
+        "long_ema": safe_int(historical_params, "long_ema"),
+        "stop_loss": safe_float(historical_params, "stop_loss"),
+        "cooldown": safe_int(historical_params, "cooldown"),
+        "drawdown_exit_pct": safe_float(historical_params, "drawdown_exit_pct"),
+        "reentry_rebound_pct": safe_float(historical_params, "reentry_rebound_pct"),
+        "rsi_oversold": safe_int(historical_params, "rsi_oversold", 30),
+        "rsi_overbought": safe_int(historical_params, "rsi_overbought", 70),
+        "rsi_period": safe_int(historical_params, "rsi_period", bt.DEFAULT_RSI_PERIOD),
+        "exposure_multiplier": safe_float(historical_params, "exposure_multiplier", 1.0),
+        **replay_artifacts,
+        **latest_artifacts,
+        "replay_status": historical_status,
+        "historical_replay_status": historical_status,
+        "latest_replay_status": latest_status,
+        "schedule_window_count": len(source_schedule),
+        "latest_schedule_window_count": len(latest_schedule),
+        "continuation_window_count": continuation_count,
         "source_run_id": row.get("source_run_id", ""),
         "source_run_started_at": row.get("source_run_started_at", ""),
         "source_adaptive_return_pct": row.get("source_adaptive_return_pct", ""),
@@ -880,9 +1518,13 @@ def run_one_fund(row, args, run_timestamp):
         "source_adaptive_annualized_return_pct": row.get("source_adaptive_annualized_return_pct", ""),
         "source_buy_hold_annualized_return_pct": row.get("source_buy_hold_annualized_return_pct", ""),
         "source_excess_annualized_return_pct": row.get("source_excess_annualized_return_pct", ""),
+        "best_excess_annualized_return_pct": row.get("source_excess_annualized_return_pct", ""),
+        "best_excess_run_id": row.get("source_run_id", ""),
+        "best_excess_chart_file": source_chart_file,
+        "best_excess_data_end": row.get("data_end", row.get("backtest_end", "")),
         "source_sharpe": row.get("source_sharpe", ""),
         "source_max_dd_pct": row.get("source_max_dd_pct", ""),
-        "final_portfolio_value": df_result["Portfolio_Value"].iloc[-1],
+        "final_portfolio_value": source_replay["final_portfolio_value"],
         "adaptive_return_pct": metrics["adaptive_return"],
         "buy_hold_return_pct": buy_hold_return,
         "excess_return_pct": metrics["excess_return"],
@@ -903,8 +1545,10 @@ def run_one_fund(row, args, run_timestamp):
         "technical_chart_file": str(technical_chart),
         "simple_chart_file": str(simple_chart),
         "latest_chart_file": str(latest_chart),
-        "latest_data_start": df_full.index.min().strftime("%Y-%m-%d"),
-        "latest_data_end": df_full.index.max().strftime("%Y-%m-%d"),
+        "latest_data_start": latest_dates.min().strftime("%Y-%m-%d"),
+        "latest_data_end": latest_dates.max().strftime("%Y-%m-%d"),
+        "latest_stock_price": latest_stock_price,
+        "latest_stock_price_date": latest_stock_price_date,
         "latest_adaptive_return_pct": metrics_latest["adaptive_return"],
         "latest_buy_hold_return_pct": buy_hold_return_latest,
         "latest_excess_return_pct": metrics_latest["excess_return"],
@@ -1045,7 +1689,7 @@ def write_latest_dashboard(results, run_timestamp):
   </script>
 </body>
 </html>"""
-    dashboard_path = REPORTS_DIR / "dashboard.html"
+    dashboard_path = REPORTS_DIR / "dashboard_latest.html"
     dashboard_path.write_text(dashboard, encoding="utf-8")
     return dashboard_path
 
@@ -1130,10 +1774,21 @@ def main():
 
     summary_output = TUNINGS_DIR / f"final_backtest_summary_{run_timestamp}.csv"
     pd.DataFrame(results).to_csv(summary_output, index=False)
-    dashboard_path = write_latest_dashboard(results, run_timestamp)
+    latest_dashboard_path = write_latest_dashboard(results, run_timestamp)
     pdf_path = write_latest_pdf(results)
+    dashboard_suite = build_dashboard_suite(results, summary_output)
+    dashboard_path = dashboard_suite["master"]
     print(f"\nFinal backtest summary saved to: {summary_output}")
-    print(f"Latest chart dashboard saved to: {dashboard_path}")
+    print(f"Master dashboard saved to: {dashboard_path}")
+    print(f"Latest chart dashboard saved to: {latest_dashboard_path}")
+    print(f"Per-ticker dashboards saved under: {REPORTS_DIR / 'funds'}")
+    if dashboard_suite["companions"]:
+        print(
+            "Comparison dashboards refreshed: "
+            + ", ".join(str(path) for path in dashboard_suite["companions"].values())
+        )
+    for warning in dashboard_suite["warnings"]:
+        print(f"Warning: {warning}")
     print(f"One-fund-per-page PDF saved to: {pdf_path}")
     return 0
 

@@ -1,0 +1,3 @@
+python ..\backtest_stocks.py --data-file NVDA.csv --price-column "Adj Close" --lookback-years 1 --offset-months 12 --strategy-profile generic --profile-override-preset default --pop_ranges 8 --gen_ranges 4 --short-ema-bounds 1 100 --long-ema-bounds 30 600 --rsi-oversold-bounds 1 49 --rsi-overbought-bounds 51 99 --stop-loss-bounds 5 50 --drawdown-exit-bounds 2 100 --reentry-rebound-bounds 0 30 --cooldown-bounds 0 10
+
+rem generic-bh-reachable - identical to generic except stop_loss (8,101), drawdown_exit_pct (2.5,101), reentry_rebound_pct (0.0,3.0), exposure pinned 1.0. The old trading region stays inside the new bounds, so the GA can still trade — it just can now choose not to.

@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>V Parameter Sweep &#8212; What Actually Correlates</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --plane: #f9f9f7;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --pos: #2a78d6; --neg: #e34948; --mid: #f0efec;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+    --good: #0ca30c; --warn: #fab219;
+    --chip: rgba(11,11,11,0.05); --note-bg: rgba(42,120,214,0.06);
+  }
+  /* Dark theme. Surfaces are deliberately lifted off pure black and the
+     negative pole is a brighter red: on the previous #1a1a19 ground the
+     #e66767 red measured only 4.5:1, which read as low-contrast. The red
+     below measures ~6.4:1 against the lighter surface. */
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1: #292927; --plane: #1f1f1d;
+      --text-primary: #ffffff; --text-secondary: #cfcec4; --muted: #9d9b93;
+      --grid: #3a3a37; --axis: #4d4d47; --border: rgba(255,255,255,0.13);
+      --pos: #4d94ea; --neg: #ff8a8a; --mid: #45453f;
+      --s1: #4d94ea; --s2: #e0642f; --s3: #1fae7c;
+      --chip: rgba(255,255,255,0.09); --note-bg: rgba(77,148,234,0.13);
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1: #292927; --plane: #1f1f1d;
+    --text-primary: #ffffff; --text-secondary: #cfcec4; --muted: #9d9b93;
+    --grid: #3a3a37; --axis: #4d4d47; --border: rgba(255,255,255,0.13);
+    --pos: #4d94ea; --neg: #ff8a8a; --mid: #45453f;
+    --s1: #4d94ea; --s2: #e0642f; --s3: #1fae7c;
+    --chip: rgba(255,255,255,0.09); --note-bg: rgba(77,148,234,0.13);
+  }
+  .viz-root {
+    background: var(--plane); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5; padding: 32px 24px 64px; min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 6px; }
+  h1 { font-size: 26px; font-weight: 650; margin: 0 0 8px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { color: var(--text-secondary); font-size: 14.5px; margin: 0; max-width: 68ch; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .card > h2 { font-size: 14px; font-weight: 650; margin: 0 0 3px; letter-spacing: -0.005em; }
+  .card > .sub { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 18px; max-width: 76ch; }
+  .note { margin-top: 18px; padding: 12px 14px; border-radius: 8px; background: var(--note-bg);
+    border-left: 2px solid var(--s1); font-size: 12.5px; color: var(--text-secondary); max-width: 82ch; }
+  .note b { color: var(--text-primary); font-weight: 620; }
+  .note .nh { display: block; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); font-weight: 650; margin-bottom: 5px; }
+  .note p { margin: 0 0 7px; } .note p:last-child { margin-bottom: 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: 18px 26px; align-items: flex-end;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+  .fgroup { display: flex; flex-direction: column; gap: 6px; }
+  .flabel { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .segs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg { font: inherit; font-size: 12px; font-weight: 500; padding: 5px 11px; border-radius: 6px;
+    cursor: pointer; background: var(--chip); color: var(--text-secondary); border: 1px solid transparent; }
+  .seg[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); }
+  .seg:focus-visible, .tgl:focus-visible, .tabbtn:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+  .tgl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; color: var(--text-secondary); }
+  .tgl input { width: 15px; height: 15px; accent-color: var(--s1); cursor: pointer; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  .kpi { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 15px 17px; }
+  .kpi .k { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .kpi .v { font-size: 27px; font-weight: 620; margin-top: 5px; letter-spacing: -0.02em; }
+  .kpi .n { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+  .facets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+  .facet h3 { font-size: 12px; font-weight: 620; margin: 0 0 2px; }
+  .facet .fnote { font-size: 11.5px; color: var(--muted); margin: 0 0 10px; }
+  table.hm { border-collapse: separate; border-spacing: 2px; width: 100%; }
+  table.hm th { font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 3px; font-variant-numeric: tabular-nums; }
+  table.hm th.rowh { text-align: right; padding-right: 7px; white-space: nowrap; }
+  td.cell { border-radius: 4px; text-align: center; padding: 9px 4px; font-size: 12px;
+    font-weight: 600; font-variant-numeric: tabular-nums; cursor: default; }
+  td.cell.empty { background: transparent; color: var(--axis); font-weight: 400; border: 1px dashed var(--grid); }
+  td.cell.best { box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--good); }
+  .dims { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 26px 40px; }
+  .dimblock h3 { font-size: 12px; font-weight: 620; margin: 0 0 12px; }
+  .drow { display: grid; grid-template-columns: 62px 1fr 72px; align-items: center; gap: 9px; margin-bottom: 7px; }
+  .dname { font-size: 12px; color: var(--text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+  .dtrack { position: relative; height: 19px; }
+  .dtrack::before { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--axis); }
+  .dbar { position: absolute; top: 3px; height: 13px; border-radius: 3px; }
+  .dval { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .dn { font-size: 10.5px; color: var(--muted); }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--text-secondary); }
+  .lg { display: flex; align-items: center; gap: 6px; }
+  .lgdot { width: 10px; height: 10px; border-radius: 50%; }
+  .smallmults { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; }
+  .sm h3 { font-size: 12px; font-weight: 620; margin: 0 0 1px; }
+  .sm .rho { font-size: 11.5px; color: var(--muted); margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tabbtn { font: inherit; font-size: 12px; font-weight: 550; padding: 5px 12px; border-radius: 6px;
+    cursor: pointer; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  .tabbtn[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+  .tablescroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+  /* Colour is set explicitly rather than inherited: a table does not inherit
+     colour from its ancestors in quirks mode, which silently rendered every
+     cell black on the dark surface. */
+  table.data { border-collapse: collapse; width: 100%; font-size: 12px; color: var(--text-primary); }
+  table.data th { text-align: right; padding: 7px 9px; font-weight: 600; font-size: 10.5px;
+    letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--axis); position: sticky; top: 0; background: var(--surface-1);
+    cursor: pointer; white-space: nowrap; }
+  table.data th:first-child, table.data td:first-child { text-align: left; }
+  table.data td { padding: 6px 9px; text-align: right; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  table.data tr:hover td { background: var(--chip); }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 10.5px;
+    font-weight: 600; background: var(--chip); color: var(--text-secondary); }
+  .pill.lev { background: color-mix(in oklab, var(--warn) 26%, transparent); color: var(--text-primary); }
+  #tip { position: fixed; pointer-events: none; opacity: 0; transition: opacity .1s;
+    background: var(--text-primary); color: var(--surface-1); padding: 8px 11px; border-radius: 7px;
+    font-size: 11.5px; line-height: 1.45; z-index: 50; max-width: 270px; box-shadow: 0 4px 16px rgba(0,0,0,.22); }
+  #tip b { font-weight: 650; } #tip .tnum { font-variant-numeric: tabular-nums; }
+  .foot { font-size: 11.5px; color: var(--muted); max-width: 82ch; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="viz-root">
+<div class="wrap">
+  <header>
+    <p class="eyebrow">V &#183; profile generic &#183; generated 2026-07-26 22:47</p>
+    <h1>What actually correlates with beating buy &amp; hold</h1>
+    <p class="lede">
+      Every completed V run in the sweep, scored on <b>excess annualized return</b> &#8212; the
+      strategy's annualized return minus buy &amp; hold over the same window. Zero is the only
+      line that matters: above it the strategy earned its complexity, below it a single buy
+      order would have done better.
+    </p>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="fgroup"><span class="flabel" id="lb-depth">History depth</span>
+      <div class="segs" id="f-depth" role="group" aria-labelledby="lb-depth"></div></div>
+    <div class="fgroup"><span class="flabel" id="lb-batch">Batch (pop/gen)</span>
+      <div class="segs" id="f-batch" role="group" aria-labelledby="lb-batch"></div></div>
+    <div class="fgroup"><span class="flabel" id="lb-metric">Cell / bar value</span>
+      <div class="segs" id="f-metric" role="group" aria-labelledby="lb-metric">
+        <button type="button" class="seg" data-m="median" aria-pressed="true">Median run</button>
+        <button type="button" class="seg" data-m="best" aria-pressed="false">Best run</button>
+      </div></div>
+    <div class="fgroup"><span class="flabel">Rule</span>
+      <label class="tgl"><input type="checkbox" id="f-lev" checked />
+        <span>Exclude leveraged (exposure &gt; 1.0&times;)</span></label></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>1 &#183; Where the wins live: lookback &times; offset, split by history depth</h2>
+    <p class="sub" id="hm-sub"></p>
+    <div class="facets" id="facets"></div>
+    <div class="legend" id="scale-legend"></div>
+    <div class="note" id="note-hm"></div>
+  </section>
+
+  <section class="card">
+    <h2>2 &#183; Which dimension moves the needle</h2>
+    <p class="sub" id="dim-sub"></p>
+    <div class="dims" id="dims"></div>
+    <div class="note" id="note-dim"></div>
+  </section>
+
+  <section class="card">
+    <h2>3 &#183; Running years: how much evidence is each run judged on?</h2>
+    <p class="sub">
+      <b>Running years = history depth &#8722; lookback</b> &#8212; the out-of-sample window a run is
+      actually scored on. A 4Y file with a 3Y lookback leaves just <b>one year</b> to test on; a 5Y
+      file with a 1Y lookback leaves four. Same sweep, very different amounts of evidence.
+    </p>
+    <svg class="chart" id="runyrs" viewBox="0 0 820 400" role="img"
+      aria-label="Excess annualized return by length of the out-of-sample test window"></svg>
+    <div class="legend" id="ry-legend"></div>
+    <div class="note" id="note-ry"></div>
+  </section>
+
+  <section class="card">
+    <h2>4 &#183; Correlation strength</h2>
+    <p class="sub">Spearman rank correlation between excess annualized return and each numeric
+      factor. Rank-based, so it catches any monotonic relationship, not just straight lines.
+      Bars right of the line mean "more of this went with a better result".</p>
+    <svg class="chart" id="corr" viewBox="0 0 820 300" role="img"
+      aria-label="Correlation strength of each factor against excess return"></svg>
+    <div class="note" id="note-corr"></div>
+  </section>
+
+  <section class="card">
+    <h2>5 &#183; Return vs. risk</h2>
+    <p class="sub">Excess annualized return against maximum drawdown. The upper-left quadrant is
+      the one worth wanting: beats buy &amp; hold with a shallower worst-case loss.</p>
+    <svg class="chart" id="scatter" viewBox="0 0 820 400" role="img"
+      aria-label="Excess annualized return against maximum drawdown"></svg>
+    <div class="legend" id="sc-legend"></div>
+    <div class="note" id="note-sc"></div>
+  </section>
+
+  <section class="card">
+    <h2>6 &#183; What else tracks the result</h2>
+    <p class="sub">The same runs against the four factors most likely to explain performance. A
+      cloud with no tilt means that factor is not what separates a good run from a bad one.</p>
+    <div class="smallmults" id="smallmults"></div>
+    <div class="note" id="note-sm"></div>
+  </section>
+
+  <section class="card">
+    <h2>7 &#183; Is a good cell repeatable?</h2>
+    <p class="sub">Every individual run in each cell that has at least three runs, ranked by
+      median. A tight cluster means the search converges; a wide spread means the same settings
+      can produce very different outcomes, and any single result from it is luck.</p>
+    <svg class="chart" id="spread" viewBox="0 0 820 420" role="img"
+      aria-label="Spread of individual run results within each parameter cell"></svg>
+    <div class="note" id="note-spread"></div>
+  </section>
+
+  <section class="card">
+    <h2>8 &#183; Every run</h2>
+    <p class="sub">The same data as a table &#8212; click any column header to sort.</p>
+    <div class="tabs">
+      <button class="tabbtn" id="tab-top" aria-pressed="true" type="button">Top 25 by excess</button>
+      <button class="tabbtn" id="tab-all" aria-pressed="false" type="button">All runs</button>
+    </div>
+    <div class="tablescroll"><table class="data" id="dtable"></table></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function () {
+  var PAYLOAD = {"fields":["depth","batch","lb","off","adaptA","bhA","excA","sharpe","dd","exp","trades","inv","budget","ry"],"rows":[["5Y","run4",2.0,6,0.22,14.82,-14.6,0.097,29.9,1.0,49,73.6,8,3.0],["5Y","run4",2.0,12,0.26,14.82,-14.56,0.1,31.03,1.0,60,76.2,8,3.0],["5Y","run4",3.0,6,0.47,16.86,-16.4,0.112,28.06,1.0,48,73.8,8,2.0],["5Y","run4",3.0,12,3.7,16.86,-13.16,0.288,25.08,1.0,45,77.4,8,2.0],["5Y","run4",2.0,6,4.02,14.82,-10.8,0.34,30.17,1.0,56,67.6,8,3.0],["5Y","run4",2.0,6,6.55,14.82,-8.27,0.459,23.72,1.0,60,80.8,8,3.0],["5Y","run4",2.0,12,2.27,14.82,-12.55,0.217,30.84,1.0,58,79.5,8,3.0],["5Y","run4",3.0,6,5.65,16.86,-11.21,0.393,26.29,1.0,46,78.4,8,2.0],["5Y","run4",3.0,12,3.22,16.86,-13.65,0.26,25.6,1.0,35,82.0,8,2.0],["5Y","10/4",1.0,12,0.55,14.44,-13.89,0.114,27.44,1.0,63,67.7,40,4.0],["5Y","10/4",1.0,12,-0.26,14.44,-14.7,0.066,26.21,1.0,71,67.5,40,4.0],["5Y","10/4",1.0,12,3.44,14.44,-10.99,0.283,30.43,1.0,74,77.4,40,4.0],["5Y","10/4",3.0,12,0.94,16.86,-15.92,0.142,28.48,1.0,33,65.2,40,2.0],["5Y","10/4",2.0,12,5.28,14.82,-9.54,0.402,24.66,1.0,40,72.6,40,3.0],["5Y","10/4",2.0,12,1.01,14.82,-13.81,0.143,29.96,1.0,39,68.2,40,3.0],["5Y","10/4",3.0,12,4.48,16.86,-12.38,0.34,24.66,1.0,29,67.2,40,2.0],["5Y","10/4",3.0,12,6.1,16.86,-10.77,0.441,21.63,1.0,39,66.8,40,2.0],["5Y","10/4",2.0,12,3.28,14.82,-11.54,0.284,25.81,1.0,45,69.4,40,3.0],["5Y","10/10",2.0,6,8.74,14.82,-6.08,0.605,19.45,1.0,45,72.8,100,3.0],["3Y","run4",1.0,3,0.21,18.55,-18.34,0.107,36.68,1.0,38,76.8,8,2.0],["4Y","run4",1.0,3,-2.56,15.11,-17.67,-0.07,38.36,1.0,55,72.8,8,3.0],["3Y","run4",1.0,6,-3.4,18.55,-21.95,-0.088,40.15,1.0,43,74.3,8,2.0],["3Y","run4",1.0,9,0.13,19.22,-19.09,0.1,35.71,1.0,44,72.7,8,2.0],["4Y","run4",1.0,6,-5.14,15.11,-20.25,-0.254,38.87,1.0,65,66.0,8,3.0],["3Y","run4",1.0,12,5.31,18.55,-13.24,0.385,26.92,1.0,33,68.7,8,2.0],["4Y","run4",1.0,9,-0.08,15.11,-15.19,0.07,29.73,1.0,43,66.1,8,3.0],["3Y","run4",2.0,3,-11.02,0.12,-11.13,-0.527,22.84,1.0,26,68.9,8,1.0],["3Y","run6",1.0,3,6.48,18.55,-12.07,0.443,28.87,1.0,51,73.7,18,2.0],["4Y","run4",1.0,12,2.21,15.11,-12.9,0.222,22.65,1.0,54,66.4,8,3.0],["3Y","run4",2.0,6,-16.53,0.12,-16.65,-0.974,25.4,1.0,27,59.4,8,1.0],["3Y","run4",2.0,9,-5.34,1.29,-6.63,-0.312,15.1,1.0,18,44.8,8,1.0],["3Y","run6",1.0,6,2.86,18.55,-15.69,0.252,33.05,1.0,49,67.3,18,2.0],["3Y","run4",2.0,12,-4.22,0.12,-4.33,-0.218,15.1,1.0,13,49.0,8,1.0],["3Y","run6",1.0,9,3.96,19.22,-15.25,0.308,28.37,1.0,55,73.5,18,2.0],["5Y","run6",1.0,3,-1.51,14.65,-16.16,-0.006,36.95,1.0,79,75.9,18,4.0],["3Y","run6",1.0,12,6.24,18.55,-12.31,0.46,22.14,1.0,36,63.1,18,2.0],["4Y","run4",2.0,3,1.57,19.35,-17.78,0.178,34.94,1.0,48,81.4,8,2.0],["3Y","run6",2.0,3,-1.94,0.12,-2.06,-0.055,12.72,1.0,19,61.0,18,1.0],["4Y","run4",2.0,6,5.4,19.35,-13.95,0.371,29.1,1.0,54,79.2,8,2.0],["3Y","run6",2.0,6,-0.06,0.12,-0.18,0.07,11.06,1.0,17,60.6,18,1.0],["3Y","run6",2.0,9,-2.46,1.29,-3.76,-0.037,18.31,1.0,25,75.4,18,1.0],["4Y","run4",2.0,9,6.2,19.35,-13.14,0.423,31.15,1.0,60,76.2,8,2.0],["5Y","run6",1.0,6,-3.11,14.65,-17.75,-0.105,39.98,1.0,86,72.3,18,4.0],["3Y","run6",2.0,12,-2.5,0.12,-2.61,-0.044,18.31,1.0,30,71.3,18,1.0],["4Y","run4",2.0,12,12.26,19.35,-7.08,0.742,22.61,1.0,57,75.4,8,2.0],["4Y","run4",3.0,3,-4.06,0.42,-4.48,-0.122,18.94,1.0,25,77.3,8,1.0],["5Y","run6",1.0,9,5.99,14.65,-8.66,0.446,21.45,1.0,91,73.0,18,4.0],["4Y","run4",3.0,6,-7.64,0.42,-8.07,-0.329,21.94,1.0,32,74.5,8,1.0],["5Y","run6",1.0,12,3.08,14.65,-11.57,0.272,22.26,1.0,63,69.1,18,4.0],["4Y","run4",3.0,9,-14.11,0.42,-14.53,-0.672,27.4,1.0,29,78.9,8,1.0],["4Y","run4",3.0,12,-13.71,0.42,-14.14,-0.668,27.4,1.0,35,74.5,8,1.0],["5Y","run6",2.0,3,3.44,15.38,-11.95,0.284,30.5,1.0,57,77.4,18,3.0],["3Y","run8",1.0,3,3.91,18.55,-14.64,0.297,32.17,1.0,43,80.4,32,2.0],["5Y","run6",2.0,6,1.48,15.38,-13.9,0.172,34.19,1.0,62,75.0,18,3.0],["4Y","run8",1.0,3,-3.02,15.11,-18.13,-0.095,40.46,1.0,57,75.7,32,3.0],["3Y","run8",1.0,6,0.5,18.55,-18.05,0.122,35.12,1.0,46,79.6,32,2.0],["5Y","run6",2.0,9,4.44,15.38,-10.95,0.335,29.33,1.0,59,81.9,18,3.0],["4Y","run8",1.0,6,-2.59,15.11,-17.7,-0.08,43.32,1.0,60,68.7,32,3.0],["3Y","run8",1.0,9,1.86,19.22,-17.36,0.193,33.35,1.0,55,76.1,32,2.0],["5Y","run6",2.0,12,6.66,15.38,-8.73,0.507,19.73,1.0,46,67.6,18,3.0],["4Y","run8",1.0,9,-2.23,15.11,-17.34,-0.044,43.46,1.0,65,78.1,32,3.0],["3Y","run8",1.0,12,2.29,18.55,-16.25,0.214,31.84,1.0,48,83.0,32,2.0],["4Y","run8",1.0,12,5.97,15.11,-9.14,0.463,22.7,1.0,46,69.5,32,3.0],["3Y","run8",2.0,3,-14.15,0.12,-14.26,-0.748,27.17,1.0,23,68.1,32,1.0],["3Y","run8",2.0,6,-13.85,0.12,-13.97,-0.788,24.54,1.0,23,52.6,32,1.0],["4Y","run8",2.0,3,8.69,19.35,-10.66,0.581,23.6,1.0,33,69.5,32,2.0],["5Y","run6",3.0,3,-2.88,18.05,-20.93,-0.058,33.72,1.0,48,78.4,18,2.0],["3Y","run8",2.0,9,-1.75,1.29,-3.05,-0.046,13.94,1.0,13,41.7,32,1.0],["3Y","run8",2.0,12,-2.9,0.12,-3.02,-0.127,13.94,1.0,13,41.4,32,1.0],["4Y","run8",2.0,6,7.91,19.35,-11.44,0.543,24.69,1.0,33,68.7,32,2.0],["5Y","run6",3.0,6,-4.88,18.05,-22.93,-0.183,33.72,1.0,45,71.0,18,2.0],["4Y","run8",2.0,9,6.89,19.35,-12.46,0.473,26.11,1.0,33,73.5,32,2.0],["4Y","run8",2.0,12,12.43,19.35,-6.92,0.771,19.49,1.0,30,68.5,32,2.0],["5Y","run6",3.0,9,-0.6,18.05,-18.65,0.05,30.31,1.0,57,67.8,18,2.0],["5Y","run6",3.0,12,-0.81,18.05,-18.85,0.044,28.82,1.0,43,71.4,18,2.0],["4Y","run8",3.0,3,2.48,0.42,2.05,0.225,13.75,1.0,21,73.3,32,1.0],["4Y","run8",3.0,6,-0.47,0.42,-0.9,0.06,13.91,1.0,26,68.5,32,1.0],["4Y","run8",3.0,9,-9.54,0.42,-9.97,-0.42,24.85,1.0,27,77.3,32,1.0],["4Y","run8",3.0,12,-12.29,0.42,-12.71,-0.591,24.85,1.0,36,73.7,32,1.0],["4Y","run6",1.0,3,-3.67,15.11,-18.78,-0.138,43.96,1.0,57,77.0,18,3.0],["4Y","run6",1.0,6,-6.46,15.11,-21.57,-0.335,43.51,1.0,69,68.4,18,3.0],["4Y","run6",1.0,9,-5.12,15.11,-20.23,-0.249,42.26,1.0,68,74.9,18,3.0],["4Y","run6",1.0,12,2.33,15.11,-12.78,0.23,22.34,1.0,51,65.7,18,3.0],["4Y","run6",2.0,3,6.81,19.35,-12.54,0.461,28.8,1.0,34,72.3,18,2.0],["4Y","run6",2.0,6,9.07,19.35,-10.28,0.582,27.03,1.0,36,71.5,18,2.0],["4Y","run6",2.0,9,8.29,19.35,-11.05,0.528,28.07,1.0,36,74.3,18,2.0],["4Y","run6",2.0,12,9.28,19.35,-10.07,0.591,25.99,1.0,23,70.1,18,2.0],["4Y","run6",3.0,3,-16.62,0.42,-17.04,-0.913,28.76,1.0,27,69.7,18,1.0]],"depths":["3Y","4Y","5Y"],"batches":["run4","run6","run8","10/10","10/4"],"popgen":{"run4":"4/2","10/4":"10/4","10/10":"10/10","run6":"6/3","run8":"8/4"}};
+  var FUND = "V";
+  var F = PAYLOAD.fields;
+  var ALL = PAYLOAD.rows.map(function (r) {
+    var o = {}; for (var i = 0; i < F.length; i++) o[F[i]] = r[i]; return o;
+  });
+  var DEPTHS = PAYLOAD.depths;
+  var BATCHES = PAYLOAD.batches;
+  var POP_GEN = PAYLOAD.popgen;
+
+  // Depth is an ordered quantity, so it gets ordered colour. Up to three depths
+  // use the validated categorical hues (they read fastest in a scatter, where
+  // every pair is adjacent); beyond three, a categorical set cannot clear the
+  // colour-blind gates, so fall back to the single-hue ordinal ramp -- light =
+  // least history, dark = most. Both variants are validator-clean in both modes.
+  var CAT3 = ['var(--s1)', 'var(--s2)', 'var(--s3)'];
+  var ORD_LIGHT = ['#86b6ef', '#5598e7', '#3987e5', '#2a78d6', '#1c5cab', '#104281'];
+  var ORD_DARK = ['#9ec5f4', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#184f95'];
+  var DEPTH_COLOR = {}, DEPTH_ORDINAL = DEPTHS.length > 3;
+  function computeDepthColors() {
+    if (!DEPTH_ORDINAL) {
+      DEPTHS.forEach(function (d, i) { DEPTH_COLOR[d] = CAT3[i]; });
+      return;
+    }
+    var dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    var stamped = document.documentElement.getAttribute('data-theme');
+    if (stamped === 'dark') dark = true; else if (stamped === 'light') dark = false;
+    var ramp = dark ? ORD_DARK : ORD_LIGHT;
+    DEPTHS.forEach(function (d, i) {
+      var pos = DEPTHS.length === 1 ? 0 : i / (DEPTHS.length - 1);
+      DEPTH_COLOR[d] = ramp[Math.round(pos * (ramp.length - 1))];
+    });
+  }
+  // The ordinal ramp is picked per theme, so re-render when the theme changes.
+  try {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render(); });
+  } catch (e) { /* older engines: theme toggle still handled below */ }
+  new MutationObserver(function () { render(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  var state = { depth: new Set(DEPTHS), batch: new Set(BATCHES), noLev: true, metric: 'median' };
+
+  var tip = document.getElementById('tip');
+  function showTip(e, html) {
+    tip.innerHTML = html; tip.style.opacity = '1';
+    var r = tip.getBoundingClientRect();
+    var x = e.clientX + 14, y = e.clientY + 14;
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+    if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  function hideTip() { tip.style.opacity = '0'; }
+  function bindTip(el, html) {
+    el.addEventListener('mousemove', function (e) { showTip(e, html); });
+    el.addEventListener('mouseleave', hideTip);
+  }
+
+  var MAXABS = 30;
+  function divColor(v) {
+    var t = Math.min(Math.abs(v) / MAXABS, 1);
+    return 'color-mix(in oklab, ' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ' ' + (t * 100).toFixed(1) + '%, var(--mid))';
+  }
+  // Pick label ink from the colour the browser actually painted, rather than
+  // guessing from the value. color-mix() resolves differently per theme and the
+  // poles differ in lightness, so a fixed rule breaks as soon as a colour moves.
+  function inkForBackground(bg) {
+    // A computed color-mix() is reported in its own space (oklab/oklch), not
+    // rgb, so both forms have to be handled -- reading oklab components as rgb
+    // silently inverts the choice.
+    var ok = bg.match(/^okla?b?c?h?\(\s*([\d.]+%?)/);
+    if (ok) {
+      var l = parseFloat(ok[1]);
+      if (ok[1].indexOf('%') >= 0) l /= 100;
+      return l > 0.62 ? '#141413' : '#ffffff';   // oklab L is perceptual
+    }
+    var m = bg.match(/[\d.]+/g);
+    if (!m || m.length < 3) return 'var(--text-primary)';
+    var f = [m[0], m[1], m[2]].map(function (v) {
+      v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    var lum = 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2];
+    return lum > 0.4 ? '#141413' : '#ffffff';
+  }
+  function applyCellInk(root) {
+    root.querySelectorAll('td.cell:not(.empty)').forEach(function (td) {
+      td.style.color = inkForBackground(getComputedStyle(td).backgroundColor);
+    });
+  }
+  // Tolerant of null so one empty group degrades to a dash instead of throwing
+  // and blanking every chart rendered after it.
+  function fmt(v, d) {
+    if (v === null || v === undefined || isNaN(v)) return '&#8212;';
+    d = d === undefined ? 2 : d;
+    return (v >= 0 ? '+' : '') + v.toFixed(d);
+  }
+  function median(a) {
+    if (!a.length) return null;
+    var s = a.slice().sort(function (x, y) { return x - y; });
+    var m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function agg(v) { return !v.length ? null : (state.metric === 'best' ? Math.max.apply(null, v) : median(v)); }
+  function aggLabel() { return state.metric === 'best' ? 'best' : 'median'; }
+  // \u escapes rather than literal punctuation: this string reaches textContent
+  // in the filter chips, where an HTML entity would not be decoded.
+  function batchLabel(b) {
+    return (POP_GEN[b] && POP_GEN[b] !== b) ? b + ' \u00b7 ' + POP_GEN[b] : b;
+  }
+
+  function ranks(a) {
+    var idx = a.map(function (v, i) { return [v, i]; }).sort(function (x, y) { return x[0] - y[0]; });
+    var r = new Array(a.length), i = 0;
+    while (i < idx.length) {
+      var j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++;
+      var avg = (i + j) / 2 + 1;
+      for (var k = i; k <= j; k++) r[idx[k][1]] = avg;
+      i = j + 1;
+    }
+    return r;
+  }
+  function pearson(x, y) {
+    var n = x.length; if (n < 3) return 0;
+    var mx = x.reduce(function (a, b) { return a + b; }, 0) / n;
+    var my = y.reduce(function (a, b) { return a + b; }, 0) / n;
+    var num = 0, dx = 0, dy = 0;
+    for (var i = 0; i < n; i++) { var a = x[i] - mx, b = y[i] - my; num += a * b; dx += a * a; dy += b * b; }
+    return (dx && dy) ? num / Math.sqrt(dx * dy) : 0;
+  }
+  function spearman(x, y) { return pearson(ranks(x), ranks(y)); }
+
+  function current() {
+    return ALL.filter(function (d) {
+      if (!state.depth.has(d.depth)) return false;
+      if (!state.batch.has(d.batch)) return false;
+      if (state.noLev && d.exp > 1.0) return false;
+      return true;
+    });
+  }
+
+  function buildSegs(host, items, key, label) {
+    host.innerHTML = '';
+    items.forEach(function (it) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'seg'; b.textContent = label ? label(it) : it;
+      b.setAttribute('aria-pressed', state[key].has(it) ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        if (state[key].has(it)) { if (state[key].size > 1) state[key].delete(it); }
+        else state[key].add(it);
+        b.setAttribute('aria-pressed', state[key].has(it) ? 'true' : 'false');
+        render();
+      });
+      host.appendChild(b);
+    });
+  }
+  buildSegs(document.getElementById('f-depth'), DEPTHS, 'depth');
+  buildSegs(document.getElementById('f-batch'), BATCHES, 'batch', batchLabel);
+  document.getElementById('f-lev').addEventListener('change', function (e) { state.noLev = e.target.checked; render(); });
+  document.querySelectorAll('#f-metric .seg').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.metric = b.dataset.m;
+      document.querySelectorAll('#f-metric .seg').forEach(function (o) {
+        o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      });
+      render();
+    });
+  });
+
+  function note(id, heading, paras) {
+    document.getElementById(id).innerHTML = '<span class="nh">' + heading + '</span>' +
+      paras.filter(Boolean).map(function (p) { return '<p>' + p + '</p>'; }).join('');
+  }
+
+  function renderKpis(data) {
+    var pos = data.filter(function (d) { return d.excA > 0; });
+    var best = data.slice().sort(function (a, b) { return b.excA - a.excA; })[0];
+    var medAll = median(data.map(function (d) { return d.excA; }));
+    var items = [
+      { k: 'Runs in view', v: String(data.length), n: ALL.length + ' completed overall' },
+      { k: 'Beat buy &amp; hold', v: String(pos.length), n: data.length ? (100 * pos.length / data.length).toFixed(1) + '% of runs in view' : '&#8212;' },
+      { k: 'Median excess', v: medAll === null ? '&#8212;' : fmt(medAll) + '%', n: 'the typical run trails B&amp;H' },
+      { k: 'Best excess', v: best ? fmt(best.excA) + '%' : '&#8212;',
+        n: best ? best.depth + ' &#183; ' + best.lb + 'Y/' + best.off + 'M &#183; ' + best.batch : '&#8212;' }
+    ];
+    document.getElementById('kpis').innerHTML = items.map(function (i) {
+      return '<div class="kpi"><div class="k">' + i.k + '</div><div class="v">' + i.v + '</div><div class="n">' + i.n + '</div></div>';
+    }).join('');
+  }
+
+  function renderFacets(data) {
+    var host = document.getElementById('facets');
+    host.innerHTML = '';
+    var offs = Array.from(new Set(ALL.map(function (d) { return d.off; }))).sort(function (a, b) { return a - b; });
+    var lbs = Array.from(new Set(ALL.map(function (d) { return d.lb; }))).sort(function (a, b) { return a - b; });
+    var bestVal = -Infinity;
+    DEPTHS.forEach(function (dp) {
+      if (!state.depth.has(dp)) return;
+      lbs.forEach(function (lb) { offs.forEach(function (off) {
+        var c = data.filter(function (d) { return d.depth === dp && d.lb === lb && d.off === off; });
+        if (c.length) { var m = agg(c.map(function (d) { return d.excA; })); if (m > bestVal) bestVal = m; }
+      }); });
+    });
+    DEPTHS.forEach(function (dp) {
+      if (!state.depth.has(dp)) return;
+      var sub = data.filter(function (d) { return d.depth === dp; });
+      var wrap = document.createElement('div');
+      wrap.className = 'facet';
+      wrap.innerHTML = '<h3>' + dp + ' history</h3><p class="fnote">' + sub.length +
+        ' runs &#183; rows = lookback, cols = offset (months)</p>';
+      var t = document.createElement('table');
+      t.className = 'hm';
+      t.innerHTML = '<tr><th></th>' + offs.map(function (o) { return '<th>' + o + '</th>'; }).join('') + '</tr>' +
+        lbs.map(function (lb) {
+          return '<tr><th class="rowh">' + lb + 'Y</th>' + offs.map(function (off) {
+            var c = sub.filter(function (d) { return d.lb === lb && d.off === off; });
+            if (!c.length) return '<td class="cell empty">&#8211;</td>';
+            var m = agg(c.map(function (d) { return d.excA; }));
+            return '<td class="cell' + (m === bestVal ? ' best' : '') + '" data-lb="' + lb + '" data-off="' + off +
+              '" style="background:' + divColor(m) + '">' + fmt(m, 1) + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
+      wrap.appendChild(t); host.appendChild(wrap);
+      t.querySelectorAll('td.cell:not(.empty)').forEach(function (td) {
+        var lbv = parseFloat(td.dataset.lb), offv = parseInt(td.dataset.off, 10);
+        var c = sub.filter(function (d) { return d.lb === lbv && d.off === offv; });
+        var vals = c.map(function (d) { return d.excA; });
+        var npos = vals.filter(function (v) { return v > 0; }).length;
+        bindTip(td, '<b>' + dp + ' &#183; ' + lbv + 'Y lookback &#183; ' + offv + 'M offset</b><br>' +
+          '<span class="tnum">' + aggLabel() + ' excess ' + fmt(agg(vals)) + '%</span><br>' +
+          '<span class="tnum">range ' + fmt(Math.min.apply(null, vals), 1) + '% to ' + fmt(Math.max.apply(null, vals), 1) +
+          '% over ' + c.length + ' run' + (c.length > 1 ? 's' : '') + '</span><br>' +
+          '<span class="tnum">' + npos + ' of ' + c.length + ' beat buy &amp; hold</span>');
+      });
+    });
+    if (!host.children.length) host.innerHTML = '<p class="sub">No runs match the current filters.</p>';
+    applyCellInk(host);
+    document.getElementById('scale-legend').innerHTML =
+      '<span class="lg" style="gap:9px"><span style="font-size:11.5px">Excess ann.</span>' +
+      [-30, -20, -10, 0, 10, 20, 30].map(function (s) {
+        return '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:3px">' +
+          '<span style="width:34px;height:11px;border-radius:2px;background:' + divColor(s) + '"></span>' +
+          '<span style="font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums">' + (s > 0 ? '+' + s : s) + '</span></span>';
+      }).join('') + '</span><span class="lg"><span class="lgdot" style="background:var(--good)"></span>best cell in view</span>';
+
+    var cells = {};
+    data.forEach(function (d) { var k = d.depth + '|' + d.lb + '|' + d.off; (cells[k] = cells[k] || []).push(d.excA); });
+    var nCells = Object.keys(cells).length;
+    var posCells = Object.keys(cells).filter(function (k) { return median(cells[k]) > 0; });
+    var bestCell = Object.keys(cells).sort(function (a, b) { return Math.max.apply(null, cells[b]) - Math.max.apply(null, cells[a]); })[0];
+    var bc = bestCell ? bestCell.split('|') : null;
+    note('note-hm', 'Remarks', [
+      (posCells.length === 0
+        ? 'Every cell is on the losing side in <b>Median run</b> mode: at typical settings the strategy trails ' +
+          'buy &amp; hold no matter where you sit in the grid.'
+        : 'Most cells are red in <b>Median run</b> mode. Only <b>' + posCells.length + ' of ' + nCells +
+          '</b> cell' + (posCells.length === 1 ? ' has' : 's have') + ' a median above zero.'),
+      bc ? 'The strongest cell is <b>' + bc[0] + ' history, ' + bc[1] + 'Y lookback, ' + bc[2] + 'M offset</b>. ' +
+        'Switch to <b>Best run</b> to see its ceiling &#8212; if the neighbouring cells stay red, that is a narrow ' +
+        'island rather than a broad plateau, and it will need replication before you trust it.' : '',
+      'Dashed cells were never run. A lookback equal to the history depth leaves no out-of-sample period, so those ' +
+      'runs complete with an empty window and are excluded here.'
+    ]);
+  }
+
+  function renderDims(data) {
+    var host = document.getElementById('dims');
+    host.innerHTML = '';
+    var defs = [
+      { title: 'Batch (GA population / generations)', key: 'batch',
+        levels: BATCHES.filter(function (b) { return state.batch.has(b); }), label: batchLabel },
+      { title: 'History depth', key: 'depth',
+        levels: DEPTHS.filter(function (d) { return state.depth.has(d); }), label: function (v) { return v; } },
+      { title: 'Lookback (tuning window)', key: 'lb',
+        levels: Array.from(new Set(data.map(function (d) { return d.lb; }))).sort(function (a, b) { return a - b; }),
+        label: function (v) { return v + 'Y'; } },
+      { title: 'Offset (re-tune step)', key: 'off',
+        levels: Array.from(new Set(data.map(function (d) { return d.off; }))).sort(function (a, b) { return a - b; }),
+        label: function (v) { return v + 'M'; } },
+      { title: 'Running years (depth &#8722; lookback)', key: 'ry',
+        levels: Array.from(new Set(data.map(function (d) { return d.ry; })))
+          .filter(function (v) { return v !== null; }).sort(function (a, b) { return a - b; }),
+        label: function (v) { return v + 'Y'; } }
+    ];
+    var SCALE = 30, spans = {}, thinAny = false;
+    defs.forEach(function (def) {
+      var block = document.createElement('div');
+      block.className = 'dimblock';
+      var vals = [];
+      var rowsHtml = def.levels.map(function (lv) {
+        var c = data.filter(function (d) { return d[def.key] === lv; });
+        if (!c.length) return '';
+        var m = agg(c.map(function (d) { return d.excA; }));
+        vals.push(m);
+        var pct = Math.min(Math.abs(m) / SCALE, 1) * 50;
+        var thin = c.length < 3; if (thin) thinAny = true;
+        var style = (m >= 0 ? 'left:50%;width:' + pct + '%;background:var(--pos)'
+                            : 'left:' + (50 - pct) + '%;width:' + pct + '%;background:var(--neg)') + (thin ? ';opacity:.42' : '');
+        return '<div class="drow" data-key="' + def.key + '" data-lv="' + lv + '">' +
+          '<span class="dname">' + def.label(lv) + '</span>' +
+          '<span class="dtrack"><span class="dbar" style="' + style + '"></span></span>' +
+          '<span><span class="dval" style="color:' + (m >= 0 ? 'var(--pos)' : 'var(--neg)') + (thin ? ';opacity:.6' : '') +
+          '">' + fmt(m, 1) + '</span> <span class="dn">n=' + c.length + (thin ? '*' : '') + '</span></span></div>';
+      }).join('');
+      spans[def.key] = vals.length ? (Math.max.apply(null, vals) - Math.min.apply(null, vals)) : 0;
+      block.innerHTML = '<h3>' + def.title + '</h3>' + (rowsHtml || '<p class="dn">no runs</p>');
+      host.appendChild(block);
+      block.querySelectorAll('.drow').forEach(function (row) {
+        var k = row.dataset.key;
+        // dataset values are strings; numeric dimensions must be parsed back or
+        // the strict compare below silently matches nothing.
+        var NUMERIC = { lb: 1, off: 1, ry: 1 };
+        var lv = NUMERIC[k] ? parseFloat(row.dataset.lv) : row.dataset.lv;
+        var c = data.filter(function (d) { return d[k] === lv; });
+        var best = c.slice().sort(function (a, b) { return b.excA - a.excA; })[0];
+        bindTip(row, '<b>' + def.title + ' = ' + def.label(lv) + '</b><br>' +
+          '<span class="tnum">' + aggLabel() + ' excess ' + fmt(agg(c.map(function (d) { return d.excA; }))) + '%</span><br>' +
+          '<span class="tnum">best in group ' + fmt(best.excA) + '%</span> (' + best.depth + ' ' + best.lb + 'Y/' + best.off + 'M)<br>' +
+          c.length + ' run' + (c.length > 1 ? 's' : '') + (c.length < 3 ? ' &#8212; too few to trust' : ''));
+      });
+    });
+    var NAMES = { batch: 'batch', depth: 'history depth', lb: 'lookback', off: 'offset' };
+    var widest = Object.keys(spans).sort(function (a, b) { return spans[b] - spans[a]; })[0];
+    note('note-dim', 'Remarks', [
+      'If every bar in every dimension sits in a narrow band on the same side of zero, no single dimension sorts ' +
+      'good runs from bad ones &#8212; the useful negative result, because it means there is no knob to simply turn up.',
+      'The widest spread here belongs to <b>' + NAMES[widest] + '</b> (' + spans[widest].toFixed(1) +
+      ' points between its best and worst level). Compare that against the spread <i>within</i> a single cell in ' +
+      'chart 7: when within-cell spread is larger, run-to-run variance is swamping every setting you chose.',
+      thinAny ? 'Faded bars marked * rest on fewer than three runs &#8212; one-off probes rather than swept levels. ' +
+        'Read them as anecdotes.' : ''
+    ]);
+  }
+
+  /* ---------- 3. running years (depth - lookback) ---------- */
+  function renderRunYears(data) {
+    var svg = document.getElementById('runyrs');
+    var groups = {};
+    data.forEach(function (d) { if (d.ry !== null) (groups[d.ry] = groups[d.ry] || []).push(d); });
+    var keys = Object.keys(groups).map(parseFloat).sort(function (a, b) { return a - b; });
+    if (!keys.length) {
+      svg.innerHTML = '';
+      note('note-ry', 'Remarks', ['No runs with a resolvable history depth in the current view.']);
+      return;
+    }
+    var W = 820, H = 400, M = { t: 16, r: 20, b: 52, l: 56 };
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var pw = W - M.l - M.r, ph = H - M.t - M.b;
+    var ys = data.map(function (d) { return d.excA; });
+    var yMin = Math.min(-5, Math.floor((Math.min.apply(null, ys) - 2) / 5) * 5);
+    var yMax = Math.max(5, Math.ceil((Math.max.apply(null, ys) + 2) / 5) * 5);
+    function Y(v) { return M.t + ph - ((v - yMin) / (yMax - yMin)) * ph; }
+    // Categorical x: buckets are evenly spaced regardless of their numeric gap,
+    // so a lone 17Y bucket cannot squash the 1-4Y range that carries the story.
+    var band = pw / keys.length;
+    function X(i) { return M.l + band * (i + 0.5); }
+
+    var parts = [], yStep = (yMax - yMin) > 60 ? 20 : 10;
+    for (var gy = yMin; gy <= yMax; gy += yStep) {
+      parts.push('<line x1="' + M.l + '" y1="' + Y(gy) + '" x2="' + (M.l + pw) + '" y2="' + Y(gy) + '" stroke="var(--grid)" stroke-width="1"/>');
+      parts.push('<text x="' + (M.l - 8) + '" y="' + (Y(gy) + 4) + '" text-anchor="end" font-size="10.5" fill="var(--muted)" style="font-variant-numeric:tabular-nums">' + gy + '</text>');
+    }
+    parts.push('<line x1="' + M.l + '" y1="' + Y(0) + '" x2="' + (M.l + pw) + '" y2="' + Y(0) + '" stroke="var(--axis)" stroke-width="2"/>');
+    parts.push('<text x="' + (M.l + pw) + '" y="' + (Y(0) - 7) + '" text-anchor="end" font-size="11" fill="var(--text-secondary)">buy &amp; hold parity</text>');
+    parts.push('<text x="' + (M.l + pw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="var(--text-secondary)">running years = history depth &#8722; lookback (out-of-sample window)</text>');
+    parts.push('<text transform="translate(13,' + (M.t + ph / 2) + ') rotate(-90)" text-anchor="middle" font-size="11" fill="var(--text-secondary)">excess ann. return (%)</text>');
+
+    keys.forEach(function (ry, i) {
+      var g = groups[ry], cx = X(i);
+      var vals = g.map(function (d) { return d.excA; });
+      var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), md = median(vals);
+      // range spine + median tick: the spread is the point of this chart
+      parts.push('<line x1="' + cx + '" y1="' + Y(mn) + '" x2="' + cx + '" y2="' + Y(mx) + '" stroke="var(--axis)" stroke-width="1"/>');
+      g.forEach(function (d, j) {
+        // deterministic jitter so overlapping runs stay countable
+        var jit = ((j * 2654435761) % 1000) / 1000 - 0.5;
+        var x = cx + jit * Math.min(band * 0.62, 54);
+        parts.push('<circle class="ry" data-k="' + i + '" data-j="' + j + '" cx="' + x.toFixed(1) + '" cy="' + Y(d.excA) +
+          '" r="3.8" fill="' + (DEPTH_COLOR[d.depth] || 'var(--s1)') + '" fill-opacity="0.7" stroke="var(--surface-1)" stroke-width="1.5"/>');
+      });
+      var half = Math.min(band * 0.34, 32);
+      parts.push('<line x1="' + (cx - half) + '" y1="' + Y(md) + '" x2="' + (cx + half) + '" y2="' + Y(md) + '" stroke="var(--text-primary)" stroke-width="2.5"/>');
+      parts.push('<text x="' + cx + '" y="' + (M.t + ph + 18) + '" text-anchor="middle" font-size="11.5" font-weight="620" fill="var(--text-primary)">' + ry + 'Y</text>');
+      parts.push('<text x="' + cx + '" y="' + (M.t + ph + 32) + '" text-anchor="middle" font-size="10" fill="var(--muted)" style="font-variant-numeric:tabular-nums">n=' + g.length + ' &#183; spread ' + (mx - mn).toFixed(0) + '</text>');
+    });
+    svg.innerHTML = parts.join('');
+    svg.querySelectorAll('circle.ry').forEach(function (c) {
+      var g = groups[keys[parseInt(c.dataset.k, 10)]], d = g[parseInt(c.dataset.j, 10)];
+      c.setAttribute('pointer-events', 'all'); c.style.cursor = 'crosshair';
+      bindTip(c, '<b>' + d.ry + 'Y running (' + d.depth + ' depth &#8722; ' + d.lb + 'Y lookback)</b><br>' +
+        '<span class="tnum">excess ' + fmt(d.excA) + '% &#183; ' + d.off + 'M offset &#183; ' + batchLabel(d.batch) + '</span><br>' +
+        '<span class="tnum">Sharpe ' + d.sharpe.toFixed(2) + ' &#183; drawdown ' + d.dd.toFixed(1) + '%</span>');
+    });
+    document.getElementById('ry-legend').innerHTML =
+      DEPTHS.filter(function (dp) { return state.depth.has(dp); }).map(function (dp) {
+        return '<span class="lg"><span class="lgdot" style="background:' + DEPTH_COLOR[dp] + '"></span>' + dp + ' history</span>';
+      }).join('') + '<span class="lg"><span style="width:16px;height:2.5px;background:var(--text-primary)"></span>median</span>';
+
+    // remarks: does a shorter window inflate the spread, and where do wins live?
+    var stats = keys.map(function (ry) {
+      var v = groups[ry].map(function (d) { return d.excA; });
+      return { ry: ry, n: v.length, spread: Math.max.apply(null, v) - Math.min.apply(null, v),
+               med: median(v), pos: v.filter(function (x) { return x > 0; }).length };
+    });
+    var solid = stats.filter(function (s) { return s.n >= 5; });
+    var shortest = solid[0], longest = solid[solid.length - 1];
+    var totalPos = stats.reduce(function (a, s) { return a + s.pos; }, 0);
+    var shortPos = shortest ? shortest.pos : 0;
+    var funnel = shortest && longest && shortest.spread > longest.spread * 1.3;
+    note('note-ry', 'Remarks', [
+      'This is a comparability check, not a tuning knob &#8212; you do not choose running years directly, you get ' +
+      'them from the depth and lookback you picked. But it decides how much a result is worth.',
+      (!shortest || !longest ? '' :
+        funnel
+        ? 'The funnel is the finding: <b>' + shortest.ry + 'Y</b> windows spread <b>' + shortest.spread.toFixed(0) +
+          ' points</b> worst-to-best while <b>' + longest.ry + 'Y</b> windows spread only <b>' + longest.spread.toFixed(0) +
+          '</b>. A short window does not make the strategy better &#8212; it makes the answer noisier in both directions, ' +
+          'so its extremes are the first results to distrust.'
+        : longest.spread > shortest.spread * 1.3
+        ? 'Unusually, the spread <i>widens</i> with more test data (' + shortest.spread.toFixed(0) + ' points at ' +
+          shortest.ry + 'Y vs ' + longest.spread.toFixed(0) + ' at ' + longest.ry + 'Y). That points at genuine ' +
+          'regime differences inside the longer windows rather than small-sample noise &#8212; worth looking at the ' +
+          'long-window runs individually.'
+        : 'Spread is comparable across window lengths here (' + shortest.spread.toFixed(0) + ' vs ' +
+          longest.spread.toFixed(0) + ' points), so results are not obviously dominated by how much test data each run saw.'),
+      (!shortest || !longest ? '' :
+        'Watch the medians as the window grows: <b>' + fmt(shortest.med, 1) + '% at ' + shortest.ry + 'Y</b> against <b>' +
+        fmt(longest.med, 1) + '% at ' + longest.ry + 'Y</b>. ' +
+        (shortest.med - longest.med > 2
+          ? 'The typical result gets <b>worse</b> with more evidence, which is the direction that should worry you: ' +
+            'whatever looks good on a short window is not surviving a longer one.'
+          : longest.med - shortest.med > 2
+          ? 'The typical result <b>improves</b> with more evidence &#8212; the more encouraging direction, since the ' +
+            'better numbers rest on more data rather than less.'
+          : 'The typical result is stable across window lengths, so the central estimate is not an artifact of how ' +
+            'much test data a run happened to get.')),
+      (totalPos > 0 && shortest
+        ? '<b>' + shortPos + ' of the ' + totalPos + '</b> runs that beat buy &amp; hold sit in the shortest bucket. ' +
+          (shortPos / Math.max(totalPos, 1) > 0.4
+            ? 'That is where the wins are concentrated &#8212; and it is also the least evidence. Before promoting any ' +
+              'of them, re-run the same parameters on a deeper history so the same conclusion has to survive a longer ' +
+              'out-of-sample window.'
+            : 'The wins are not concentrated in the noisiest bucket, which makes them more credible.')
+        : 'No run in view beat buy &amp; hold at any window length.'),
+      'Buckets are spaced evenly rather than to scale, so a single deep-history bucket cannot squash the rest.'
+    ]);
+  }
+
+  var CORR_FACTORS = [
+    { k: 'ry', t: 'Running years (test window)' },
+    { k: 'lb', t: 'Lookback (years)' }, { k: 'off', t: 'Offset (months)' },
+    { k: 'budget', t: 'GA budget (pop x gen)' }, { k: 'trades', t: 'Trade count' },
+    { k: 'inv', t: 'Time invested (%)' }, { k: 'dd', t: 'Max drawdown (%)' },
+    { k: 'sharpe', t: 'Sharpe ratio' }
+  ];
+  function renderCorr(data) {
+    var svg = document.getElementById('corr');
+    var W = 820, M = { t: 10, r: 120, b: 34, l: 170 }, rowH = 30;
+    var H = M.t + M.b + CORR_FACTORS.length * rowH;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var pw = W - M.l - M.r;
+    var ys = data.map(function (d) { return d.excA; });
+    var stats = CORR_FACTORS.map(function (f) {
+      return { t: f.t, k: f.k, rho: data.length > 2 ? spearman(data.map(function (d) { return d[f.k]; }), ys) : 0 };
+    }).sort(function (a, b) { return Math.abs(b.rho) - Math.abs(a.rho); });
+    var cx = M.l + pw / 2;
+    function X(r) { return cx + r * (pw / 2); }
+    var parts = [];
+    [-1, -0.5, 0, 0.5, 1].forEach(function (g) {
+      parts.push('<line x1="' + X(g) + '" y1="' + M.t + '" x2="' + X(g) + '" y2="' + (M.t + stats.length * rowH) +
+        '" stroke="' + (g === 0 ? 'var(--axis)' : 'var(--grid)') + '" stroke-width="' + (g === 0 ? 2 : 1) + '"/>');
+      parts.push('<text x="' + X(g) + '" y="' + (M.t + stats.length * rowH + 17) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)" style="font-variant-numeric:tabular-nums">' + g + '</text>');
+    });
+    parts.push('<text x="' + cx + '" y="' + (M.t + stats.length * rowH + 32) + '" text-anchor="middle" font-size="11" fill="var(--text-secondary)">Spearman rho vs excess annualized return</text>');
+    stats.forEach(function (s, i) {
+      var y = M.t + i * rowH, bh = 14, by = y + (rowH - bh) / 2;
+      var w = Math.abs(s.rho) * (pw / 2), x = s.rho >= 0 ? cx : cx - w;
+      parts.push('<text x="' + (M.l - 12) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="end" font-size="12" fill="var(--text-secondary)">' + s.t + '</text>');
+      parts.push('<rect class="cbar" data-i="' + i + '" x="' + x + '" y="' + by + '" width="' + Math.max(w, 1) + '" height="' + bh +
+        '" rx="3" fill="' + (s.rho >= 0 ? 'var(--pos)' : 'var(--neg)') + '" fill-opacity="' + (Math.abs(s.rho) >= 0.3 ? 1 : 0.5) + '"/>');
+      parts.push('<text x="' + (W - M.r + 12) + '" y="' + (y + rowH / 2 + 4) + '" font-size="12" font-weight="600" fill="' +
+        (s.rho >= 0 ? 'var(--pos)' : 'var(--neg)') + '" style="font-variant-numeric:tabular-nums">' + fmt(s.rho, 2) + '</text>');
+    });
+    svg.innerHTML = parts.join('');
+    svg.querySelectorAll('rect.cbar').forEach(function (r) {
+      var s = stats[parseInt(r.dataset.i, 10)];
+      r.setAttribute('pointer-events', 'all');
+      bindTip(r, '<b>' + s.t + '</b><br><span class="tnum">Spearman rho ' + fmt(s.rho, 3) + '</span><br>' +
+        (Math.abs(s.rho) < 0.2 ? 'Essentially no monotonic relationship.'
+          : Math.abs(s.rho) < 0.4 ? 'Weak but visible relationship.' : 'Moderate relationship.') + '<br>' + data.length + ' runs');
+    });
+    var DERIVED = { sharpe: 1, dd: 1 };
+    var top = stats[0];
+    var ctrl = stats.filter(function (s) { return ['lb', 'off', 'budget'].indexOf(s.k) >= 0; })
+      .sort(function (a, b) { return Math.abs(b.rho) - Math.abs(a.rho); })[0];
+    var budget = stats.filter(function (s) { return s.k === 'budget'; })[0];
+    note('note-corr', 'Remarks', [
+      'The strongest association is <b>' + top.t.toLowerCase() + '</b> at rho ' + fmt(top.rho, 2) + '. ' +
+      (DERIVED[top.k]
+        ? 'Treat that as bookkeeping, not insight: it is derived from the same equity curve as the return, so it has ' +
+          'to move together. It tells you nothing you can act on.'
+        : Math.abs(top.rho) < 0.4 ? 'Even that is only a moderate rank correlation &#8212; nothing here is a lever that reliably buys return.'
+                                  : 'That is a genuine relationship worth exploiting.'),
+      ctrl ? 'Of the three settings you actually control &#8212; lookback, offset and GA budget &#8212; the strongest is ' +
+        '<b>' + ctrl.t.toLowerCase() + '</b> at rho ' + fmt(ctrl.rho, 2) + '. ' +
+        (budget && Math.abs(budget.rho) < 0.2
+          ? 'Notably <b>GA budget sits near zero</b>: a bigger population run for more generations does not produce ' +
+            'better results. That is the clearest argument for stopping the brute-force sweep.'
+          : (budget && budget.rho > 0.2 ? 'GA budget shows a real positive tilt, so deeper search is still paying here.' : '')) : '',
+      'Read these as description, not causation: drawdown and Sharpe are computed from the same equity curve as the ' +
+      'return, so their correlation is partly definitional. The parameter rows are the honest ones.'
+    ]);
+  }
+
+  function drawScatter(svg, data, xKey, xLabel, opts) {
+    opts = opts || {};
+    var W = opts.W || 820, H = opts.H || 400, M = { t: 14, r: 18, b: 46, l: 56 };
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var pw = W - M.l - M.r, ph = H - M.t - M.b;
+    if (!data.length) { svg.innerHTML = ''; return; }
+    var xs = data.map(function (d) { return d[xKey]; }), ys = data.map(function (d) { return d.excA; });
+    var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+    if (xMin === xMax) { xMin -= 1; xMax += 1; }
+    var pad = (xMax - xMin) * 0.06; xMin -= pad; xMax += pad;
+    if (opts.xFromZero) xMin = Math.min(0, xMin);
+    var yMin = Math.min(-5, Math.floor((Math.min.apply(null, ys) - 2) / 5) * 5);
+    var yMax = Math.max(5, Math.ceil((Math.max.apply(null, ys) + 2) / 5) * 5);
+    function X(v) { return M.l + ((v - xMin) / (xMax - xMin)) * pw; }
+    function Y(v) { return M.t + ph - ((v - yMin) / (yMax - yMin)) * ph; }
+    var parts = [], yStep = (yMax - yMin) > 60 ? 20 : 10;
+    for (var i = 0; i <= 5; i++) {
+      var xv = xMin + (xMax - xMin) * i / 5;
+      parts.push('<line x1="' + X(xv) + '" y1="' + M.t + '" x2="' + X(xv) + '" y2="' + (M.t + ph) + '" stroke="var(--grid)" stroke-width="1"/>');
+      parts.push('<text x="' + X(xv) + '" y="' + (M.t + ph + 17) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)" style="font-variant-numeric:tabular-nums">' +
+        (Math.abs(xv) >= 100 ? xv.toFixed(0) : xv.toFixed(Math.abs(xv) < 10 ? 1 : 0)) + '</text>');
+    }
+    for (var gy = yMin; gy <= yMax; gy += yStep) {
+      parts.push('<line x1="' + M.l + '" y1="' + Y(gy) + '" x2="' + (M.l + pw) + '" y2="' + Y(gy) + '" stroke="var(--grid)" stroke-width="1"/>');
+      parts.push('<text x="' + (M.l - 8) + '" y="' + (Y(gy) + 4) + '" text-anchor="end" font-size="10.5" fill="var(--muted)" style="font-variant-numeric:tabular-nums">' + gy + '</text>');
+    }
+    parts.push('<line x1="' + M.l + '" y1="' + Y(0) + '" x2="' + (M.l + pw) + '" y2="' + Y(0) + '" stroke="var(--axis)" stroke-width="2"/>');
+    if (opts.parityLabel !== false) {
+      parts.push('<text x="' + (M.l + pw) + '" y="' + (Y(0) - 7) + '" text-anchor="end" font-size="11" fill="var(--text-secondary)">buy &amp; hold parity</text>');
+    }
+    parts.push('<text x="' + (M.l + pw / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--text-secondary)">' + xLabel + '</text>');
+    parts.push('<text transform="translate(13,' + (M.t + ph / 2) + ') rotate(-90)" text-anchor="middle" font-size="11" fill="var(--text-secondary)">excess ann. return (%)</text>');
+    var best = data.slice().sort(function (a, b) { return b.excA - a.excA; })[0];
+    data.forEach(function (d, i) {
+      var isBest = opts.markBest !== false && d === best;
+      parts.push('<circle class="pt" data-i="' + i + '" cx="' + X(d[xKey]) + '" cy="' + Y(d.excA) + '" r="' + (isBest ? 7 : (opts.r || 4.5)) +
+        '" fill="' + (DEPTH_COLOR[d.depth] || 'var(--s1)') + '" fill-opacity="' + (isBest ? 1 : 0.7) + '" stroke="var(--surface-1)" stroke-width="2"/>');
+      if (isBest) parts.push('<circle cx="' + X(d[xKey]) + '" cy="' + Y(d.excA) + '" r="12" fill="none" stroke="var(--good)" stroke-width="2"/>');
+    });
+    if (opts.labelBest && best) {
+      var lx = X(best[xKey]) + 18, anchor = 'start';
+      if (lx > M.l + pw - 160) { lx = X(best[xKey]) - 18; anchor = 'end'; }
+      parts.push('<text x="' + lx + '" y="' + (Y(best.excA) - 12) + '" text-anchor="' + anchor + '" font-size="11.5" font-weight="650" fill="var(--text-primary)">' +
+        fmt(best.excA, 2) + '% &#183; ' + best.depth + ' ' + best.lb + 'Y/' + best.off + 'M</text>');
+      parts.push('<text x="' + lx + '" y="' + (Y(best.excA) + 2) + '" text-anchor="' + anchor + '" font-size="11" fill="var(--text-secondary)">Sharpe ' +
+        best.sharpe.toFixed(2) + ' &#183; drawdown ' + best.dd.toFixed(1) + '%</text>');
+    }
+    svg.innerHTML = parts.join('');
+    svg.querySelectorAll('circle.pt').forEach(function (c) {
+      var d = data[parseInt(c.dataset.i, 10)];
+      c.setAttribute('pointer-events', 'all'); c.style.cursor = 'crosshair';
+      bindTip(c, '<b>' + d.depth + ' &#183; ' + d.lb + 'Y/' + d.off + 'M &#183; ' + batchLabel(d.batch) + '</b><br>' +
+        '<span class="tnum">excess ' + fmt(d.excA) + '% &#183; strategy ' + d.adaptA.toFixed(1) + '% vs B&amp;H ' + d.bhA.toFixed(1) + '%</span><br>' +
+        '<span class="tnum">Sharpe ' + d.sharpe.toFixed(2) + ' &#183; drawdown ' + d.dd.toFixed(1) + '% &#183; ' + d.trades + ' trades &#183; ' + d.inv.toFixed(0) + '% invested</span>' +
+        (d.exp > 1 ? '<br><span class="tnum">exposure ' + d.exp.toFixed(2) + '&#215; (leveraged)</span>' : ''));
+    });
+  }
+
+  function renderScatter(data) {
+    drawScatter(document.getElementById('scatter'), data, 'dd', 'maximum drawdown (%)', { labelBest: true, xFromZero: true });
+    document.getElementById('sc-legend').innerHTML =
+      DEPTHS.filter(function (dp) { return state.depth.has(dp); }).map(function (dp) {
+        return '<span class="lg"><span class="lgdot" style="background:' + DEPTH_COLOR[dp] + '"></span>' + dp + ' history</span>';
+      }).join('') + '<span class="lg"><span class="lgdot" style="border:2px solid var(--good);background:transparent"></span>best run in view</span>';
+    var best = data.slice().sort(function (a, b) { return b.excA - a.excA; })[0];
+    var pos = data.filter(function (d) { return d.excA > 0; });
+    var cut = median(data.map(function (d) { return d.dd; })) || 0;
+    var low = data.filter(function (d) { return d.dd <= cut; });
+    var lowPos = low.filter(function (d) { return d.excA > 0; });
+    var high = data.filter(function (d) { return d.dd > cut; });
+    var highPos = high.filter(function (d) { return d.excA > 0; });
+    note('note-sc', 'Remarks', [
+      'The cloud sits ' + (pos.length / data.length < 0.15 ? 'almost entirely' : 'largely') + ' below the parity line: <b>' +
+      (data.length - pos.length) + ' of ' + data.length + '</b> runs in view lose to buy &amp; hold. What this adds over a ' +
+      'league table is the <i>shape</i> &#8212; if the losing mass spreads across every drawdown level, taking more risk ' +
+      'did not buy more return.',
+      best ? 'The best run sits at <b>' + best.dd.toFixed(1) + '% drawdown for ' + fmt(best.excA) + '% excess</b>. ' +
+        'Check whether it lies on a trend the other points define or sits off the cloud entirely; an isolated point ' +
+        'needs replication rather than celebration.' : '',
+      'Splitting at the median drawdown (' + cut.toFixed(1) + '%): <b>' + lowPos.length + ' of ' + low.length +
+      '</b> low-drawdown runs beat buy &amp; hold versus <b>' + highPos.length + ' of ' + high.length + '</b> above it. ' +
+      (lowPos.length > highPos.length
+        ? 'Whatever works here works by <i>staying out of trouble</i>, not by capturing more upside.'
+        : 'Risk-taking is not being punished on this name the way it usually is.')
+    ]);
+  }
+
+  var SM = [
+    { k: 'trades', t: 'Trade count', x: 'number of trades', why: 'more trading = more friction?' },
+    { k: 'inv', t: 'Time invested', x: 'time invested (%)', why: 'just market exposure?' },
+    { k: 'budget', t: 'GA budget', x: 'population x generations', why: 'does more compute help?' },
+    { k: 'sharpe', t: 'Sharpe ratio', x: 'Sharpe', why: 'risk-adjusted agreement' }
+  ];
+  function renderSmall(data) {
+    var host = document.getElementById('smallmults');
+    host.innerHTML = '';
+    var ys = data.map(function (d) { return d.excA; }), rhos = {};
+    SM.forEach(function (s) {
+      var rho = data.length > 2 ? spearman(data.map(function (d) { return d[s.k]; }), ys) : 0;
+      rhos[s.k] = rho;
+      var div = document.createElement('div');
+      div.className = 'sm';
+      div.innerHTML = '<h3>' + s.t + '</h3><p class="rho">rho ' + fmt(rho, 2) + ' &#183; ' + s.why + '</p>' +
+        '<svg class="chart" role="img" aria-label="Excess return against ' + s.x + '"></svg>';
+      host.appendChild(div);
+      drawScatter(div.querySelector('svg'), data, s.k, s.x, { W: 400, H: 260, r: 3.6, parityLabel: false });
+    });
+    var budgets = Array.from(new Set(data.map(function (d) { return d.budget; }))).sort(function (a, b) { return a - b; });
+    note('note-sm', 'Remarks', [
+      '<b>GA budget (rho ' + fmt(rhos.budget, 2) + ')</b> is the one to look at first' +
+      (budgets.length > 1 ? ', spanning ' + budgets[0] + ' to ' + budgets[budgets.length - 1] + ' here' : '') + '. ' +
+      (Math.abs(rhos.budget) < 0.2
+        ? 'The points stack vertically at each budget with no upward drift: the cheapest batch reaches as high as the ' +
+          'most expensive one. Note what a bigger budget does do &#8212; it tightens the stack and pulls the top of it ' +
+          'down. More search converges more reliably onto the in-sample optimum, which generalises worse, so the ' +
+          'compute buys consistency at a mediocre value rather than a better result.'
+        : 'There is a real tilt, so deeper search is still paying on this name.') +
+      ' This rho is a pooled figure and budget was not assigned at random across cells, so treat it as a pointer: ' +
+      'the paired within-cell test in <code>summarize.py</code> is the one that isolates budget.',
+      '<b>Trade count (rho ' + fmt(rhos.trades, 2) + ')</b> and <b>time invested (rho ' + fmt(rhos.inv, 2) + ')</b> ' +
+      'describe how the strategy behaved rather than how you configured it. ' +
+      (rhos.trades < -0.2 ? 'The negative tilt on trades supports the friction story: the runs that traded least did best.'
+        : Math.abs(rhos.trades) < 0.2 ? 'Neither shows a strong tilt, so neither over-trading nor market exposure alone explains the outcome.'
+        : 'Trading more went with better results here, which is unusual and worth a closer look.'),
+      '<b>Sharpe (rho ' + fmt(rhos.sharpe, 2) + ')</b> tracks excess return closely, as it must &#8212; both come from ' +
+      'the same equity curve. It is a sanity check on the others, not an independent finding.'
+    ]);
+  }
+
+  function renderSpread(data) {
+    var svg = document.getElementById('spread');
+    var groups = {};
+    data.forEach(function (d) { var k = d.depth + ' ' + d.lb + 'Y/' + d.off + 'M'; (groups[k] = groups[k] || []).push(d); });
+    var keys = Object.keys(groups).filter(function (k) { return groups[k].length >= 3; })
+      .sort(function (a, b) { return median(groups[b].map(function (d) { return d.excA; })) - median(groups[a].map(function (d) { return d.excA; })); })
+      .slice(0, 12);
+    if (!keys.length) {
+      svg.innerHTML = '';
+      note('note-spread', 'Remarks', [
+        'No cell in the current view has three or more runs, so reproducibility cannot be judged yet.',
+        'Repeat a few promising configurations at different GA seeds before trusting any single result &#8212; ' +
+        'this chart is the one that tells you whether a good number is a strategy or a coincidence.'
+      ]);
+      return;
+    }
+    var W = 820, M = { t: 12, r: 30, b: 42, l: 140 }, rowH = 28;
+    var H = M.t + M.b + keys.length * rowH;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var pw = W - M.l - M.r;
+    var all = data.map(function (d) { return d.excA; });
+    var lo = Math.min(-5, Math.floor(Math.min.apply(null, all) / 5) * 5);
+    var hi = Math.max(5, Math.ceil(Math.max.apply(null, all) / 5) * 5);
+    function X(v) { return M.l + ((v - lo) / (hi - lo)) * pw; }
+    var parts = [];
+    for (var g = lo; g <= hi; g += 10) {
+      parts.push('<line x1="' + X(g) + '" y1="' + M.t + '" x2="' + X(g) + '" y2="' + (M.t + keys.length * rowH) +
+        '" stroke="' + (g === 0 ? 'var(--axis)' : 'var(--grid)') + '" stroke-width="' + (g === 0 ? 2 : 1) + '"/>');
+      parts.push('<text x="' + X(g) + '" y="' + (M.t + keys.length * rowH + 17) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)" style="font-variant-numeric:tabular-nums">' + g + '</text>');
+    }
+    parts.push('<text x="' + (M.l + pw / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--text-secondary)">excess annualized return (%) &#8212; each dot is one run</text>');
+    keys.forEach(function (k, i) {
+      var g = groups[k], y = M.t + i * rowH + rowH / 2;
+      var vals = g.map(function (d) { return d.excA; });
+      var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), md = median(vals);
+      parts.push('<text x="' + (M.l - 12) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11.5" fill="var(--text-secondary)" style="font-variant-numeric:tabular-nums">' + k + '</text>');
+      parts.push('<line x1="' + X(mn) + '" y1="' + y + '" x2="' + X(mx) + '" y2="' + y + '" stroke="var(--axis)" stroke-width="1"/>');
+      g.forEach(function (d, j) {
+        parts.push('<circle class="sp" data-k="' + i + '" data-j="' + j + '" cx="' + X(d.excA) + '" cy="' + y + '" r="4.5" fill="' +
+          (DEPTH_COLOR[d.depth] || 'var(--s1)') + '" fill-opacity="0.75" stroke="var(--surface-1)" stroke-width="1.5"/>');
+      });
+      parts.push('<line x1="' + X(md) + '" y1="' + (y - 8) + '" x2="' + X(md) + '" y2="' + (y + 8) + '" stroke="var(--text-primary)" stroke-width="2"/>');
+    });
+    svg.innerHTML = parts.join('');
+    svg.querySelectorAll('circle.sp').forEach(function (c) {
+      var g = groups[keys[parseInt(c.dataset.k, 10)]], d = g[parseInt(c.dataset.j, 10)];
+      c.setAttribute('pointer-events', 'all'); c.style.cursor = 'crosshair';
+      bindTip(c, '<b>' + batchLabel(d.batch) + ' &#183; ' + d.depth + ' ' + d.lb + 'Y/' + d.off + 'M</b><br>' +
+        '<span class="tnum">excess ' + fmt(d.excA) + '%</span><br>' +
+        '<span class="tnum">Sharpe ' + d.sharpe.toFixed(2) + ' &#183; drawdown ' + d.dd.toFixed(1) + '% &#183; ' + d.trades + ' trades</span>');
+    });
+    var top = groups[keys[0]], tv = top.map(function (d) { return d.excA; });
+    var npos = tv.filter(function (v) { return v > 0; }).length;
+    var spread = Math.max.apply(null, tv) - Math.min.apply(null, tv);
+    var widest = keys.map(function (k) {
+      var v = groups[k].map(function (d) { return d.excA; });
+      return { k: k, s: Math.max.apply(null, v) - Math.min.apply(null, v) };
+    }).sort(function (a, b) { return b.s - a.s; })[0];
+    note('note-spread', 'Remarks', [
+      'This is the chart that decides whether anything here is real. The black tick is the median; each dot is one run ' +
+      'of <i>identical settings</i> at a different GA seed or batch.',
+      'The top cell <b>' + keys[0] + '</b> has ' + npos + ' of ' + top.length + ' runs above zero and a spread of <b>' +
+      spread.toFixed(1) + ' points</b> worst to best. ' +
+      (npos === 0 ? 'Not one repetition cleared buy &amp; hold, so its best dot is the ceiling of a losing configuration.'
+        : npos === top.length ? 'Every repetition cleared buy &amp; hold &#8212; the strongest evidence in this dataset that the cell is real.'
+        : 'That two-sided split is the key observation: the same configuration lands in a good basin some of the time and ' +
+          'a poor one the rest. If the winners also cluster on drawdown and trade count, the search is finding a genuine ' +
+          'solution but not reliably &#8212; a seed-stability problem, not a parameter problem.'),
+      'The widest cell is <b>' + widest.k + '</b> at ' + widest.s.toFixed(1) + ' points. Where within-cell spread exceeds ' +
+      'the gap between cells, ranking configurations by their best run is ranking luck. Repeat the promising cells across ' +
+      'seeds before trusting any of them.'
+    ]);
+  }
+
+  var tableMode = 'top', sortKey = 'excA', sortDir = -1;
+  function renderTable(data) {
+    var cols = [
+      { k: 'depth', t: 'Depth' }, { k: 'batch', t: 'Batch' }, { k: 'lb', t: 'Lookback' },
+      { k: 'ry', t: 'Run yrs' }, { k: 'off', t: 'Offset' },
+      { k: 'excA', t: 'Excess ann %' }, { k: 'adaptA', t: 'Strategy ann %' }, { k: 'bhA', t: 'B&amp;H ann %' },
+      { k: 'sharpe', t: 'Sharpe' }, { k: 'dd', t: 'Max DD %' }, { k: 'inv', t: 'Invested %' },
+      { k: 'exp', t: 'Exposure' }, { k: 'trades', t: 'Trades' }
+    ];
+    var rws = data.slice().sort(function (a, b) {
+      var x = a[sortKey], y = b[sortKey];
+      if (typeof x === 'string') return sortDir * String(x).localeCompare(String(y));
+      return sortDir * (x - y);
+    });
+    if (tableMode === 'top') rws = rws.slice(0, 25);
+    var t = document.getElementById('dtable');
+    t.innerHTML = '<thead><tr>' + cols.map(function (c) {
+      return '<th data-k="' + c.k + '">' + c.t + (sortKey === c.k ? (sortDir < 0 ? ' &#8595;' : ' &#8593;') : '') + '</th>';
+    }).join('') + '</tr></thead><tbody>' + rws.map(function (d) {
+      return '<tr><td><span class="pill">' + d.depth + '</span></td><td>' + d.batch + '</td>' +
+        '<td>' + d.lb + 'Y</td><td>' + (d.ry === null ? '&#8212;' : d.ry + 'Y') + '</td><td>' + d.off + 'M</td>' +
+        '<td style="color:' + (d.excA >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' + fmt(d.excA) + '</td>' +
+        '<td>' + d.adaptA.toFixed(2) + '</td><td>' + d.bhA.toFixed(2) + '</td><td>' + d.sharpe.toFixed(2) + '</td>' +
+        '<td>' + d.dd.toFixed(2) + '</td><td>' + d.inv.toFixed(1) + '</td>' +
+        '<td>' + (d.exp > 1 ? '<span class="pill lev">' + d.exp.toFixed(2) + '&#215;</span>' : d.exp.toFixed(2)) + '</td>' +
+        '<td>' + d.trades + '</td></tr>';
+    }).join('') + '</tbody>';
+    t.querySelectorAll('th').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var k = th.dataset.k;
+        if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
+        render();
+      });
+    });
+  }
+  document.getElementById('tab-top').addEventListener('click', function () {
+    tableMode = 'top'; this.setAttribute('aria-pressed', 'true');
+    document.getElementById('tab-all').setAttribute('aria-pressed', 'false'); render();
+  });
+  document.getElementById('tab-all').addEventListener('click', function () {
+    tableMode = 'all'; this.setAttribute('aria-pressed', 'true');
+    document.getElementById('tab-top').setAttribute('aria-pressed', 'false'); render();
+  });
+
+  function renderCopy() {
+    var isBest = state.metric === 'best';
+    document.getElementById('hm-sub').innerHTML =
+      (isBest ? 'Best single run' : 'Median run') + ' per cell, by excess annualized return. Blue beats buy &amp; hold, ' +
+      'red trails it, near-neutral is a coin flip. Dashed cells were never run. The green ring marks the strongest cell on screen. ' +
+      (isBest ? 'Showing the ceiling: a cell can look strong on one lucky seed.'
+              : 'Showing the typical result &#8212; switch to <b>Best run</b> for each cell&#8217;s ceiling.');
+    document.getElementById('dim-sub').innerHTML =
+      (isBest ? 'Best' : 'Median') + ' excess annualized return at each level, measured from the zero line. ' +
+      'A dimension whose bars all sit at similar length doesn&#8217;t explain much; one with a clear gradient does. ' +
+      'Faded bars marked * rest on fewer than three runs.';
+  }
+  function renderFoot() {
+    var lev = ALL.filter(function (d) { return d.exp > 1.0; }).length;
+    document.getElementById('foot').innerHTML =
+      'Excess annualized return = strategy annualized minus buy &amp; hold annualized over the same window, so runs on ' +
+      'different history depths stay comparable. ' + lev + ' of ' + ALL.length + ' ' + FUND + ' runs used exposure above ' +
+      '1.0&#215; and are hidden by default &#8212; leverage is disqualified, so counting those wins would flatter the ' +
+      'strategy. Degenerate runs with an empty backtest window are excluded throughout. GA budget is population &#215; generations.';
+  }
+
+  function render() {
+    var data = current();
+    computeDepthColors();
+    renderCopy(); renderKpis(data); renderFacets(data); renderDims(data);
+    renderRunYears(data); renderCorr(data); renderScatter(data); renderSmall(data); renderSpread(data);
+    renderTable(data); renderFoot();
+  }
+  render();
+})();
+</script>

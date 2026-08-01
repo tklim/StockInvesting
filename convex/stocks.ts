@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 const normalizeTicker = (ticker: string) => ticker.trim().toUpperCase();
 
@@ -458,14 +459,24 @@ export const removeFromPortfolio = mutation({
 export const portfolio = query({
   args: {},
   handler: async (ctx) => {
-    const saved = await ctx.db.query("portfolioStocks").order("desc").collect();
+    const saved = await ctx.db
+      .query("portfolioStocks")
+      .withIndex("by_savedAt")
+      .order("desc")
+      .take(100);
     const stocks = await Promise.all(
       saved.map(async (item) => {
-        const stock = await ctx.db
-          .query("stocks")
-          .withIndex("by_ticker", (q) => q.eq("ticker", item.ticker))
-          .unique();
-        return { ...item, stock };
+        const [stock, stockSignal] = await Promise.all([
+          ctx.db
+            .query("stocks")
+            .withIndex("by_ticker", (q) => q.eq("ticker", item.ticker))
+            .unique(),
+          ctx.db
+            .query("stockSignals")
+            .withIndex("by_ticker", (q) => q.eq("ticker", item.ticker))
+            .unique(),
+        ]);
+        return { ...item, stock, stockSignal };
       })
     );
 
@@ -553,6 +564,7 @@ export const researchBundle = query({
       financialReport,
       saved,
       snapshots,
+      stockSignal,
     ] = await Promise.all([
       ctx.db
         .query("stocks")
@@ -593,6 +605,10 @@ export const researchBundle = query({
         .withIndex("by_ticker_and_syncedAt", (q) => q.eq("ticker", ticker))
         .order("desc")
         .take(12),
+      ctx.db
+        .query("stockSignals")
+        .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+        .unique(),
     ]);
     const latestSnapshot = snapshots[0] ?? null;
 
@@ -606,6 +622,7 @@ export const researchBundle = query({
         investmentThesis ?? snapshotToInvestmentThesis(latestSnapshot),
       financialReport,
       snapshots,
+      stockSignal,
       isSaved: Boolean(saved),
     };
   },
@@ -761,25 +778,13 @@ export const upsertMarketData = internalMutation({
       });
     }
 
-    const aiReport = await ctx.db
-      .query("aiReports")
-      .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
-      .unique();
-    const investmentThesis = await ctx.db
-      .query("investmentTheses")
-      .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
-      .unique();
-
+    // A market snapshot is a point-in-time record of the sync payload. Do not
+    // copy the most recently generated AI report or thesis into it: those may
+    // have been created against an older quote and would make the snapshot
+    // appear internally inconsistent.
     await ctx.db.insert("companySnapshots", {
       ...args.snapshot,
       ticker,
-      aiBriefSummary: aiReport?.summary ?? args.snapshot.aiBriefSummary,
-      aiBullPoints: aiReport?.bullPoints ?? args.snapshot.aiBullPoints,
-      aiBearPoints: aiReport?.bearPoints ?? args.snapshot.aiBearPoints,
-      thesisSummary: investmentThesis?.summary ?? args.snapshot.thesisSummary,
-      thesisPoints: investmentThesis?.thesisPoints ?? args.snapshot.thesisPoints,
-      thesisWatchItems:
-        investmentThesis?.watchItems ?? args.snapshot.thesisWatchItems,
     });
 
     const snapshots = await ctx.db
@@ -961,6 +966,8 @@ export const upsertAiReport = internalMutation({
     watchItems: v.array(v.string()),
     provider: v.string(),
     model: v.string(),
+    signalScore: v.optional(v.number()),
+    signalRationale: v.optional(v.string()),
     generatedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -975,12 +982,17 @@ export const upsertAiReport = internalMutation({
       ticker,
     };
 
+    let id;
     if (existing) {
       await ctx.db.patch(existing._id, reportDoc);
-      return existing._id;
+      id = existing._id;
+    } else {
+      id = await ctx.db.insert("aiReports", reportDoc);
     }
-
-    return await ctx.db.insert("aiReports", reportDoc);
+    await ctx.scheduler.runAfter(0, internal.signals.recalculateTickerInternal, {
+      ticker,
+    });
+    return id;
   },
 });
 
@@ -994,6 +1006,8 @@ export const saveAiReport = mutation({
     watchItems: v.array(v.string()),
     provider: v.string(),
     model: v.string(),
+    signalScore: v.optional(v.number()),
+    signalRationale: v.optional(v.string()),
     generatedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -1008,12 +1022,17 @@ export const saveAiReport = mutation({
       ticker,
     };
 
+    let id;
     if (existing) {
       await ctx.db.patch(existing._id, reportDoc);
-      return existing._id;
+      id = existing._id;
+    } else {
+      id = await ctx.db.insert("aiReports", reportDoc);
     }
-
-    return await ctx.db.insert("aiReports", reportDoc);
+    await ctx.scheduler.runAfter(0, internal.signals.recalculateTickerInternal, {
+      ticker,
+    });
+    return id;
   },
 });
 

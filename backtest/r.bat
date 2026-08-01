@@ -1,0 +1,1 @@
+python backtest_stocks.py --data-files data\META-3Y.csv --ga-search-preset focused  --reuse-tuned-params --pop_ranges 1  --gen_ranges 1

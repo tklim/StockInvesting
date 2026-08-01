@@ -1,0 +1,1 @@
+python analysis/dashboard.py --fund MSFT --open

@@ -6,6 +6,7 @@
   *{box-sizing:border-box} [hidden]{display:none!important}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
   header{position:sticky;top:0;z-index:10;padding:17px clamp(16px,4vw,48px) 13px;background:rgba(243,245,247,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;margin-bottom:7px;color:var(--accent);font-size:.78rem;font-weight:800;text-decoration:none}.back-link:hover{text-decoration:underline}
   h1{margin:0 0 4px;font-size:clamp(1.4rem,3vw,2.05rem)} header p{margin:0;color:var(--muted);font-size:.88rem}
   .source{margin-top:5px;font-size:.76rem}.source code{padding:1px 5px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
   .tabs{display:flex;gap:7px;overflow-x:auto;margin-top:12px;padding-bottom:2px}
@@ -25,11 +26,11 @@
   @media(min-width:2100px){.ranking-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.simple-chart svg{height:96px;max-height:96px}}
   @media(max-width:760px){.ranking-grid{grid-template-columns:1fr}.chart-endpoints{grid-template-columns:1fr;gap:8px}.endpoint-end{text-align:left}}
 </style></head><body>
-<header><h1>Buy &amp; Hold Annualized Ranking</h1>
-  <p>Highest historical buy-and-hold outcome grouped by source-data horizon · generated 2026-08-01 20:49:14</p>
-  <p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-01 20:32:41 — 1713 run(s) considered.</p>
+<header><a class="back-link" href="dashboard.html">← Master dashboard</a><h1>Buy &amp; Hold Annualized Ranking</h1>
+  <p>Highest historical buy-and-hold outcome grouped by source-data horizon · generated 2026-08-01 21:22:11</p>
+  <p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-01 21:10:56 — 1717 run(s) considered.</p>
   <nav class="tabs" role="tablist" aria-label="Source-data horizon"><button class="tab" type="button" role="tab" id="tab-mixed" data-group="mixed" aria-controls="panel-mixed" aria-selected="true">Mixed highest (11)</button><button class="tab" type="button" role="tab" id="tab-20y" data-group="20y" aria-controls="panel-20y" aria-selected="false">20 years (11)</button><button class="tab" type="button" role="tab" id="tab-10y" data-group="10y" aria-controls="panel-10y" aria-selected="false">10 years (11)</button><button class="tab" type="button" role="tab" id="tab-5y" data-group="5y" aria-controls="panel-5y" aria-selected="false">5 years (11)</button><button class="tab" type="button" role="tab" id="tab-4y" data-group="4y" aria-controls="panel-4y" aria-selected="false">4 years (3)</button><button class="tab" type="button" role="tab" id="tab-3y" data-group="3y" aria-controls="panel-3y" aria-selected="false">3 years (11)</button></nav>
-</header><main><section role="tabpanel" id="panel-mixed" aria-labelledby="tab-mixed" ><p class="group-note">Highest buy-and-hold annualized run per ticker, regardless of source-data horizon. 1713 candidate run(s).</p><div class="ranking-grid"><article class="rank-card">
+</header><main><section role="tabpanel" id="panel-mixed" aria-labelledby="tab-mixed" ><p class="group-note">Highest buy-and-hold annualized run per ticker, regardless of source-data horizon. 1717 candidate run(s).</p><div class="ranking-grid"><article class="rank-card">
                   <div class="card-head"><span class="rank">#1</span><h2>NVDA</h2>
                     <div class="headline"><small>Buy &amp; hold annualized</small><strong>+88.36%</strong></div>
                   </div>
@@ -196,9 +197,9 @@
                   <div class="chips">
                     <span>Source years <b>16.1Y</b></span>
                     <span>Scored years <b>15.1Y</b></span>
-                    <span>Strategy ann. <b>+32.02%</b></span>
+                    <span>Strategy ann. <b>+24.04%</b></span>
                     <span>Through <b>2026-07-31</b></span>
-                    <span>Winning run <b>1Y/9M · generic</b></span>
+                    <span>Winning run <b>1Y/12M · generic</b></span>
                   </div>
       <figure class="simple-chart">
         <svg viewBox="0 0 800 215" role="img" aria-label="Buy and hold growth from 2011-06-29 through 2026-07-31">
@@ -1085,7 +1086,7 @@
         </figcaption>
       </figure>
     
-                </article></div></section><section role="tabpanel" id="panel-5y" aria-labelledby="tab-5y" hidden><p class="group-note">Highest buy-and-hold annualized run per ticker from source datasets spanning approximately 5 years. 1275 candidate run(s).</p><div class="ranking-grid"><article class="rank-card">
+                </article></div></section><section role="tabpanel" id="panel-5y" aria-labelledby="tab-5y" hidden><p class="group-note">Highest buy-and-hold annualized run per ticker from source datasets spanning approximately 5 years. 1278 candidate run(s).</p><div class="ranking-grid"><article class="rank-card">
                   <div class="card-head"><span class="rank">#1</span><h2>NVDA</h2>
                     <div class="headline"><small>Buy &amp; hold annualized</small><strong>+88.36%</strong></div>
                   </div>

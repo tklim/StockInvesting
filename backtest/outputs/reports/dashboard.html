@@ -22,7 +22,7 @@
     .stat strong{display:block;margin-top:4px;font-size:1.25rem}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:22px 0 10px}
     .section-head h2{margin:0;font-size:1.28rem;letter-spacing:-.025em} .section-head p{margin:0;color:var(--muted);font-size:.9rem}
-    .dashboards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .dashboards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
     .dashboard-link{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;align-content:start;min-height:106px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
       transition:transform .18s,box-shadow .18s,border-color .18s}
     .dashboard-link:hover{transform:translateY(-3px);border-color:#9dc4b9;box-shadow:0 15px 35px rgba(25,48,60,.09)}
@@ -66,7 +66,7 @@
     <p class="hero-copy">Explore the latest full-history replay, inspect each ticker's technical and simple
       final charts, or compare the entire run history by excess return and top annualized performance.</p>
     <div class="hero-meta"><span>11 tickers</span><span>Latest local data 2026-07-31</span>
-      <span>Built 2026-08-01 17:29:59</span><span>Source final_backtest_summary_20260801_172614.csv</span></div>
+      <span>Built 2026-08-01 21:24:13</span><span>Source final_backtest_summary_20260801_172614.csv</span></div>
   </section>
   <section class="summary" aria-label="Run summary">
     <div class="stat"><span>Latest leader</span><strong>NVDA · +90.52%</strong></div>
@@ -77,12 +77,14 @@
   <section class="dashboards">
     <a class="dashboard-link" href="dashboard_latest.html"><span class="number">1</span><h3>Latest ranking</h3>
       <p>Rank the selected winning parameters on each ticker's full locally available history.</p></a>
-    <a class="dashboard-link" href="dashboard_excess_annualized.html"><span class="number">2</span><h3>Excess annualized return</h3>
+    <a class="dashboard-link" href="dashboard_excess_annualized.html"><span class="number">2</span><h3>Excess annualized ranking</h3>
       <p>Find the historical strategy runs that beat buy and hold by the widest annualized margin.</p></a>
     <a class="dashboard-link" href="dashboard_top_annualized.html"><span class="number">3</span><h3>Top annualized return</h3>
       <p>Compare the strongest annualized outcome from either the strategy or buy and hold.</p></a>
     <a class="dashboard-link" href="dashboard_final_simple.html"><span class="number">4</span><h3>Final simple charts</h3>
       <p>Browse each historical strategy-versus-buy-and-hold chart in one place.</p></a>
+    <a class="dashboard-link" href="dashboard_top_annualized_buyhold.html"><span class="number">5</span><h3>Buy &amp; hold horizons</h3>
+      <p>Compare price-derived buy-and-hold growth across 20Y, 10Y, 5Y, 4Y, and 3Y windows.</p></a>
   </section>
   <section class="sort-bar" aria-label="Stock sorting controls">
     <span class="sort-label">Sort stocks</span>
@@ -243,17 +245,17 @@
               <span class="arrow">→</span></a><a class="fund-row" href="funds/TSLA.html"
               data-ticker="TSLA"
               data-latest-strategy="12.8019844965"
-              data-top-strategy="20.0820958023"
-              data-top-buy-hold="24.1074254133"
-              data-top-annualized="24.1074254133"
+              data-top-strategy="32.1298135691"
+              data-top-buy-hold="40.2713597733"
+              data-top-annualized="40.2713597733"
               data-top-excess="11.8374973312"
               data-last-price="311.209991455">
               <span class="rank">#8</span><span class="ticker">TSLA</span>
               <span class="metric-wrap">
                 <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+12.80%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260723174516_TSLA_e56e083a through 2026-07-21"><small>Top strategy ann.</small><strong>+20.08%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260724021343_TSLA_7bc8e820 through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+24.11%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260724021343_TSLA_7bc8e820 through 2026-07-21"><small>Top annualized</small><strong>+24.11%</strong></span>
+                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260801181450_TSLA_94fb1a5a through 2026-07-31"><small>Top strategy ann.</small><strong>+32.13%</strong></span>
+                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260801203423_TSLA_f74529f1 through 2026-07-31"><small>Top buy &amp; hold ann.</small><strong>+40.27%</strong></span>
+                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260801203423_TSLA_f74529f1 through 2026-07-31"><small>Top annualized</small><strong>+40.27%</strong></span>
                 <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260729234556_TSLA_5188ab49"><small>Top excess</small><strong>+11.84%</strong></span>
                 <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$311.21</strong></span>
                 <span class="metric-column through" data-column="through">Through 2026-07-31</span>
@@ -294,9 +296,9 @@
                 <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260724214913_AAPL-4Y_e88fdb67 through 2026-07-21"><small>Top annualized</small><strong>+60.80%</strong></span>
                 <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260724214913_AAPL-4Y_e88fdb67"><small>Top excess</small><strong>+6.26%</strong></span>
                 <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$308.91</strong></span>
-                <span class="metric-column through" data-column="through">Through n/a</span>
+                <span class="metric-column through" data-column="through">Through </span>
               </span>
-              <span class="signal cash">n/a</span>
+              <span class="signal cash"></span>
               <span class="arrow">→</span></a><a class="fund-row" href="funds/V.html"
               data-ticker="V"
               data-latest-strategy=""
@@ -313,12 +315,12 @@
                 <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260731190416_V_319bde9c through 2026-07-30"><small>Top annualized</small><strong>+21.97%</strong></span>
                 <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260726185629_V-4Y_57209da0"><small>Top excess</small><strong>+2.05%</strong></span>
                 <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$366.13</strong></span>
-                <span class="metric-column through" data-column="through">Through n/a</span>
+                <span class="metric-column through" data-column="through">Through </span>
               </span>
-              <span class="signal cash">n/a</span>
+              <span class="signal cash"></span>
               <span class="arrow">→</span></a></section>
   
-  <footer>Master dashboard generated from C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\final_backtest_summary_20260801_172614.csv.</footer>
+  <footer>Master dashboard generated from outputs\tunings\final_backtest_summary_20260801_172614.csv.</footer>
   <script>
     (() => {
       const list = document.querySelector('.fund-list');

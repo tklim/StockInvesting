@@ -2404,6 +2404,10 @@ export const syncTicker = action({
       },
     });
 
+    await ctx.scheduler.runAfter(0, internal.signals.refreshTickerInternal, {
+      ticker,
+    });
+
     return {
       ticker,
       companyName,

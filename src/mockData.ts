@@ -142,6 +142,8 @@ export type ResearchBundle = {
     watchItems: string[];
     provider: string;
     model: string;
+    signalScore?: number;
+    signalRationale?: string;
     generatedAt: number;
   };
   investmentThesis?: {
@@ -150,6 +152,43 @@ export type ResearchBundle = {
     watchItems: string[];
     source: string;
     updatedAt: number;
+  };
+  stockSignal?: {
+    rating: "BUY" | "HOLD" | "SELL";
+    provisional: boolean;
+    compositeScore: number;
+    horizonDays: number;
+    winProbability?: number;
+    lossProbability?: number;
+    outperformProbability?: number;
+    expectedReturn?: number;
+    expectedExcessReturn?: number;
+    downsideP10?: number;
+    factorScores: {
+      market: number;
+      growth: number;
+      profitability: number;
+      balanceSheet: number;
+      valuation: number;
+      ai: number;
+    };
+    confidence: "low" | "medium" | "high";
+    sampleSize: number;
+    tickerCount: number;
+    calibrationSampleSize: number;
+    brierScore?: number;
+    dataCoverage: number;
+    topPositiveDrivers: string[];
+    topNegativeDrivers: string[];
+    aiRationale?: string;
+    aiFresh: boolean;
+    modelVersion: string;
+    dataStatus: "ready" | "insufficient" | "stale" | "error";
+    source: string;
+    historyStart?: string;
+    historyEnd?: string;
+    computedAt: number;
+    inputsUpdatedAt: number;
   };
   snapshots?: Array<{
     ticker: string;

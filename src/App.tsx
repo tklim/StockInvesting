@@ -44,6 +44,12 @@ import {
   searchableStocks,
   StockSummary,
 } from "./mockData";
+import {
+  runAiNotesWorkflow,
+  type AiNotesWorkflowStage,
+} from "./aiNotesWorkflow";
+import { MultiPortfolioView } from "./MultiPortfolioView";
+import { rankSignalItems } from "./signalRanking";
 
 type AppProps = {
   convexEnabled: boolean;
@@ -58,6 +64,7 @@ type ConvexRuntimeGuardState = {
 };
 
 type ShellProps = {
+  multiPortfolioEnabled?: boolean;
   bundle: ResearchBundle;
   activeView: AppView;
   compareEntries: CompareEntry[];
@@ -113,6 +120,7 @@ type ShellProps = {
 type AppView =
   | "research"
   | "watchlist"
+  | "signals"
   | "portfolio"
   | "compare"
   | "data-health"
@@ -129,6 +137,7 @@ type PortfolioItem = {
   updatedAt?: number;
   savedAt: number;
   stock: ResearchBundle["stock"] | null;
+  stockSignal?: ResearchBundle["stockSignal"] | null;
 };
 
 type PortfolioPositionInput = {
@@ -155,6 +164,16 @@ type NoteDeleteInput = {
 };
 
 type NoteStatus = "idle" | "saving" | "deleting" | "generating" | "success" | "error";
+
+type GeneratedAiReport = NonNullable<ResearchBundle["aiReport"]> & {
+  ticker: string;
+};
+
+type GeneratedInvestmentThesis = NonNullable<
+  ResearchBundle["investmentThesis"]
+> & {
+  ticker: string;
+};
 
 type ListSummary = {
   name: string;
@@ -205,6 +224,17 @@ type DataSourceEventInput = {
 
 type DataSourceHealth = {
   dateKey: string;
+  signalHealth?: {
+    trackedStocks: number;
+    signalCount: number;
+    missingSignals: number;
+    readySignals: number;
+    provisionalSignals: number;
+    staleSignals: number;
+    errorSignals: number;
+    lastComputedAt: number;
+    modelVersions: string[];
+  };
   usage: Array<{
     service: string;
     dateKey: string;
@@ -243,6 +273,7 @@ const navItems: Array<{
 }> = [
   { label: "Research", icon: Search, view: "research" },
   { label: "Watchlist", icon: Star, view: "watchlist" },
+  { label: "Signals", icon: TrendingUp, view: "signals" },
   { label: "Portfolio", icon: BriefcaseBusiness, view: "portfolio" },
   { label: "Compare", icon: BarChart3, view: "compare" },
   { label: "Data Health", icon: Settings, view: "data-health" },
@@ -1096,15 +1127,22 @@ function ConvexResearchApp() {
   const [selectedListName, setSelectedListName] = useState(defaultListNames[0]);
   const normalizedSearchQuery = searchQuery.trim();
   const bundle = useQuery(api.stocks.researchBundle, { ticker });
-  const portfolio = (useQuery(api.stocks.portfolio) ?? []) as PortfolioItem[];
+  const portfolioQuery = useQuery(api.stocks.portfolio);
+  const portfolio = useMemo(
+    () => (portfolioQuery ?? []) as PortfolioItem[],
+    [portfolioQuery]
+  );
   const dataSourceHealth = useQuery(api.dataSources.healthDashboard, {
     dateKey: getTodayDateKey(),
   }) as DataSourceHealth | undefined;
-  const liveCompareEntries =
-    useQuery(
-      api.stocks.compareCompanies,
-      compareTickers.length ? { tickers: compareTickers } : "skip"
-    ) ?? [];
+  const liveCompareQuery = useQuery(
+    api.stocks.compareCompanies,
+    compareTickers.length ? { tickers: compareTickers } : "skip"
+  );
+  const liveCompareEntries = useMemo(
+    () => liveCompareQuery ?? [],
+    [liveCompareQuery]
+  );
   const watchlists = useQuery(api.stocks.watchlists);
   const fetchedSearchResults = useQuery(
     api.stocks.search,
@@ -1209,6 +1247,7 @@ function ConvexResearchApp() {
       financialReport: bundle.financialReport ?? undefined,
       aiReport: bundle.aiReport ?? undefined,
       investmentThesis: bundle.investmentThesis ?? undefined,
+      stockSignal: bundle.stockSignal ?? undefined,
       snapshots: bundle.snapshots ?? [],
       isSaved: bundle.isSaved,
     };
@@ -1402,7 +1441,7 @@ function ConvexResearchApp() {
     }
   };
 
-  const onGenerateAiResearchReport = async () => {
+  const refreshAiResearchReport = async (): Promise<GeneratedAiReport> => {
     setAiReportStatus("generating");
     setAiReportMessage(`Generating AI research report for ${ticker}...`);
 
@@ -1430,17 +1469,7 @@ function ConvexResearchApp() {
         throw new Error(errorText || "The local AI bridge failed.");
       }
 
-      const result = (await response.json()) as {
-        ticker: string;
-        summary: string;
-        bullPoints: string[];
-        bearPoints: string[];
-        thesisPoints: string[];
-        watchItems: string[];
-        provider: string;
-        model: string;
-        generatedAt: number;
-      };
+      const result = (await response.json()) as GeneratedAiReport;
 
       await saveAiReport({
         ticker: result.ticker,
@@ -1449,6 +1478,8 @@ function ConvexResearchApp() {
         bearPoints: result.bearPoints,
         thesisPoints: result.thesisPoints,
         watchItems: result.watchItems,
+        signalScore: result.signalScore,
+        signalRationale: result.signalRationale,
         provider: result.provider,
         model: result.model,
         generatedAt: result.generatedAt,
@@ -1465,26 +1496,37 @@ function ConvexResearchApp() {
       setAiReportMessage(
         `${result.ticker} AI report generated with ${result.provider} (${result.model}).`
       );
+      return result;
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to generate AI research report.";
       emitClientDataSourceEvent({
         service: "Local AI Bridge",
         operation: "ai_report",
         status: "error",
         provider: "Local bridge",
         ticker,
-        message:
-          error instanceof Error ? error.message : "Unable to generate AI research report.",
+        message,
       });
       setAiReportStatus("error");
-      setAiReportMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to generate AI research report."
-      );
+      setAiReportMessage(message);
+      throw error instanceof Error ? error : new Error(message);
     }
   };
 
-  const onProposeInvestmentThesis = async () => {
+  const onGenerateAiResearchReport = async () => {
+    try {
+      await refreshAiResearchReport();
+    } catch {
+      // The refresh helper already exposes the failure through AI report status.
+    }
+  };
+
+  const proposeInvestmentThesis = async (
+    aiReport: ResearchBundle["aiReport"] = fallbackBundle.aiReport
+  ): Promise<GeneratedInvestmentThesis> => {
     setThesisStatus("proposing");
     setThesisMessage(`Proposing an investment thesis for ${ticker}...`);
 
@@ -1500,7 +1542,7 @@ function ConvexResearchApp() {
           news: fallbackBundle.news,
           notes: fallbackBundle.notes,
           researchItems: fallbackBundle.researchItems,
-          aiReport: fallbackBundle.aiReport,
+          aiReport,
         }),
       });
 
@@ -1537,20 +1579,38 @@ function ConvexResearchApp() {
 
       setThesisStatus("success");
       setThesisMessage(`${result.ticker} investment thesis proposed and saved.`);
+      return {
+        ticker: result.ticker,
+        summary: result.summary,
+        thesisPoints: result.thesisPoints,
+        watchItems: result.watchItems,
+        source: result.source,
+        updatedAt: result.generatedAt,
+      };
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to propose investment thesis.";
       emitClientDataSourceEvent({
         service: "Local AI Bridge",
         operation: "investment_thesis",
         status: "error",
         provider: "Local bridge",
         ticker,
-        message:
-          error instanceof Error ? error.message : "Unable to propose investment thesis.",
+        message,
       });
       setThesisStatus("error");
-      setThesisMessage(
-        error instanceof Error ? error.message : "Unable to propose investment thesis."
-      );
+      setThesisMessage(message);
+      throw error instanceof Error ? error : new Error(message);
+    }
+  };
+
+  const onProposeInvestmentThesis = async () => {
+    try {
+      await proposeInvestmentThesis();
+    } catch {
+      // The proposal helper already exposes the failure through thesis status.
     }
   };
 
@@ -1619,10 +1679,13 @@ function ConvexResearchApp() {
     }
   };
 
-  const onGenerateAiNotes = async () => {
-    setNoteStatus("generating");
-    setNoteMessage(`Asking the local LLM to generate practical notes for ${ticker}...`);
-
+  const generateAiNotes = async ({
+    report,
+    thesis,
+  }: {
+    report: GeneratedAiReport;
+    thesis: GeneratedInvestmentThesis;
+  }) => {
     try {
       const response = await fetch("/local-ai/notes", {
         method: "POST",
@@ -1635,8 +1698,8 @@ function ConvexResearchApp() {
           news: fallbackBundle.news,
           notes: fallbackBundle.notes,
           researchItems: fallbackBundle.researchItems,
-          aiReport: fallbackBundle.aiReport,
-          investmentThesis: fallbackBundle.investmentThesis,
+          aiReport: report,
+          investmentThesis: thesis,
           financialReport: fallbackBundle.financialReport,
           snapshots: fallbackBundle.snapshots?.slice(0, 5) ?? [],
         }),
@@ -1689,18 +1752,65 @@ function ConvexResearchApp() {
           ? `${newNotes.length} practical AI note${newNotes.length === 1 ? "" : "s"} created for ${ticker} with ${result.provider} (${result.model}).`
           : `${ticker} already has these LLM-generated notes.`
       );
+      return newNotes.length;
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to generate AI notes.";
       emitClientDataSourceEvent({
         service: "Local AI Bridge",
         operation: "ai_notes",
         status: "error",
         provider: "Local bridge",
         ticker,
-        message: error instanceof Error ? error.message : "Unable to generate AI notes.",
+        message,
+      });
+      setNoteStatus("error");
+      setNoteMessage(message);
+      throw error instanceof Error ? error : new Error(message);
+    }
+  };
+
+  const onGenerateAiNotes = async () => {
+    setNoteStatus("generating");
+    let currentStage: AiNotesWorkflowStage = "report";
+
+    try {
+      await runAiNotesWorkflow({
+        refreshReport: refreshAiResearchReport,
+        proposeThesis: proposeInvestmentThesis,
+        generateNotes: generateAiNotes,
+        onStage: (stage) => {
+          currentStage = stage;
+          setNoteMessage(
+            stage === "report"
+              ? `Step 1 of 3: refreshing the AI report for ${ticker}...`
+              : stage === "thesis"
+                ? `Step 2 of 3: proposing and saving the investment thesis for ${ticker}...`
+                : `Step 3 of 3: generating practical AI notes for ${ticker}...`
+          );
+        },
+      });
+    } catch (error) {
+      const stageLabel =
+        currentStage === "report"
+          ? "AI report refresh"
+          : currentStage === "thesis"
+            ? "investment thesis proposal"
+            : "AI note generation";
+      const message =
+        error instanceof Error ? error.message : "The AI notes workflow failed.";
+
+      emitClientDataSourceEvent({
+        service: "Local AI Bridge",
+        operation: "ai_notes_workflow",
+        status: "error",
+        provider: "Local bridge",
+        ticker,
+        message: `${stageLabel}: ${message}`,
       });
       setNoteStatus("error");
       setNoteMessage(
-        error instanceof Error ? error.message : "Unable to generate AI notes."
+        `${stageLabel} failed, so AI notes were not generated. ${message}`
       );
     }
   };
@@ -1722,6 +1832,7 @@ function ConvexResearchApp() {
 
   return (
     <ResearchShell
+      multiPortfolioEnabled
       bundle={fallbackBundle}
       activeView={activeView}
       compareEntries={compareEntries}
@@ -1731,9 +1842,7 @@ function ConvexResearchApp() {
       listNames={listNames}
       selectedListName={selectedListName}
       listSummaries={getListSummaries(portfolio, listNames)}
-      portfolioItems={portfolio
-        .filter((item) => item.stock)
-        .map((item) => ({
+      portfolioItems={portfolio.map((item) => ({
           ticker: item.ticker,
           listName: item.listName,
           shares: item.shares,
@@ -1743,6 +1852,7 @@ function ConvexResearchApp() {
           updatedAt: item.updatedAt,
           savedAt: item.savedAt,
           stock: item.stock,
+          stockSignal: item.stockSignal,
         }))}
       searchQuery={searchQuery}
       selectedTicker={ticker}
@@ -1761,7 +1871,6 @@ function ConvexResearchApp() {
       onUpdatePortfolioPosition={onUpdatePortfolioPosition}
       onSelectedListChange={(listName) => {
         setSelectedList(listName);
-        setActiveView("watchlist");
       }}
       onSelectedListNameChange={onSelectedListNameChange}
       onCreateList={onCreateList}
@@ -1839,6 +1948,7 @@ function StaticResearchApp() {
       updatedAt: item.updatedAt,
       savedAt: item.savedAt,
       stock: researchBundles[ticker]?.stock ?? null,
+      stockSignal: researchBundles[ticker]?.stockSignal,
     })
   );
   const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -1919,7 +2029,6 @@ function StaticResearchApp() {
       }}
       onSelectedListChange={(listName) => {
         setSelectedList(listName);
-        setActiveView("watchlist");
       }}
       onCreateList={async (name) => {
         const normalized = name.trim();
@@ -2108,6 +2217,7 @@ function StaticResearchApp() {
 }
 
 function ResearchShell({
+  multiPortfolioEnabled = false,
   bundle,
   activeView,
   compareEntries,
@@ -2164,6 +2274,7 @@ function ResearchShell({
     return window.localStorage.getItem("stock-app-sidebar-compact") === "true";
   });
   const [selectedTab, setSelectedTab] = useState<ResearchTab>("Overview");
+  const [isSignalExpanded, setIsSignalExpanded] = useState(false);
   const { stock } = bundle;
   const strengths = bundle.researchItems.filter((item) => item.kind === "strength");
   const risks = bundle.researchItems.filter((item) => item.kind === "risk");
@@ -2173,6 +2284,7 @@ function ResearchShell({
   const heroFinancials = getKeyFinancialMetricValues(stock, activeFinancialReport);
   const aiReport = bundle.aiReport;
   const savedThesis = bundle.investmentThesis;
+  const stockSignal = bundle.stockSignal;
   const normalizedSearchQuery = searchQuery.trim();
   const canSearchFinnhub = Boolean(onSearchFinnhub && normalizedSearchQuery);
 
@@ -2186,6 +2298,7 @@ function ResearchShell({
 
   useEffect(() => {
     setSelectedTab("Overview");
+    setIsSignalExpanded(false);
   }, [selectedTicker]);
 
   return (
@@ -2243,7 +2356,10 @@ function ResearchShell({
             <button
               className={selectedList === name ? "list-row active" : "list-row"}
               key={name}
-              onClick={() => onSelectedListChange(name)}
+              onClick={() => {
+                onSelectedListChange(name);
+                onViewChange("watchlist");
+              }}
               type="button"
             >
               <span>{name}</span>
@@ -2384,21 +2500,41 @@ function ResearchShell({
             }}
             onSelectedListChange={onSelectedListChange}
           />
-        ) : activeView === "portfolio" ? (
-          <PortfolioView
+        ) : activeView === "signals" ? (
+          <SignalsView
             items={portfolioItems}
             listNames={listNames}
             selectedList={selectedList}
-            compareTickers={compareTickers}
-            onCompareTickersChange={onCompareTickersChange}
-            onOpenCompare={onOpenCompare}
-            onUpdatePortfolioPosition={onUpdatePortfolioPosition}
             onOpenResearch={(ticker) => {
               onSelectTicker(ticker);
               onViewChange("research");
             }}
             onSelectedListChange={onSelectedListChange}
           />
+        ) : activeView === "portfolio" ? (
+          multiPortfolioEnabled ? (
+            <MultiPortfolioView
+              onOpenResearch={(ticker) => {
+                onSelectTicker(ticker);
+                onViewChange("research");
+              }}
+            />
+          ) : (
+            <PortfolioView
+              items={portfolioItems}
+              listNames={listNames}
+              selectedList={selectedList}
+              compareTickers={compareTickers}
+              onCompareTickersChange={onCompareTickersChange}
+              onOpenCompare={onOpenCompare}
+              onUpdatePortfolioPosition={onUpdatePortfolioPosition}
+              onOpenResearch={(ticker) => {
+                onSelectTicker(ticker);
+                onViewChange("research");
+              }}
+              onSelectedListChange={onSelectedListChange}
+            />
+          )
         ) : activeView === "compare" ? (
           <CompareCompaniesView
             entries={compareEntries}
@@ -2454,6 +2590,12 @@ function ResearchShell({
             </div>
           </div>
 
+          <StockSignalCard
+            signal={stockSignal}
+            expanded={isSignalExpanded}
+            onToggle={() => stockSignal && setIsSignalExpanded((current) => !current)}
+          />
+
           <div className="metric-grid">
             <Metric label="Market Cap" value={stock.marketCap} />
             <Metric label="P/E (TTM)" value={heroFinancials.peRatio} />
@@ -2497,6 +2639,10 @@ function ResearchShell({
           </div>
         </section>
 
+        {stockSignal && isSignalExpanded && (
+          <StockSignalDetails signal={stockSignal} ticker={stock.ticker} />
+        )}
+
         <div className="save-list-row">
           <span>Save destination</span>
           <select
@@ -2537,10 +2683,13 @@ function ResearchShell({
             thesis={thesis}
             thesisMessage={thesisMessage}
             thesisStatus={thesisStatus}
+            noteMessage={noteMessage}
+            noteStatus={noteStatus}
             syncStatus={syncStatus}
             onGenerateAiReport={onGenerateAiReport}
             onCreateNote={onCreateNote}
             onDeleteNote={onDeleteNote}
+            onGenerateAiNotes={onGenerateAiNotes}
             onOpenNewsTab={() => setSelectedTab("News")}
             onOpenNotesTab={() => setSelectedTab("Notes")}
             onSyncMarketData={onSyncMarketData}
@@ -2567,10 +2716,12 @@ function ResearchShell({
 
         {selectedTab === "Notes" && (
           <NotesTab
+            aiReportStatus={aiReportStatus}
             notes={bundle.notes}
             noteMessage={noteMessage}
             noteStatus={noteStatus}
             stock={stock}
+            thesisStatus={thesisStatus}
             onCreateNote={onCreateNote}
             onDeleteNote={onDeleteNote}
             onGenerateAiNotes={onGenerateAiNotes}
@@ -2595,10 +2746,13 @@ function OverviewTab({
   aiReportMessage,
   thesisStatus,
   thesisMessage,
+  noteMessage,
+  noteStatus,
   syncStatus,
   onGenerateAiReport,
   onCreateNote,
   onDeleteNote,
+  onGenerateAiNotes,
   onOpenNewsTab,
   onOpenNotesTab,
   onSyncMarketData,
@@ -2616,10 +2770,13 @@ function OverviewTab({
   aiReportMessage?: string;
   thesisStatus: "idle" | "proposing" | "saving" | "success" | "error";
   thesisMessage?: string;
+  noteMessage?: string;
+  noteStatus?: NoteStatus;
   syncStatus?: "idle" | "syncing" | "success" | "error";
   onGenerateAiReport?: () => Promise<void>;
   onCreateNote?: (input: NoteInput) => Promise<void>;
   onDeleteNote?: (input: NoteDeleteInput) => Promise<void>;
+  onGenerateAiNotes?: () => Promise<void>;
   onOpenNewsTab?: () => void;
   onOpenNotesTab?: () => void;
   onSyncMarketData?: () => Promise<void>;
@@ -2631,6 +2788,9 @@ function OverviewTab({
   }) => Promise<void>;
 }) {
   const snapshots = bundle.snapshots ?? [];
+  const riskFactors = aiReport ? aiReport.bearPoints : risks.map((item) => item.title);
+  const riskFactorsUpdatedAt =
+    aiReport?.generatedAt ?? stock.updatedAt ?? snapshots[0]?.syncedAt;
 
   return (
     <div className="content-grid">
@@ -2682,7 +2842,38 @@ function OverviewTab({
             )}
           </Panel>
 
-          <Panel title="Notes" action="View all" onAction={onOpenNotesTab}>
+          <Panel
+            title="Notes"
+            actions={
+              <>
+                <button
+                  disabled={
+                    !onGenerateAiNotes ||
+                    noteStatus === "generating" ||
+                    aiReportStatus === "generating" ||
+                    thesisStatus === "proposing" ||
+                    thesisStatus === "saving"
+                  }
+                  onClick={() => void onGenerateAiNotes?.()}
+                  type="button"
+                >
+                  {noteStatus === "generating"
+                    ? aiReportStatus === "generating"
+                      ? "Refreshing report..."
+                      : thesisStatus === "proposing"
+                        ? "Proposing thesis..."
+                        : "Generating notes..."
+                    : "Generate AI notes"}
+                </button>
+                <button onClick={onOpenNotesTab} type="button">
+                  View all
+                </button>
+              </>
+            }
+          >
+            {noteMessage && (
+              <p className={`sync-message ${noteStatus}`}>{noteMessage}</p>
+            )}
             {bundle.notes.length ? (
               <div className="notes-stack">
                 {bundle.notes.map((note) => (
@@ -2714,10 +2905,25 @@ function OverviewTab({
               AI Research Brief
             </span>
           }
-          meta={
-            aiReport
-              ? `${aiReport.provider} • ${aiReport.model} • ${formatDayMonth(aiReport.generatedAt)}`
-              : "Generated from live data"
+          actions={
+            <>
+              <button
+                disabled={!onGenerateAiReport || aiReportStatus === "generating"}
+                onClick={() => void onGenerateAiReport?.()}
+                type="button"
+              >
+                {aiReportStatus === "generating"
+                  ? "Generating..."
+                  : aiReport
+                    ? "Refresh AI report"
+                    : "Generate AI report"}
+              </button>
+              <span>
+                {aiReport
+                  ? `${aiReport.provider} • ${aiReport.model} • ${formatDayMonth(aiReport.generatedAt)}`
+                  : "Generated from live data"}
+              </span>
+            </>
           }
         >
           <p className="brief-copy">{aiReport?.summary ?? stock.summary}</p>
@@ -2752,17 +2958,6 @@ function OverviewTab({
           {aiReportMessage && (
             <p className={`sync-message ${aiReportStatus}`}>{aiReportMessage}</p>
           )}
-          <button
-            className="link-button"
-            onClick={() => void onGenerateAiReport?.()}
-            type="button"
-          >
-            {aiReportStatus === "generating"
-              ? "Generating AI report..."
-              : aiReport
-                ? "Refresh AI report →"
-                : "Generate AI report →"}
-          </button>
         </Panel>
 
         <InvestmentThesisPanel
@@ -2797,21 +2992,28 @@ function OverviewTab({
                     <strong>${snapshot.price.toFixed(2)}</strong>
                     <span>{snapshot.marketCap} market cap</span>
                   </div>
-                  <p>{snapshot.aiBriefSummary ?? snapshot.thesisSummary ?? snapshot.summary}</p>
+                  <p>{snapshot.summary ?? snapshot.aiBriefSummary ?? snapshot.thesisSummary}</p>
                 </article>
               ))}
             </div>
           ) : (
             <p className="portfolio-muted-copy">
               Each successful live sync now saves a lightweight company snapshot with the
-              quote, core metrics, AI brief, and thesis state.
+              quote, core metrics, and the live sync summary.
             </p>
           )}
         </Panel>
 
-        <Panel title="Risk Factors">
+        <Panel
+          title="Risk Factors"
+          meta={
+            riskFactorsUpdatedAt
+              ? `${aiReport ? "AI brief" : "Live sync"} • Updated ${formatDayMonth(riskFactorsUpdatedAt)}`
+              : "No risk data"
+          }
+        >
           <ul className="risk-list">
-            {(aiReport ? aiReport.watchItems : risks.map((item) => item.title)).map((item) => (
+            {riskFactors.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
@@ -3098,18 +3300,22 @@ function FilingsTab({
 }
 
 function NotesTab({
+  aiReportStatus,
   notes,
   noteMessage,
   noteStatus = "idle",
   stock,
+  thesisStatus,
   onCreateNote,
   onDeleteNote,
   onGenerateAiNotes,
 }: {
+  aiReportStatus: "idle" | "generating" | "success" | "error";
   notes: ResearchBundle["notes"];
   noteMessage?: string;
   noteStatus?: NoteStatus;
   stock: ResearchBundle["stock"];
+  thesisStatus: "idle" | "proposing" | "saving" | "success" | "error";
   onCreateNote?: (input: NoteInput) => Promise<void>;
   onDeleteNote?: (input: NoteDeleteInput) => Promise<void>;
   onGenerateAiNotes?: () => Promise<void>;
@@ -3117,7 +3323,10 @@ function NotesTab({
   const isBusy =
     noteStatus === "saving" ||
     noteStatus === "deleting" ||
-    noteStatus === "generating";
+    noteStatus === "generating" ||
+    aiReportStatus === "generating" ||
+    thesisStatus === "proposing" ||
+    thesisStatus === "saving";
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
@@ -3173,7 +3382,13 @@ function NotesTab({
             onClick={() => void onGenerateAiNotes?.()}
             type="button"
           >
-            {noteStatus === "generating" ? "Generating..." : "Auto-generate AI Notes"}
+            {noteStatus === "generating"
+              ? aiReportStatus === "generating"
+                ? "Refreshing report..."
+                : thesisStatus === "proposing"
+                  ? "Proposing thesis..."
+                  : "Generating notes..."
+              : "Auto-generate AI Notes"}
           </button>
           <button
             className="secondary-button compact"
@@ -3905,9 +4120,16 @@ function DataSourceHealthView({ health }: { health?: DataSourceHealth }) {
     },
     {
       service: "Twelve Data",
-      role: "Fallback quote and chart history",
-      configured: twelveDataClientKey ? "Client key configured" : "Client key missing",
-      note: "Used when primary chart or quote providers are unavailable.",
+      role: "Adjusted signal history plus quote and chart fallback",
+      configured: "Convex server env",
+      dailyLimit: 800,
+      note: "Convex fetches adjust=all daily history in rate-limited batches.",
+    },
+    {
+      service: "Signal Engine",
+      role: "Six-month BUY/HOLD/SELL model and historical calibration",
+      configured: "Convex signal-v1-6m",
+      note: "Tracks backfill, recalculation, factor fallback, and model failures.",
     },
     {
       service: "Local AI Bridge",
@@ -3950,6 +4172,37 @@ function DataSourceHealthView({ health }: { health?: DataSourceHealth }) {
           />
         </div>
       </div>
+
+      <section className="panel signal-health-panel">
+        <div className="panel-header">
+          <div>
+            <h2>Signal Engine Health</h2>
+            <p>Coverage, freshness, and calibration state for the saved universe.</p>
+          </div>
+          <span>{health?.signalHealth?.modelVersions.join(", ") || "signal-v1-6m"}</span>
+        </div>
+        <div className="portfolio-summary data-health-summary">
+          <Metric
+            label="Signals"
+            value={`${health?.signalHealth?.signalCount ?? 0}/${health?.signalHealth?.trackedStocks ?? 0}`}
+          />
+          <Metric label="Calibrated" value={String(health?.signalHealth?.readySignals ?? 0)} />
+          <Metric label="Provisional" value={String(health?.signalHealth?.provisionalSignals ?? 0)} />
+          <Metric label="Missing" value={String(health?.signalHealth?.missingSignals ?? 0)} />
+          <Metric
+            label="Stale / errors"
+            value={`${health?.signalHealth?.staleSignals ?? 0} / ${health?.signalHealth?.errorSignals ?? 0}`}
+          />
+          <Metric
+            label="Last calculation"
+            value={
+              health?.signalHealth?.lastComputedAt
+                ? formatDateTime(health.signalHealth.lastComputedAt)
+                : "Not run"
+            }
+          />
+        </div>
+      </section>
 
       <section className="data-source-grid">
         {providerCards.map((provider) => {
@@ -4801,6 +5054,226 @@ function WatchlistView({
         </div>
       </section>
     </section>
+  );
+}
+
+function SignalsView({
+  items,
+  listNames,
+  selectedList,
+  onOpenResearch,
+  onSelectedListChange,
+}: {
+  items: PortfolioItem[];
+  listNames: string[];
+  selectedList: string;
+  onOpenResearch: (ticker: string) => void;
+  onSelectedListChange: (listName: string) => void;
+}) {
+  const rankedItems = rankSignalItems(items, selectedList);
+  const buyCount = rankedItems.filter(
+    (item) => item.stockSignal?.rating === "BUY"
+  ).length;
+  const holdCount = rankedItems.filter(
+    (item) => item.stockSignal?.rating === "HOLD"
+  ).length;
+  const sellCount = rankedItems.filter(
+    (item) => item.stockSignal?.rating === "SELL"
+  ).length;
+  const provisionalCount = rankedItems.filter(
+    (item) => item.stockSignal?.provisional
+  ).length;
+  const staleCount = rankedItems.filter(
+    (item) => item.stockSignal?.dataStatus === "stale"
+  ).length;
+  const pendingCount = rankedItems.filter((item) => !item.stockSignal).length;
+
+  const summaryCounts = [
+    ["BUY", buyCount, "buy"],
+    ["HOLD", holdCount, "hold"],
+    ["SELL", sellCount, "sell"],
+    ["Provisional", provisionalCount, "provisional"],
+    ["Stale", staleCount, "stale"],
+  ] as const;
+
+  return (
+    <section className="portfolio-page signal-ranking-page">
+      <div className="portfolio-hero signal-ranking-hero">
+        <div>
+          <span className="ticker-badge">Six-month horizon</span>
+          <h1>Research Signal Rankings</h1>
+          <p>
+            Saved companies are grouped BUY, HOLD, then SELL and ranked by their
+            explainable composite score. Pending signals remain separate from HOLD.
+          </p>
+        </div>
+        <div className="signal-ranking-summary" aria-label="Signal summary counts">
+          {summaryCounts.map(([label, count, tone]) => (
+            <article className={`signal-count-card ${tone}`} key={label}>
+              <span>{label}</span>
+              <strong>{count}</strong>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div className="portfolio-filters" aria-label="Filter signal rankings by watchlist">
+        {["All", ...listNames].map((name) => (
+          <button
+            className={selectedList === name ? "selected" : ""}
+            key={name}
+            onClick={() => onSelectedListChange(name)}
+            type="button"
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+
+      <section className="panel signal-ranking-panel">
+        <div className="panel-header">
+          <div>
+            <h2>{selectedList === "All" ? "All Saved Stocks" : selectedList}</h2>
+            <p className="signal-ranking-sort-note">
+              Rating group → composite score → update date → ticker
+            </p>
+          </div>
+          <span>
+            {rankedItems.length} ranked{pendingCount ? ` • ${pendingCount} pending` : ""}
+          </span>
+        </div>
+
+        {rankedItems.length === 0 ? (
+          <div className="empty-portfolio signal-ranking-empty">
+            <h2>No saved companies in this watchlist</h2>
+            <p>
+              Save a company from Research, then sync live data to calculate its
+              six-month research signal.
+            </p>
+          </div>
+        ) : (
+          <div className="signal-ranking-list">
+            {rankedItems.map((item, index) => (
+              <article
+                className={`signal-ranking-row ${
+                  item.stockSignal?.rating.toLowerCase() ?? "pending"
+                }`}
+                key={item.ticker}
+              >
+                <div className="signal-rank" aria-label={`Rank ${index + 1}`}>
+                  <span>#</span>
+                  <strong>{index + 1}</strong>
+                </div>
+
+                <div className="signal-ranking-company-block">
+                  <button
+                    className="portfolio-company-cell company-cell-button"
+                    onClick={() => onOpenResearch(item.ticker)}
+                    type="button"
+                  >
+                    <span>{item.ticker.slice(0, 1)}</span>
+                    <div>
+                      <strong>{item.stock?.companyName ?? item.ticker}</strong>
+                      <small>
+                        {item.ticker} • {item.stock?.sector ?? "Company data pending"}
+                      </small>
+                    </div>
+                  </button>
+                  <div className="signal-ranking-market">
+                    <span className="portfolio-list-pill">{item.listName}</span>
+                    <strong>{item.stock ? `$${item.stock.price.toFixed(2)}` : "Price N/A"}</strong>
+                    <em className={(item.stock?.changePercent ?? 0) >= 0 ? "up" : "down"}>
+                      {item.stock
+                        ? `${item.stock.changePercent >= 0 ? "+" : ""}${item.stock.changePercent.toFixed(2)}% day`
+                        : "Day N/A"}
+                    </em>
+                  </div>
+                </div>
+
+                <SignalRankingSummary signal={item.stockSignal ?? undefined} />
+
+                <button
+                  className="signal-ranking-research"
+                  onClick={() => onOpenResearch(item.ticker)}
+                  type="button"
+                >
+                  Research
+                  <ChevronRight size={16} />
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <p className="signal-ranking-disclaimer">
+        General research opinions for a six-month horizon, not personalized financial
+        advice. Historical probabilities describe model analogs and do not guarantee
+        future returns.
+      </p>
+    </section>
+  );
+}
+
+function SignalRankingSummary({
+  signal,
+}: {
+  signal?: NonNullable<ResearchBundle["stockSignal"]>;
+}) {
+  if (!signal) {
+    return (
+      <div className="signal-ranking-signal pending" aria-label="Signal pending">
+        <div className="signal-ranking-heading">
+          <span>6M research signal</span>
+          <strong>Pending</strong>
+        </div>
+        <p>Sync live data to calculate the first research signal.</p>
+      </div>
+    );
+  }
+
+  const showProbabilities =
+    !signal.provisional &&
+    signal.winProbability !== undefined &&
+    signal.lossProbability !== undefined &&
+    signal.outperformProbability !== undefined;
+
+  return (
+    <div
+      className={`signal-ranking-signal ${signal.rating.toLowerCase()}${
+        signal.dataStatus === "stale" ? " stale" : ""
+      }`}
+      aria-label={`${signal.rating} six-month signal, score ${signal.compositeScore} out of 100`}
+    >
+      <div className="signal-ranking-heading">
+        <span>6M research signal</span>
+        <strong>{signal.rating}</strong>
+        <em>{signal.compositeScore}/100</em>
+      </div>
+      <div className="signal-scale" aria-hidden="true">
+        <span className="signal-scale-marker" style={{ left: `${signal.compositeScore}%` }} />
+      </div>
+      <div className="signal-scale-labels" aria-hidden="true">
+        <span>SELL</span>
+        <span>HOLD</span>
+        <span>BUY</span>
+      </div>
+      {showProbabilities ? (
+        <div className="signal-ranking-probabilities">
+          <span><strong>{Math.round((signal.winProbability ?? 0) * 100)}%</strong> win</span>
+          <span><strong>{Math.round((signal.lossProbability ?? 0) * 100)}%</strong> loss</span>
+          <span><strong>{Math.round((signal.outperformProbability ?? 0) * 100)}%</strong> beat SPY</span>
+        </div>
+      ) : (
+        <p className="signal-ranking-unavailable">Historical probability unavailable</p>
+      )}
+      <div className="signal-ranking-meta">
+        <span>{signal.provisional ? "Provisional" : `${signal.confidence} confidence`}</span>
+        <span>{signal.dataCoverage}% coverage</span>
+        <span>Updated {formatDayMonth(signal.computedAt)}</span>
+        {signal.dataStatus === "stale" && <em>Stale</em>}
+      </div>
+    </div>
   );
 }
 
@@ -6200,6 +6673,156 @@ function ResearchHighlight({
         <p>{item.body}</p>
       </div>
     </article>
+  );
+}
+
+type StockSignal = NonNullable<ResearchBundle["stockSignal"]>;
+
+function StockSignalCard({
+  signal,
+  expanded,
+  onToggle,
+}: {
+  signal?: StockSignal;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  if (!signal) {
+    return (
+      <div className="stock-signal-card pending" aria-label="Six-month signal pending">
+        <div className="signal-card-heading">
+          <span>6M research signal</span>
+          <strong>Pending</strong>
+        </div>
+        <p>Sync live data to calculate a provisional BUY/HOLD/SELL opinion.</p>
+        <small>General research opinion, not personalized financial advice.</small>
+      </div>
+    );
+  }
+
+  const showProbabilities = !signal.provisional && signal.winProbability !== undefined;
+  return (
+    <button
+      aria-expanded={expanded}
+      className={`stock-signal-card ${signal.rating.toLowerCase()}${
+        signal.dataStatus === "stale" ? " stale" : ""
+      }`}
+      onClick={onToggle}
+      type="button"
+    >
+      <div className="signal-card-heading">
+        <span>6M research signal</span>
+        <strong>{signal.rating}</strong>
+      </div>
+      <div className="signal-scale" aria-label={`Composite score ${signal.compositeScore} out of 100`}>
+        <span className="signal-scale-marker" style={{ left: `${signal.compositeScore}%` }} />
+      </div>
+      <div className="signal-scale-labels" aria-hidden="true">
+        <span>SELL</span>
+        <span>HOLD</span>
+        <span>BUY</span>
+      </div>
+      {showProbabilities ? (
+        <div className="signal-quick-metrics">
+          <span><strong>{Math.round((signal.winProbability ?? 0) * 100)}%</strong> win</span>
+          <span><strong>{Math.round((signal.lossProbability ?? 0) * 100)}%</strong> loss</span>
+          <span><strong>{Math.round((signal.outperformProbability ?? 0) * 100)}%</strong> beat SPY</span>
+        </div>
+      ) : (
+        <p className="signal-unavailable">Historical probability unavailable</p>
+      )}
+      <div className="signal-card-meta">
+        <span>{signal.provisional ? "Provisional" : signal.confidence + " confidence"}</span>
+        <span>{signal.dataCoverage}% coverage</span>
+        <span>{formatDayMonth(signal.computedAt)}</span>
+        {signal.dataStatus === "stale" && <em>Stale</em>}
+        <ChevronDown className={expanded ? "expanded" : ""} size={15} />
+      </div>
+    </button>
+  );
+}
+
+function StockSignalDetails({ signal, ticker }: { signal: StockSignal; ticker: string }) {
+  const factors = [
+    ["Price trend / statistical", signal.factorScores.market],
+    ["Financial growth", signal.factorScores.growth],
+    ["Profitability / cash flow", signal.factorScores.profitability],
+    ["Balance sheet", signal.factorScores.balanceSheet],
+    ["Valuation", signal.factorScores.valuation],
+    ["AI Research Brief", signal.factorScores.ai],
+  ] as const;
+  const formatOutcome = (value?: number) =>
+    value === undefined ? "Unavailable" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
+
+  return (
+    <section className="stock-signal-details" aria-label={`${ticker} six-month signal details`}>
+      <div className="signal-details-header">
+        <div>
+          <span>Explainable six-month opinion</span>
+          <h2>{ticker} {signal.rating} · {signal.compositeScore}/100</h2>
+        </div>
+        <div className="signal-detail-badges">
+          <span>{signal.modelVersion}</span>
+          <span>{signal.provisional ? "Provisional factor rating" : `${signal.confidence} confidence`}</span>
+          {signal.dataStatus === "stale" && <span className="stale">Stale inputs</span>}
+        </div>
+      </div>
+
+      <div className="signal-details-grid">
+        <div className="signal-factor-list">
+          <h3>Factor scores</h3>
+          {factors.map(([label, score]) => (
+            <div className="signal-factor-row" key={label}>
+              <span>{label}</span>
+              <div><i style={{ width: `${score}%` }} /></div>
+              <strong>{score}</strong>
+            </div>
+          ))}
+        </div>
+
+        <div className="signal-outcome-panel">
+          <h3>Historical analog outcome</h3>
+          {signal.provisional ? (
+            <p className="signal-unavailable">Historical probability unavailable. The displayed rating uses factors only.</p>
+          ) : (
+            <dl>
+              <div><dt>Positive return</dt><dd>{Math.round((signal.winProbability ?? 0) * 100)}%</dd></div>
+              <div><dt>Loss</dt><dd>{Math.round((signal.lossProbability ?? 0) * 100)}%</dd></div>
+              <div><dt>Beat SPY</dt><dd>{Math.round((signal.outperformProbability ?? 0) * 100)}%</dd></div>
+            </dl>
+          )}
+          <dl>
+            <div><dt>Expected return</dt><dd>{formatOutcome(signal.expectedReturn)}</dd></div>
+            <div><dt>Expected excess</dt><dd>{formatOutcome(signal.expectedExcessReturn)}</dd></div>
+            <div><dt>10th-percentile downside</dt><dd>{formatOutcome(signal.downsideP10)}</dd></div>
+          </dl>
+        </div>
+
+        <div className="signal-driver-panel positive">
+          <h3>Positive drivers</h3>
+          <ul>{signal.topPositiveDrivers.map((item) => <li key={item}>{item}</li>)}</ul>
+        </div>
+        <div className="signal-driver-panel negative">
+          <h3>Negative drivers</h3>
+          <ul>{signal.topNegativeDrivers.map((item) => <li key={item}>{item}</li>)}</ul>
+        </div>
+      </div>
+
+      <div className="signal-ai-rationale">
+        <strong>AI factor ({signal.factorScores.ai}/100)</strong>
+        <span>{signal.aiFresh && signal.aiRationale
+          ? signal.aiRationale
+          : "Neutral: the AI Research Brief is missing, lacks a signal score, or is older than the latest market or financial sync."}</span>
+      </div>
+      <div className="signal-details-footer">
+        <span>{signal.source}</span>
+        <span>History {signal.historyStart ?? "unavailable"} to {signal.historyEnd ?? "unavailable"}</span>
+        <span>{signal.sampleSize} nearest analogs · {signal.tickerCount} tickers · {signal.dataCoverage}% coverage</span>
+      </div>
+      <p className="signal-disclaimer">
+        General research opinion for a six-month horizon, not personalized financial advice. Validate against current filings, risk tolerance, and portfolio constraints.
+      </p>
+    </section>
   );
 }
 
