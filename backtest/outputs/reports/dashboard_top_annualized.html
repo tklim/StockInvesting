@@ -9,6 +9,7 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
     header{position:sticky;top:0;z-index:10;padding:20px clamp(18px,4vw,52px);background:rgba(243,245,247,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .back-link{display:inline-flex;align-items:center;margin-bottom:7px;color:var(--accent);font-size:.8rem;font-weight:800;text-decoration:none}.back-link:hover{text-decoration:underline}
     header h1{margin:0 0 5px;font-size:clamp(1.45rem,3vw,2.2rem)}
     header p{margin:0;color:var(--muted)}
     .source{margin-top:6px!important;font-size:.82rem}
@@ -62,9 +63,10 @@
 </head>
 <body>
   <header>
+    <a class="back-link" href="dashboard.html">← Master dashboard</a>
     <h1>Fund Backtest Dashboard — Top Annualized Return</h1>
-    <p>11 funds · ranked by best of strategy or buy &amp; hold, whichever is higher · slices pooled per ticker · generated 2026-08-01 17:30:04</p>
-    <p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-01 17:23:16 — ranking computed here from 1694 run(s) in this file, so it is current with it.</p>
+    <p>11 funds · ranked by best of strategy or buy &amp; hold, whichever is higher · slices pooled per ticker · generated 2026-08-01 21:52:13</p>
+    <p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-01 21:10:56 — ranking computed here from 1717 run(s) in this file, so it is current with it.</p>
   </header>
   <main>
             <article class="fund-card">
@@ -129,7 +131,19 @@
             
             <article class="fund-card">
               <div class="card-heading">
-                <div><span class="rank">#6</span><h2>JNJ</h2></div>
+                <div><span class="rank">#6</span><h2>TSLA</h2></div>
+                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+40.27%</strong></div>
+              </div>
+              <div class="metrics"><span>Strategy ann. <b>+24.04%</b></span><span>Buy &amp; hold ann. <b>+40.27%</b></span><span>Excess ann. <b>-16.24%</b></span><span>Max drawdown <b>64.32%</b></span><span>Run years <b>15.1Y</b></span><span>Through <b>2026-07-31</b></span><span>Winning run <b>1Y/12M · generic</b></span></div>
+              <button class="chart-button" type="button" data-src="../charts/TSLA-1.0Y-12M-generic-ga10-tuned-20260801-205316.png" data-title="TSLA" aria-label="Open zoomable chart for TSLA">
+                <img src="../charts/TSLA-1.0Y-12M-generic-ga10-tuned-20260801-205316.png" alt="Strategy chart for TSLA" loading="lazy">
+                <span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article>
+            
+            <article class="fund-card">
+              <div class="card-heading">
+                <div><span class="rank">#7</span><h2>JNJ</h2></div>
                 <div class="headline pos"><span>Top annualized<span class="badge strategy">Strategy</span></span><strong>+37.03%</strong></div>
               </div>
               <div class="metrics"><span>Strategy ann. <b>+37.03%</b></span><span>Buy &amp; hold ann. <b>+32.07%</b></span><span>Excess ann. <b>+4.96%</b></span><span>Max drawdown <b>10.96%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>3Y/3M · generic</b></span></div>
@@ -141,7 +155,7 @@
             
             <article class="fund-card">
               <div class="card-heading">
-                <div><span class="rank">#7</span><h2>JPM</h2></div>
+                <div><span class="rank">#8</span><h2>JPM</h2></div>
                 <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+36.16%</strong></div>
               </div>
               <div class="metrics"><span>Strategy ann. <b>+26.76%</b></span><span>Buy &amp; hold ann. <b>+36.16%</b></span><span>Excess ann. <b>-9.40%</b></span><span>Max drawdown <b>24.42%</b></span><span>Run years <b>4.0Y</b></span><span>Through <b>2026-07-24</b></span><span>Winning run <b>1Y/12M · generic</b></span></div>
@@ -153,24 +167,12 @@
             
             <article class="fund-card">
               <div class="card-heading">
-                <div><span class="rank">#8</span><h2>AMZN</h2></div>
+                <div><span class="rank">#9</span><h2>AMZN</h2></div>
                 <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+24.40%</strong></div>
               </div>
               <div class="metrics"><span>Strategy ann. <b>+17.50%</b></span><span>Buy &amp; hold ann. <b>+24.40%</b></span><span>Excess ann. <b>-6.90%</b></span><span>Max drawdown <b>21.59%</b></span><span>Run years <b>3.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>2Y/12M · generic</b></span></div>
               <button class="chart-button" type="button" data-src="../charts/AMZN-2.0Y-12M-generic-ga10-tuned-20260722-223347.png" data-title="AMZN" aria-label="Open zoomable chart for AMZN">
                 <img src="../charts/AMZN-2.0Y-12M-generic-ga10-tuned-20260722-223347.png" alt="Strategy chart for AMZN" loading="lazy">
-                <span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article>
-            
-            <article class="fund-card">
-              <div class="card-heading">
-                <div><span class="rank">#9</span><h2>TSLA</h2></div>
-                <div class="headline pos"><span>Top annualized<span class="badge market">Buy &amp; hold</span></span><strong>+24.11%</strong></div>
-              </div>
-              <div class="metrics"><span>Strategy ann. <b>-9.19%</b></span><span>Buy &amp; hold ann. <b>+24.11%</b></span><span>Excess ann. <b>-33.30%</b></span><span>Max drawdown <b>45.00%</b></span><span>Run years <b>2.0Y</b></span><span>Through <b>2026-07-21</b></span><span>Winning run <b>3Y/12M · generic</b></span></div>
-              <button class="chart-button" type="button" data-src="../charts/TSLA-3.0Y-12M-generic-ga10-tuned-20260724-024319.png" data-title="TSLA" aria-label="Open zoomable chart for TSLA">
-                <img src="../charts/TSLA-3.0Y-12M-generic-ga10-tuned-20260724-024319.png" alt="Strategy chart for TSLA" loading="lazy">
                 <span class="zoom-hint">Click to zoom</span>
               </button>
             </article>
