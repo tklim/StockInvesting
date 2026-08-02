@@ -3,9 +3,32 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Backtest Intelligence Hub</title>
+  <script>
+    try {
+      const stored = localStorage.getItem('stockDashboard.theme.v1');
+      document.documentElement.dataset.theme =
+        stored === 'dark' || stored === 'light'
+          ? stored
+          : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (error) {}
+  </script>
   <style>
     :root{--ink:#142033;--muted:#6b7584;--line:#dce3e7;--paper:#fff;--bg:#f4f6f5;
-      --green:#0f6e5c;--green-soft:#e5f2ee}
+      --green:#0f6e5c;--green-soft:#e5f2ee;--green-ring:#bcded3;--red:#a33b2e;
+      --amber:#89510e;--amber-soft:#fff0d9;--amber-dot:#d99a3d;
+      --buy:#096744;--buy-soft:#dff4e9;--buy-dot:#1fa06a;
+      --head-bg:#eef2f1;--pill-bg:#f7f9f8;--dir-bg:#153f3a;--dir-ink:#fff;
+      --badge-bg:#142a45;--badge-ink:#8fe0c6;--hover:#9dc4b9;
+      --warn-line:#efc286;--warn-bg:#fff4e4;--warn-ink:#71440d;
+      --shadow:rgba(25,48,60,.09)}
+    [data-theme="dark"]{--ink:#e2e9ef;--muted:#93a0ad;--line:#26323d;--paper:#151f29;--bg:#0d141b;
+      --green:#43c9a2;--green-soft:#12312a;--green-ring:#1e4a3e;--red:#e07a6a;
+      --amber:#e0a95e;--amber-soft:#332512;--amber-dot:#c98f3d;
+      --buy:#4ad391;--buy-soft:#0f2e21;--buy-dot:#2fbd7d;
+      --head-bg:#1a2631;--pill-bg:#1a2631;--dir-bg:#43c9a2;--dir-ink:#0d1f19;
+      --badge-bg:#43c9a2;--badge-ink:#0d1f19;--hover:#2f5548;
+      --warn-line:#5a4218;--warn-bg:#2b2110;--warn-ink:#e6c188;
+      --shadow:rgba(0,0,0,.4)}
     *{box-sizing:border-box} [hidden]{display:none!important} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
     a{color:inherit;text-decoration:none} main{width:min(1280px,calc(100% - 32px));margin:0 auto 72px}
     .hero{margin-top:16px;padding:clamp(20px,2.8vw,32px);border-radius:22px;color:#fff;
@@ -26,39 +49,60 @@
     .dashboards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
     .dashboard-link{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;align-content:start;min-height:106px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
       transition:transform .18s,box-shadow .18s,border-color .18s}
-    .dashboard-link:hover{transform:translateY(-3px);border-color:#9dc4b9;box-shadow:0 15px 35px rgba(25,48,60,.09)}
+    .dashboard-link:hover{transform:translateY(-3px);border-color:var(--hover);box-shadow:0 15px 35px var(--shadow)}
     .dashboard-link .number{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--green-soft);color:var(--green);font-size:.8rem;font-weight:850}
     .dashboard-link h3{margin:0;align-self:center;font-size:1rem} .dashboard-link p{grid-column:1/-1;margin:6px 0 0;color:var(--muted);font-size:.84rem;line-height:1.35}
     .sort-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
     .sort-label{margin-right:2px;color:var(--muted);font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
-    .sort-pill,.sort-direction{min-height:34px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:#f7f9f8;color:var(--ink);font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
-    .sort-pill[aria-pressed="true"]{border-color:#91c7b8;background:var(--green-soft);color:var(--green)}
-    .sort-direction{margin-left:auto;background:#153f3a;color:#fff;border-color:#153f3a}
-    .sort-pill:focus-visible,.sort-direction:focus-visible{outline:3px solid rgba(29,126,232,.28);outline-offset:2px}
-    .column-chooser{position:relative}.column-chooser summary{display:flex;align-items:center;min-height:34px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:#f7f9f8;font-size:.78rem;font-weight:750;cursor:pointer;list-style:none}
-    .column-chooser summary::-webkit-details-marker{display:none}.column-chooser[open] summary{border-color:#91c7b8;background:var(--green-soft);color:var(--green)}
-    .column-panel{position:absolute;right:0;z-index:5;width:250px;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--paper);box-shadow:0 16px 40px rgba(20,46,62,.16)}
+    .sort-pill,.sort-direction,.theme-toggle{min-height:34px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--pill-bg);color:var(--ink);font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
+    .sort-pill[aria-pressed="true"]{border-color:var(--green-ring);background:var(--green-soft);color:var(--green)}
+    .sort-direction{margin-left:auto;background:var(--dir-bg);color:var(--dir-ink);border-color:var(--dir-bg)}
+    .sort-pill:focus-visible,.sort-direction:focus-visible,.theme-toggle:focus-visible{outline:3px solid rgba(29,126,232,.28);outline-offset:2px}
+    .column-chooser{position:relative}.column-chooser summary{display:flex;align-items:center;min-height:34px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--pill-bg);font-size:.78rem;font-weight:750;cursor:pointer;list-style:none}
+    .column-chooser summary::-webkit-details-marker{display:none}.column-chooser[open] summary{border-color:var(--green-ring);background:var(--green-soft);color:var(--green)}
+    .column-panel{position:absolute;right:0;z-index:6;width:250px;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--paper);box-shadow:0 16px 40px var(--shadow)}
     .column-panel label{display:flex;align-items:center;gap:8px;padding:7px 5px;font-size:.82rem}.column-panel input{accent-color:var(--green)}
-    .column-panel button{width:100%;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#f7f9f8;color:var(--ink);font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
-    .fund-list{display:grid;gap:8px;margin-top:8px}
-     .fund-row{--visible-column-count:8;display:grid;grid-template-columns:48px 86px repeat(var(--visible-column-count),minmax(0,1fr)) 150px 24px;
-      gap:9px;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
-    .fund-row:hover{border-color:#9dc4b9;box-shadow:0 8px 24px rgba(25,48,60,.06)}
-    .rank{display:grid;place-items:center;width:36px;height:30px;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:850}
-    .ticker{font-size:1.08rem;font-weight:850} .fund-row small{display:block;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
-    .metric-wrap{display:contents}.metric-column{min-width:0}.fund-row strong{display:block;margin-top:4px} .signal{display:inline-flex;align-items:center;justify-content:center;justify-self:start;min-width:0;width:100%;min-height:36px;padding:7px 10px;border-radius:999px;font-size:.76rem;font-weight:800;line-height:1;text-align:center;white-space:nowrap}
-    .signal.buy{color:#096744;background:#dff4e9} .signal.cash{color:#89510e;background:#fff0d9}
-    .through{color:var(--muted);font-size:.8rem} .arrow{font-size:1.25rem;color:var(--green)}
-    .warning{margin-top:18px;padding:16px 18px;border:1px solid #efc286;border-radius:14px;background:#fff4e4;color:#71440d}
+    .column-panel button{width:100%;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--pill-bg);color:var(--ink);font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
+    .asof-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 2px 6px;color:var(--muted);font-size:.8rem}
+    .asof-bar b{color:var(--ink)}
+    .fund-list{--visible-column-count:6;border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden}
+    .grid{display:grid;grid-template-columns:44px 158px repeat(var(--visible-column-count),minmax(0,1fr)) 26px;
+      gap:8px;align-items:center;padding:0 14px}
+    .fund-head{position:sticky;top:0;z-index:5;min-height:34px;background:var(--head-bg);border-bottom:1px solid var(--line);
+      font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    .fund-head [data-column]{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap;min-width:0;overflow:hidden}
+    .fund-head .sorted{color:var(--green);box-shadow:inset 0 -2px 0 var(--green)}
+    .info{display:inline-grid;place-items:center;width:13px;height:13px;border-radius:50%;flex:none;
+      border:1px solid var(--line);color:var(--muted);font-size:.58rem;font-style:normal;cursor:help}
+    .fund-row{min-height:42px;border-bottom:1px solid var(--line);transition:background .12s}
+    .fund-row:last-child{border-bottom:none}
+    .fund-row:hover{background:var(--head-bg)}
+    .rank{color:var(--muted);font-size:.78rem;font-weight:750;font-variant-numeric:tabular-nums}
+    .id-cell{display:flex;align-items:center;gap:8px;min-width:0}
+    .ticker{font-size:.95rem;font-weight:850;letter-spacing:-.01em}
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 6px;border-radius:5px;
+      font-size:.64rem;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+    .chip .dot{width:6px;height:6px;border-radius:50%}
+    .chip.cash{color:var(--amber);background:var(--amber-soft)} .chip.cash .dot{background:var(--amber-dot)}
+    .chip.buy{color:var(--buy);background:var(--buy-soft)} .chip.buy .dot{background:var(--buy-dot)}
+    .cell{display:flex;align-items:center;justify-content:flex-end;align-self:stretch;min-width:0}
+    .cell.sorted{background:var(--green-soft);box-shadow:inset 1px 0 0 var(--green-ring),inset -1px 0 0 var(--green-ring)}
+    .cell.sorted .val{font-size:.95rem;font-weight:850}
+    .val{font-size:.86rem;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis}
+    .val.pos{color:var(--green)} .val.neg{color:var(--red)}
+    .win{display:inline-block;margin-left:5px;padding:1px 5px;border-radius:4px;background:var(--badge-bg);
+      color:var(--badge-ink);font-size:.58rem;font-weight:800;letter-spacing:.05em;vertical-align:1px}
+    .arrow{font-size:1.05rem;color:var(--green);text-align:right}
+    .warning{margin-top:18px;padding:16px 18px;border:1px solid var(--warn-line);border-radius:14px;background:var(--warn-bg);color:var(--warn-ink)}
     .warning ul{margin:7px 0 0;padding-left:20px} footer{margin-top:28px;color:var(--muted);font-size:.8rem}
-    @media(max-width:1050px){.summary{grid-template-columns:repeat(2,1fr)}.dashboards{grid-template-columns:repeat(2,1fr)}
-      .fund-row{grid-template-columns:44px 72px repeat(var(--visible-column-count),minmax(0,1fr)) 116px 22px;gap:7px;padding:14px 12px}}
+    @media(max-width:1050px){.summary{grid-template-columns:repeat(2,1fr)}.dashboards{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:650px){main{width:min(100% - 20px,1460px)}.summary{grid-template-columns:1fr 1fr}
       .sort-label{width:100%}.sort-direction{margin-left:0}.column-panel{left:0;right:auto}
-      .fund-row{grid-template-columns:40px 1fr minmax(105px,auto) 20px;gap:9px}.rank,.ticker,.signal,.arrow{grid-row:1}
-      .rank{grid-column:1}.ticker{grid-column:2}.signal{grid-column:3}.arrow{grid-column:4}
-      .metric-wrap{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:7px;padding-top:9px;border-top:1px solid var(--line)}
-      .metric-column{padding:7px 8px;border-radius:8px;background:#f6f8f8}.section-head{display:block}.section-head p{margin-top:7px}}
+      .list-scroll{overflow-x:auto;border-radius:14px}
+      .fund-list{min-width:560px}
+      .grid{grid-template-columns:36px 140px repeat(var(--visible-column-count),minmax(88px,1fr)) 22px}
+      .section-head{display:block}.section-head p{margin-top:7px}}
   </style>
 </head>
 <body><main>
@@ -66,8 +110,7 @@
     <h1>One view for every winning strategy.</h1>
     <p class="hero-copy">Explore the latest full-history replay, inspect each ticker's technical and simple
       final charts, or compare the entire run history by excess return and top annualized performance.</p>
-    <div class="hero-meta"><span>13 tickers</span><span>Latest local data 2026-07-31</span>
-      <span>Built 2026-08-02 14:24:32</span><span>Source final_backtest_summary_20260802_142142.csv</span></div>
+    <div class="hero-meta"><span>13 tickers</span><span>Latest local data 2026-07-31</span></div>
   </section>
   <section class="summary" aria-label="Run summary">
     <div class="stat"><span>Latest leader</span><strong>NVDA · +90.52%</strong></div>
@@ -90,12 +133,11 @@
   <section class="sort-bar" aria-label="Stock sorting controls">
     <span class="sort-label">Sort stocks</span>
     <button class="sort-pill" type="button" data-sort-key="latestStrategy" aria-pressed="true">Latest strategy</button>
-    <button class="sort-pill" type="button" data-sort-key="topStrategy" aria-pressed="false">Top strategy</button>
-    <button class="sort-pill" type="button" data-sort-key="topBuyHold" aria-pressed="false">Top buy &amp; hold</button>
-    <button class="sort-pill" type="button" data-sort-key="topAnnualized" aria-pressed="false">Top annualized</button>
-    <button class="sort-pill" type="button" data-sort-key="topExcess" aria-pressed="false">Top excess</button>
-     <button class="sort-pill" type="button" data-sort-key="maxDrawdown" aria-pressed="false">Max drawdown</button>
-     <button class="sort-pill" type="button" data-sort-key="lastPrice" aria-pressed="false">Last price</button>
+    <button class="sort-pill" type="button" data-sort-key="topStrategy" aria-pressed="false">Strategy ann.</button>
+    <button class="sort-pill" type="button" data-sort-key="topBuyHold" aria-pressed="false">B&amp;H ann.</button>
+    <button class="sort-pill" type="button" data-sort-key="topExcess" aria-pressed="false">Excess</button>
+    <button class="sort-pill" type="button" data-sort-key="maxDrawdown" aria-pressed="false">Drawdown</button>
+    <button class="sort-pill" type="button" data-sort-key="lastPrice" aria-pressed="false">Price</button>
     <button class="sort-direction" id="sortDirection" type="button" aria-label="Change to lowest first">Highest first ↓</button>
     <details class="column-chooser" id="columnChooser">
       <summary>Columns (<span id="columnCount">0</span>)</summary>
@@ -103,291 +145,241 @@
         <label><input type="checkbox" data-column-toggle="latestStrategy">Latest strategy</label>
         <label><input type="checkbox" data-column-toggle="topStrategy">Top strategy annualized</label>
         <label><input type="checkbox" data-column-toggle="topBuyHold">Top buy &amp; hold annualized</label>
-        <label><input type="checkbox" data-column-toggle="topAnnualized">Combined top annualized</label>
         <label><input type="checkbox" data-column-toggle="topExcess">Top excess</label>
         <label><input type="checkbox" data-column-toggle="maxDrawdown">Max drawdown</label>
         <label><input type="checkbox" data-column-toggle="lastPrice">Last price</label>
-        <label><input type="checkbox" data-column-toggle="through">Through date</label>
         <button id="resetColumns" type="button">Reset responsive defaults</button>
       </div>
     </details>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme">🌙 Dark</button>
   </section>
-  <section class="fund-list"><a class="fund-row" href="funds/NVDA.html"
+  <div class="asof-bar">
+    <span>13 tickers · 4 buy signals · <b>W</b> marks the better of strategy vs buy &amp; hold</span>
+    <span>All data through <b>2026-07-31</b></span>
+  </div>
+  <div class="list-scroll"><section class="fund-list" aria-label="Stock rankings">
+    <div class="fund-head grid" aria-hidden="true">
+      <span>#</span>
+      <span>Ticker / Signal</span>
+      <span data-column="latestStrategy">Latest strategy</span>
+      <span data-column="topStrategy">Strategy ann. <i class="info" title="Best historical strategy annualized run — hover a value for run ID and as-of date">i</i></span>
+      <span data-column="topBuyHold">B&amp;H ann. <i class="info" title="Best historical buy &amp; hold annualized run — hover a value for run ID and as-of date">i</i></span>
+      <span data-column="topExcess">Excess <i class="info" title="Best historical excess annualized run — hover a value for run ID">i</i></span>
+      <span data-column="maxDrawdown">Drawdown</span>
+      <span data-column="lastPrice">Price</span>
+      <span></span>
+    </div>
+    <a class="fund-row grid" href="funds/NVDA.html"
               data-ticker="NVDA"
               data-latest-strategy="90.5160848246"
               data-top-strategy="93.5730031227"
               data-top-buy-hold="88.3641201622"
-              data-top-annualized="93.5730031227"
               data-top-excess="5.20888296048"
               data-max-drawdown="36.8810311256"
               data-last-price="200.75">
-              <span class="rank">#1</span><span class="ticker">NVDA</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+90.52%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260726215828_NVDA_6a7c654b through 2026-07-24"><small>Top strategy ann.</small><strong>+93.57%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260727165636_NVDA_67106aaa through 2026-07-24"><small>Top buy &amp; hold ann.</small><strong>+88.36%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260726215828_NVDA_6a7c654b through 2026-07-24"><small>Top annualized</small><strong>+93.57%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260726215828_NVDA_6a7c654b"><small>Top excess</small><strong>+5.21%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>36.88%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$200.75</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/TSM.html"
+              <span class="rank">#1</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">NVDA</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+90.52%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260726215828_NVDA_6a7c654b through 2026-07-24"><span class="val pos">+93.57%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260727165636_NVDA_67106aaa through 2026-07-24"><span class="val pos">+88.36%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260726215828_NVDA_6a7c654b"><span class="val pos">+5.21%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−36.88%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$200.75</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/TSM.html"
               data-ticker="TSM"
               data-latest-strategy="68.2098099561"
               data-top-strategy="68.2098099561"
               data-top-buy-hold="66.6306325855"
-              data-top-annualized="68.2098099561"
               data-top-excess="4.12386806167"
               data-max-drawdown="22.5595351811"
               data-last-price="404.25">
-              <span class="rank">#2</span><span class="ticker">TSM</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+68.21%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260802014020_TSM-5Y_d185bbe7 through 2026-07-31"><small>Top strategy ann.</small><strong>+68.21%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802031132_TSM-5Y_c25b1e04 through 2026-07-31"><small>Top buy &amp; hold ann.</small><strong>+66.63%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260802014020_TSM-5Y_d185bbe7 through 2026-07-31"><small>Top annualized</small><strong>+68.21%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260802014020_TSM-5Y_d185bbe7"><small>Top excess</small><strong>+4.12%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>22.56%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$404.25</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/META.html"
+              <span class="rank">#2</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">TSM</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+68.21%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260802014020_TSM-5Y_d185bbe7 through 2026-07-31"><span class="val pos">+68.21%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802031132_TSM-5Y_c25b1e04 through 2026-07-31"><span class="val pos">+66.63%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260802014020_TSM-5Y_d185bbe7"><span class="val pos">+4.12%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−22.56%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$404.25</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/META.html"
               data-ticker="META"
               data-latest-strategy="54.8109797632"
               data-top-strategy="54.9965817356"
               data-top-buy-hold="40.6348155208"
-              data-top-annualized="54.9965817356"
               data-top-excess="15.6321587487"
               data-max-drawdown="25.8072898547"
               data-last-price="556.710021973">
-              <span class="rank">#3</span><span class="ticker">META</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+54.81%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260729234823_META_c1e3acb9 through 2026-07-27"><small>Top strategy ann.</small><strong>+55.00%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260723204232_META_7133c83d through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+40.63%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260729234823_META_c1e3acb9 through 2026-07-27"><small>Top annualized</small><strong>+55.00%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260729234823_META_c1e3acb9"><small>Top excess</small><strong>+15.63%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>25.81%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$556.71</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/GOOGL.html"
+              <span class="rank">#3</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">META</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+54.81%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260729234823_META_c1e3acb9 through 2026-07-27"><span class="val pos">+55.00%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260723204232_META_7133c83d through 2026-07-21"><span class="val pos">+40.63%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260729234823_META_c1e3acb9"><span class="val pos">+15.63%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−25.81%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$556.71</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/GOOGL.html"
               data-ticker="GOOGL"
               data-latest-strategy="47.95568382"
               data-top-strategy="48.7915950666"
               data-top-buy-hold="42.4321597182"
-              data-top-annualized="48.7915950666"
               data-top-excess="7.53478910594"
               data-max-drawdown="21.0472032344"
               data-last-price="356.130004883">
-              <span class="rank">#4</span><span class="ticker">GOOGL</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+47.96%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260801000211_GOOGL-5Y_37d15434 through 2026-07-30"><small>Top strategy ann.</small><strong>+48.79%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260724022930_GOOGL_a44bf3ab through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+42.43%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260801000211_GOOGL-5Y_37d15434 through 2026-07-30"><small>Top annualized</small><strong>+48.79%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260801000211_GOOGL-5Y_37d15434"><small>Top excess</small><strong>+7.53%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>21.05%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$356.13</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/AAPL.html"
+              <span class="rank">#4</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">GOOGL</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+47.96%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260801000211_GOOGL-5Y_37d15434 through 2026-07-30"><span class="val pos">+48.79%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260724022930_GOOGL_a44bf3ab through 2026-07-21"><span class="val pos">+42.43%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260801000211_GOOGL-5Y_37d15434"><span class="val pos">+7.53%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−21.05%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$356.13</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/AAPL.html"
               data-ticker="AAPL"
               data-latest-strategy="47.8907080534"
               data-top-strategy="60.8033432543"
               data-top-buy-hold="56.5618417085"
-              data-top-annualized="60.8033432543"
               data-top-excess="6.25962113116"
               data-max-drawdown="9.16548580948"
               data-last-price="308.910003662">
-              <span class="rank">#5</span><span class="ticker">AAPL</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+47.89%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260724214913_AAPL-4Y_e88fdb67 through 2026-07-21"><small>Top strategy ann.</small><strong>+60.80%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260726052947_AAPL-4Y_8b417fa5 through 2026-07-24"><small>Top buy &amp; hold ann.</small><strong>+56.56%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260724214913_AAPL-4Y_e88fdb67 through 2026-07-21"><small>Top annualized</small><strong>+60.80%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260724214913_AAPL-4Y_e88fdb67"><small>Top excess</small><strong>+6.26%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>9.17%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$308.91</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/JNJ.html"
+              <span class="rank">#5</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">AAPL</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+47.89%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260724214913_AAPL-4Y_e88fdb67 through 2026-07-21"><span class="val pos">+60.80%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260726052947_AAPL-4Y_8b417fa5 through 2026-07-24"><span class="val pos">+56.56%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260724214913_AAPL-4Y_e88fdb67"><span class="val pos">+6.26%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−9.17%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$308.91</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/JNJ.html"
               data-ticker="JNJ"
               data-latest-strategy="38.7574696405"
               data-top-strategy="37.027641836"
               data-top-buy-hold="32.0725837899"
-              data-top-annualized="37.027641836"
               data-top-excess="4.95505804615"
               data-max-drawdown="10.9591213054"
               data-last-price="256.350006104">
-              <span class="rank">#6</span><span class="ticker">JNJ</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+38.76%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260728182646_JNJ_ba0f6d6a through 2026-07-21"><small>Top strategy ann.</small><strong>+37.03%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260728224942_JNJ_718c57a7 through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+32.07%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Strategy run 20260728182646_JNJ_ba0f6d6a through 2026-07-21"><small>Top annualized</small><strong>+37.03%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260728182646_JNJ_ba0f6d6a"><small>Top excess</small><strong>+4.96%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>10.96%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$256.35</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/JPM.html"
+              <span class="rank">#6</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">JNJ</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+38.76%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260728182646_JNJ_ba0f6d6a through 2026-07-21"><span class="val pos">+37.03%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260728224942_JNJ_718c57a7 through 2026-07-21"><span class="val pos">+32.07%</span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260728182646_JNJ_ba0f6d6a"><span class="val pos">+4.96%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−10.96%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$256.35</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/JPM.html"
               data-ticker="JPM"
               data-latest-strategy="34.9788824723"
               data-top-strategy="34.8581057945"
               data-top-buy-hold="36.1579464226"
-              data-top-annualized="36.1579464226"
               data-top-excess="1.06464445342"
               data-max-drawdown="24.423926617"
               data-last-price="351.790008545">
-              <span class="rank">#7</span><span class="ticker">JPM</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+34.98%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260728170202_JPM_02e4ca25 through 2026-07-24"><small>Top strategy ann.</small><strong>+34.86%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260728165650_JPM_8891c66d through 2026-07-24"><small>Top buy &amp; hold ann.</small><strong>+36.16%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260728165650_JPM_8891c66d through 2026-07-24"><small>Top annualized</small><strong>+36.16%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260728170202_JPM_02e4ca25"><small>Top excess</small><strong>+1.06%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>24.42%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$351.79</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/AMZN.html"
+              <span class="rank">#7</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">JPM</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+34.98%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260728170202_JPM_02e4ca25 through 2026-07-24"><span class="val pos">+34.86%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260728165650_JPM_8891c66d through 2026-07-24"><span class="val pos">+36.16%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260728170202_JPM_02e4ca25"><span class="val pos">+1.06%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−24.42%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$351.79</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/QQQ.html"
+              data-ticker="QQQ"
+              data-latest-strategy="18.5272246592"
+              data-top-strategy="18.5272246592"
+              data-top-buy-hold="24.5605992889"
+              data-top-excess="-6.03337462973"
+              data-max-drawdown="14.1412943481"
+              data-last-price="687.989990234">
+              <span class="rank">#8</span>
+              <span class="id-cell" title="BUY/HOLD invested · data through 2026-07-31"><span class="ticker">QQQ</span><span class="chip buy"><span class="dot"></span>BUY</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+18.53%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260802155344_QQQ-5Y_93250479 through 2026-07-31"><span class="val pos">+18.53%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802162750_QQQ-5Y_7de5e472 through 2026-07-31"><span class="val pos">+24.56%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260802155344_QQQ-5Y_93250479"><span class="val neg">-6.03%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−14.14%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$687.99</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/AMZN.html"
               data-ticker="AMZN"
               data-latest-strategy="18.1799502405"
               data-top-strategy="21.1602366736"
               data-top-buy-hold="24.3999839944"
-              data-top-annualized="24.3999839944"
               data-top-excess="3.72800531042"
               data-max-drawdown="22.6472541294"
               data-last-price="231.38999939">
-              <span class="rank">#8</span><span class="ticker">AMZN</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+18.18%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260728103726_AMZN_b50bce64 through 2026-07-24"><small>Top strategy ann.</small><strong>+21.16%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260722223246_AMZN_96246477 through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+24.40%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260722223246_AMZN_96246477 through 2026-07-21"><small>Top annualized</small><strong>+24.40%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260730095631_AMZN_1b52479d"><small>Top excess</small><strong>+3.73%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>22.65%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-27"><small>Last price</small><strong>$231.39</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-27</span>
-              </span>
-              <span class="signal buy">BUY/HOLD invested</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/SPY.html"
+              <span class="rank">#9</span>
+              <span class="id-cell" title="BUY/HOLD invested · data through 2026-07-27"><span class="ticker">AMZN</span><span class="chip buy"><span class="dot"></span>BUY</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+18.18%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260728103726_AMZN_b50bce64 through 2026-07-24"><span class="val pos">+21.16%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260722223246_AMZN_96246477 through 2026-07-21"><span class="val pos">+24.40%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260730095631_AMZN_1b52479d"><span class="val pos">+3.73%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−22.65%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-27"><span class="val">$231.39</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/SPY.html"
               data-ticker="SPY"
               data-latest-strategy="15.9841641688"
               data-top-strategy="19.8660474591"
               data-top-buy-hold="19.9105204082"
-              data-top-annualized="19.9105204082"
               data-top-excess="-1.92800386495"
               data-max-drawdown="8.56879437781"
               data-last-price="747.030029297">
-              <span class="rank">#9</span><span class="ticker">SPY</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+15.98%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260802131421_SPY-5Y_41c5a2a2 through 2026-07-31"><small>Top strategy ann.</small><strong>+19.87%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802124048_SPY-5Y_f6f5820c through 2026-07-31"><small>Top buy &amp; hold ann.</small><strong>+19.91%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260802124048_SPY-5Y_f6f5820c through 2026-07-31"><small>Top annualized</small><strong>+19.91%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260802104222_SPY-5Y_1451a820"><small>Top excess</small><strong>-1.93%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>8.57%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$747.03</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal buy">BUY/HOLD invested</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/QQQ.html"
-              data-ticker="QQQ"
-              data-latest-strategy="14.9618476448"
-              data-top-strategy="14.9618476448"
-              data-top-buy-hold="22.4109034085"
-              data-top-annualized="22.4109034085"
-              data-top-excess="-7.44905576365"
-              data-max-drawdown="18.3113914388"
-              data-last-price="687.989990234">
-              <span class="rank">#10</span><span class="ticker">QQQ</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+14.96%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260802135335_QQQ-5Y_3687a7a6 through 2026-07-31"><small>Top strategy ann.</small><strong>+14.96%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802135335_QQQ-5Y_3687a7a6 through 2026-07-31"><small>Top buy &amp; hold ann.</small><strong>+22.41%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260802135335_QQQ-5Y_3687a7a6 through 2026-07-31"><small>Top annualized</small><strong>+22.41%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260802135335_QQQ-5Y_3687a7a6"><small>Top excess</small><strong>-7.45%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>18.31%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$687.99</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal buy">BUY/HOLD invested</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/TSLA.html"
+              <span class="rank">#10</span>
+              <span class="id-cell" title="BUY/HOLD invested · data through 2026-07-31"><span class="ticker">SPY</span><span class="chip buy"><span class="dot"></span>BUY</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+15.98%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260802131421_SPY-5Y_41c5a2a2 through 2026-07-31"><span class="val pos">+19.87%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260802124048_SPY-5Y_f6f5820c through 2026-07-31"><span class="val pos">+19.91%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260802104222_SPY-5Y_1451a820"><span class="val neg">-1.93%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−8.57%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$747.03</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/TSLA.html"
               data-ticker="TSLA"
               data-latest-strategy="12.8019844965"
               data-top-strategy="32.1298135691"
               data-top-buy-hold="40.2713597733"
-              data-top-annualized="40.2713597733"
               data-top-excess="11.8374973312"
               data-max-drawdown="39.7462823226"
               data-last-price="311.209991455">
-              <span class="rank">#11</span><span class="ticker">TSLA</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+12.80%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260801181450_TSLA_94fb1a5a through 2026-07-31"><small>Top strategy ann.</small><strong>+32.13%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260801203423_TSLA_f74529f1 through 2026-07-31"><small>Top buy &amp; hold ann.</small><strong>+40.27%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260801203423_TSLA_f74529f1 through 2026-07-31"><small>Top annualized</small><strong>+40.27%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260729234556_TSLA_5188ab49"><small>Top excess</small><strong>+11.84%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>39.75%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$311.21</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/MSFT.html"
+              <span class="rank">#11</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">TSLA</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+12.80%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260801181450_TSLA_94fb1a5a through 2026-07-31"><span class="val pos">+32.13%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260801203423_TSLA_f74529f1 through 2026-07-31"><span class="val pos">+40.27%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260729234556_TSLA_5188ab49"><span class="val pos">+11.84%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−39.75%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$311.21</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/MSFT.html"
               data-ticker="MSFT"
               data-latest-strategy="4.6904304556"
               data-top-strategy="19.79318339"
               data-top-buy-hold="20.2744114323"
-              data-top-annualized="20.2744114323"
               data-top-excess="15.3482364297"
               data-max-drawdown="19.5754735996"
               data-last-price="464.720001221">
-              <span class="rank">#12</span><span class="ticker">MSFT</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+4.69%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260731204351_MSFT-5Y_7191b2f2 through 2026-07-30"><small>Top strategy ann.</small><strong>+19.79%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260723200639_MSFT_a7571f25 through 2026-07-21"><small>Top buy &amp; hold ann.</small><strong>+20.27%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260723200639_MSFT_a7571f25 through 2026-07-21"><small>Top annualized</small><strong>+20.27%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260802113324_MSFT-4Y_4f456cc0"><small>Top excess</small><strong>+15.35%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>19.58%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$464.72</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal buy">BUY/HOLD invested</span>
-              <span class="arrow">→</span></a><a class="fund-row" href="funds/V.html"
+              <span class="rank">#12</span>
+              <span class="id-cell" title="BUY/HOLD invested · data through 2026-07-31"><span class="ticker">MSFT</span><span class="chip buy"><span class="dot"></span>BUY</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+4.69%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260731204351_MSFT-5Y_7191b2f2 through 2026-07-30"><span class="val pos">+19.79%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260723200639_MSFT_a7571f25 through 2026-07-21"><span class="val pos">+20.27%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260802113324_MSFT-4Y_4f456cc0"><span class="val pos">+15.35%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−19.58%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$464.72</span></span>
+              <span class="arrow">→</span></a><a class="fund-row grid" href="funds/V.html"
               data-ticker="V"
               data-latest-strategy="4.35639479555"
               data-top-strategy="19.3253384452"
               data-top-buy-hold="21.9726014831"
-              data-top-annualized="21.9726014831"
               data-top-excess="2.05486083609"
               data-max-drawdown="13.7479203473"
               data-last-price="366.130004883">
-              <span class="rank">#13</span><span class="ticker">V</span>
-              <span class="metric-wrap">
-                <span class="metric-column" data-column="latestStrategy"><small>Latest strategy</small><strong>+4.36%</strong></span>
-                <span class="metric-column" data-column="topStrategy" title="Best historical strategy annualized run 20260731233446_V-5Y_29a0774b through 2026-07-30"><small>Top strategy ann.</small><strong>+19.33%</strong></span>
-                <span class="metric-column" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260731190416_V_319bde9c through 2026-07-30"><small>Top buy &amp; hold ann.</small><strong>+21.97%</strong></span>
-                <span class="metric-column" data-column="topAnnualized" title="Best historical annualized result from Buy &amp; hold run 20260731190416_V_319bde9c through 2026-07-30"><small>Top annualized</small><strong>+21.97%</strong></span>
-                <span class="metric-column" data-column="topExcess" title="Best historical excess annualized run 20260726185629_V-4Y_57209da0"><small>Top excess</small><strong>+2.05%</strong></span>
-                <span class="metric-column" data-column="maxDrawdown"><small>Max drawdown</small><strong>13.75%</strong></span>
-                <span class="metric-column" data-column="lastPrice" title="Adj Close through 2026-07-31"><small>Last price</small><strong>$366.13</strong></span>
-                <span class="metric-column through" data-column="through">Through 2026-07-31</span>
-              </span>
-              <span class="signal cash">SELL/CASH</span>
-              <span class="arrow">→</span></a></section>
+              <span class="rank">#13</span>
+              <span class="id-cell" title="SELL/CASH · data through 2026-07-31"><span class="ticker">V</span><span class="chip cash"><span class="dot"></span>CASH</span></span>
+              <span class="cell" data-column="latestStrategy"><span class="val pos">+4.36%</span></span>
+              <span class="cell" data-column="topStrategy" title="Best historical strategy annualized run 20260731233446_V-5Y_29a0774b through 2026-07-30"><span class="val pos">+19.33%</span></span>
+              <span class="cell" data-column="topBuyHold" title="Best historical buy &amp; hold annualized run 20260731190416_V_319bde9c through 2026-07-30"><span class="val pos">+21.97%<span class="win" title="Best combined historical annualized result">W</span></span></span>
+              <span class="cell" data-column="topExcess" title="Best historical excess annualized run 20260726185629_V-4Y_57209da0"><span class="val pos">+2.05%</span></span>
+              <span class="cell" data-column="maxDrawdown"><span class="val neg">−13.75%</span></span>
+              <span class="cell" data-column="lastPrice" title="Adj Close through 2026-07-31"><span class="val">$366.13</span></span>
+              <span class="arrow">→</span></a></section></div>
   
-  <footer>Master dashboard generated from C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\final_backtest_summary_20260802_142142.csv.</footer>
+  <footer>Built 2026-08-02 16:54:44 · Master dashboard generated from C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\final_backtest_summary_20260802_165114.csv.</footer>
   <script>
     (() => {
       const list = document.querySelector('.fund-list');
@@ -399,19 +391,22 @@
       if (!list || !directionButton) return;
       const rows = [...list.querySelectorAll('.fund-row')];
       const columnKeys = [
-        'latestStrategy','topStrategy','topBuyHold','topAnnualized',
-         'topExcess','maxDrawdown','lastPrice','through'
+        'latestStrategy','topStrategy','topBuyHold',
+        'topExcess','maxDrawdown','lastPrice'
       ];
-      const storageKey = 'stockDashboard.visibleColumns.v1';
+      const storageKey = 'stockDashboard.visibleColumns.v2';
+      // Drawdown ranks best-first as the smallest loss; everything else as
+      // the largest gain.
+      const defaultDirections = {maxDrawdown: 'asc'};
       let sortKey = 'latestStrategy';
       let direction = 'desc';
 
       const responsiveDefaults = () => {
         if (window.innerWidth > 1050) return [...columnKeys];
         if (window.innerWidth > 650) {
-           return ['latestStrategy','topStrategy','topBuyHold','topExcess','maxDrawdown'];
+           return ['latestStrategy','topStrategy','topBuyHold','topExcess'];
         }
-        return [];
+        return ['latestStrategy','topExcess'];
       };
       const readStoredColumns = () => {
         try {
@@ -429,15 +424,10 @@
       let visibleColumns = new Set(storedColumns || responsiveDefaults());
 
       const applyColumns = () => {
-        rows.forEach((row) => {
-          const columns = [...row.querySelectorAll('[data-column]')];
-          columns.forEach((column) => {
-            column.hidden = !visibleColumns.has(column.dataset.column);
-          });
-          const wrapper = row.querySelector('.metric-wrap');
-          if (wrapper) wrapper.hidden = visibleColumns.size === 0;
-          row.style.setProperty('--visible-column-count', visibleColumns.size);
+        list.querySelectorAll('[data-column]').forEach((column) => {
+          column.hidden = !visibleColumns.has(column.dataset.column);
         });
+        list.style.setProperty('--visible-column-count', visibleColumns.size);
         columnToggles.forEach((toggle) => {
           toggle.checked = visibleColumns.has(toggle.dataset.columnToggle);
         });
@@ -473,6 +463,9 @@
           row.querySelector('.rank').textContent = `#${index + 1}`;
           list.append(row);
         });
+        list.querySelectorAll('[data-column]').forEach((cell) =>
+          cell.classList.toggle('sorted', cell.dataset.column === sortKey)
+        );
         pills.forEach((pill) =>
           pill.setAttribute('aria-pressed', String(pill.dataset.sortKey === sortKey))
         );
@@ -486,6 +479,13 @@
 
       pills.forEach((pill) => pill.addEventListener('click', () => {
         sortKey = pill.dataset.sortKey;
+        direction = defaultDirections[sortKey] || 'desc';
+        if (!visibleColumns.has(sortKey)) {
+          visibleColumns.add(sortKey);
+          hasCustomColumns = true;
+          applyColumns();
+          saveColumns();
+        }
         applySort();
       }));
       directionButton.addEventListener('click', () => {
@@ -510,6 +510,23 @@
         visibleColumns = new Set(responsiveDefaults());
         applyColumns();
       });
+
+      const themeKey = 'stockDashboard.theme.v1';
+      const themeButton = document.getElementById('themeToggle');
+      const applyTheme = (theme) => {
+        document.documentElement.dataset.theme = theme;
+        if (themeButton) {
+          themeButton.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+      };
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+      if (themeButton) themeButton.addEventListener('click', () => {
+        const next =
+          document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { window.localStorage.setItem(themeKey, next); } catch (error) {}
+      });
+
       applyColumns();
       applySort();
     })();
