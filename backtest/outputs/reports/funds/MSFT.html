@@ -31,6 +31,9 @@
     .metric{padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
     .metric span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
     .metric strong{display:block;margin-top:6px;font-size:clamp(1rem,2vw,1.4rem)}
+    .metric strong.last-trade.buy{color:#16834b}
+    .metric strong.last-trade.sell{color:#d45b5b}
+    .metric strong.last-trade.unknown{color:var(--muted)}
     .compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:28px}
     .compare-card{padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--paper)}
     .compare-card h2{margin:0 0 12px;font-size:1.05rem}
@@ -69,6 +72,7 @@
       <a href="../dashboard_latest.html">Latest ranking</a>
       <a href="../dashboard_excess_annualized.html">Excess return</a>
       <a href="../dashboard_top_annualized.html">Top annualized</a>
+      <a href="../dashboard_top_annualized_buyhold.html">Top buy &amp; hold</a>
       <a href="../dashboard_final_simple.html">Final simple</a>
     </nav>
   </header>
@@ -77,38 +81,38 @@
       <div>
         <p class="eyebrow">Ticker intelligence</p><h1>MSFT</h1>
         <p class="hero-copy">The winning walk-forward schedule is reproduced from its archived
-          source data, then adaptively continued on newer prices. Data source: MSFT.csv · through
+          source data, then adaptively continued on newer prices. Data source: MSFT-4Y.csv · through
           2026-07-31.</p>
       </div>
-      <div class="signal neutral"><span>Current GA signal</span><strong>SELL/CASH</strong></div>
+      <div class="signal positive"><span>Current GA signal</span><strong>BUY/HOLD invested</strong></div>
     </section>
 
     <section class="metrics" aria-label="Latest metrics">
-      <div class="metric"><span>Strategy annualized</span><strong>+10.07%</strong></div>
-      <div class="metric"><span>Excess annualized</span><strong>+7.09%</strong></div>
-      <div class="metric"><span>Strategy total</span><strong>+21.39%</strong></div>
-      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+2.98%</strong></div>
-      <div class="metric"><span>Max drawdown</span><strong>16.34%</strong></div>
-      <div class="metric"><span>Last trade</span><strong>2026-07-30</strong></div>
+      <div class="metric"><span>Strategy annualized</span><strong>+4.69%</strong></div>
+      <div class="metric"><span>Excess annualized</span><strong>+15.35%</strong></div>
+      <div class="metric"><span>Strategy total</span><strong>+4.67%</strong></div>
+      <div class="metric"><span>Buy &amp; hold annualized</span><strong>-10.66%</strong></div>
+      <div class="metric"><span>Max drawdown</span><strong>19.58%</strong></div>
+      <div class="metric"><span>Last trade</span><strong class="last-trade buy">BUY · 2026-07-28</strong></div>
     </section>
 
     <section class="compare">
       <article class="compare-card"><h2>Final window parameters</h2><dl>
         <dt>EMA pair</dt><dd>14 / 67</dd>
-        <dt>Stop loss</dt><dd>14.00%</dd>
-        <dt>Cooldown</dt><dd>0 days</dd>
-        <dt>RSI bounds</dt><dd>27 / 63</dd>
+        <dt>Stop loss</dt><dd>13.34%</dd>
+        <dt>Cooldown</dt><dd>3 days</dd>
+        <dt>RSI bounds</dt><dd>26 / 64</dd>
         <dt>Exposure</dt><dd>1.00×</dd>
       </dl></article>
       <article class="compare-card"><h2>Calibration versus latest replay</h2><dl>
-        <dt>Historical annualized</dt><dd>+5.06%</dd>
-        <dt>Latest annualized</dt><dd>+10.07%</dd>
-        <dt>Best excess annualized</dt><dd>+9.78%</dd>
-        <dt>Latest excess</dt><dd>+7.09%</dd>
-        <dt>Best excess run</dt><dd>20260723164933_MSFT_2e3d454e</dd>
+        <dt>Historical annualized</dt><dd>+4.69%</dd>
+        <dt>Latest annualized</dt><dd>+4.69%</dd>
+        <dt>Best excess annualized</dt><dd>+15.35%</dd>
+        <dt>Latest excess</dt><dd>+15.35%</dd>
+        <dt>Best excess run</dt><dd>20260802113324_MSFT-4Y_4f456cc0</dd>
         <dt>Historical replay</dt><dd>exact_replay</dd>
-        <dt>Latest replay</dt><dd>adaptive_continuation</dd>
-        <dt>Schedule windows</dt><dd>8 + 1 continuation</dd>
+        <dt>Latest replay</dt><dd>exact_replay</dd>
+        <dt>Schedule windows</dt><dd>4 + 0 continuation</dd>
       </dl></article>
     </section>
 
@@ -116,13 +120,13 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Latest replay · through 2026-07-31</h2></div>
-          <p>The archived winning schedule reproduced exactly, then adaptively retuned at each original offset boundary.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-07-31</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-08-02 14:22:02.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-latest-20260802-100407.png"
-                data-title="MSFT — Latest replay · through 2026-07-31"
-                aria-label="Open Latest replay · through 2026-07-31 chart for MSFT">
-          <img src="../../charts/MSFT-final-latest-20260802-100407.png" alt="MSFT Latest replay · through 2026-07-31 chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-latest-20260802-142153.png"
+                data-title="MSFT — Latest technical · data through 2026-07-31"
+                aria-label="Open Latest technical · data through 2026-07-31 chart for MSFT">
+          <img src="../../charts/MSFT-final-latest-20260802-142153.png" alt="MSFT Latest technical · data through 2026-07-31 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
@@ -130,13 +134,13 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Best excess annualized · +9.78% · through 2026-07-21</h2></div>
+          <div><p class="eyebrow">Chart view</p><h2>Best excess annualized · +15.35% · through 2026-07-31</h2></div>
           <p>The highest non-zero annualized-excess historical run selected from the run history.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/MSFT-3.0Y-3M-generic-ga10-tuned-20260723-165131.png"
-                data-title="MSFT — Best excess annualized · +9.78% · through 2026-07-21"
-                aria-label="Open Best excess annualized · +9.78% · through 2026-07-21 chart for MSFT">
-          <img src="../../charts/MSFT-3.0Y-3M-generic-ga10-tuned-20260723-165131.png" alt="MSFT Best excess annualized · +9.78% · through 2026-07-21 chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/MSFT-4Y-3.0Y-3M-generic-ga10-tuned-20260802-113848.png"
+                data-title="MSFT — Best excess annualized · +15.35% · through 2026-07-31"
+                aria-label="Open Best excess annualized · +15.35% · through 2026-07-31 chart for MSFT">
+          <img src="../../charts/MSFT-4Y-3.0Y-3M-generic-ga10-tuned-20260802-113848.png" alt="MSFT Best excess annualized · +15.35% · through 2026-07-31 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
@@ -144,13 +148,13 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Final technical</h2></div>
-          <p>Exact walk-forward reproduction with the recorded parameter schedule over the winning historical window.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-07-31</h2></div>
+          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-08-02 14:22:02.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-technical-20260802-100407.png"
-                data-title="MSFT — Final technical"
-                aria-label="Open Final technical chart for MSFT">
-          <img src="../../charts/MSFT-final-technical-20260802-100407.png" alt="MSFT Final technical chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-technical-20260802-142153.png"
+                data-title="MSFT — Historical technical · source through 2026-07-31"
+                aria-label="Open Historical technical · source through 2026-07-31 chart for MSFT">
+          <img src="../../charts/MSFT-final-technical-20260802-142153.png" alt="MSFT Historical technical · source through 2026-07-31 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
@@ -158,20 +162,20 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Final simple</h2></div>
-          <p>A focused view of the same exact walk-forward historical reproduction.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-07-31</h2></div>
+          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-08-02 14:22:02.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-simple-20260802-100407.png"
-                data-title="MSFT — Final simple"
-                aria-label="Open Final simple chart for MSFT">
-          <img src="../../charts/MSFT-final-simple-20260802-100407.png" alt="MSFT Final simple chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/MSFT-final-simple-20260802-142153.png"
+                data-title="MSFT — Historical simple · source through 2026-07-31"
+                aria-label="Open Historical simple · source through 2026-07-31 chart for MSFT">
+          <img src="../../charts/MSFT-final-simple-20260802-142153.png" alt="MSFT Historical simple · source through 2026-07-31 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
     
     </section>
 
-    <footer>Generated 2026-08-02 10:06:50 from final_backtest_summary_20260802_100356.csv.</footer>
+    <footer>Generated 2026-08-02 14:24:21 from final_backtest_summary_20260802_142142.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>

@@ -31,6 +31,9 @@
     .metric{padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
     .metric span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
     .metric strong{display:block;margin-top:6px;font-size:clamp(1rem,2vw,1.4rem)}
+    .metric strong.last-trade.buy{color:#16834b}
+    .metric strong.last-trade.sell{color:#d45b5b}
+    .metric strong.last-trade.unknown{color:var(--muted)}
     .compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:28px}
     .compare-card{padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--paper)}
     .compare-card h2{margin:0 0 12px;font-size:1.05rem}
@@ -69,6 +72,7 @@
       <a href="../dashboard_latest.html">Latest ranking</a>
       <a href="../dashboard_excess_annualized.html">Excess return</a>
       <a href="../dashboard_top_annualized.html">Top annualized</a>
+      <a href="../dashboard_top_annualized_buyhold.html">Top buy &amp; hold</a>
       <a href="../dashboard_final_simple.html">Final simple</a>
     </nav>
   </header>
@@ -89,7 +93,7 @@
       <div class="metric"><span>Strategy total</span><strong>+94.88%</strong></div>
       <div class="metric"><span>Buy &amp; hold annualized</span><strong>+14.45%</strong></div>
       <div class="metric"><span>Max drawdown</span><strong>22.65%</strong></div>
-      <div class="metric"><span>Last trade</span><strong>2025-05-09</strong></div>
+      <div class="metric"><span>Last trade</span><strong class="last-trade buy">BUY · 2025-05-09</strong></div>
     </section>
 
     <section class="compare">
@@ -116,13 +120,13 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Latest replay · through 2026-07-27</h2></div>
-          <p>The archived winning schedule reproduced exactly, then adaptively retuned at each original offset boundary.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-07-27</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-08-02 14:23:20.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-latest-20260802-100606.png"
-                data-title="AMZN — Latest replay · through 2026-07-27"
-                aria-label="Open Latest replay · through 2026-07-27 chart for AMZN">
-          <img src="../../charts/AMZN-final-latest-20260802-100606.png" alt="AMZN Latest replay · through 2026-07-27 chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-latest-20260802-142309.png"
+                data-title="AMZN — Latest technical · data through 2026-07-27"
+                aria-label="Open Latest technical · data through 2026-07-27 chart for AMZN">
+          <img src="../../charts/AMZN-final-latest-20260802-142309.png" alt="AMZN Latest technical · data through 2026-07-27 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
@@ -144,13 +148,13 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Final technical</h2></div>
-          <p>Exact walk-forward reproduction with the recorded parameter schedule over the winning historical window.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-07-27</h2></div>
+          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-08-02 14:23:20.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-technical-20260802-100606.png"
-                data-title="AMZN — Final technical"
-                aria-label="Open Final technical chart for AMZN">
-          <img src="../../charts/AMZN-final-technical-20260802-100606.png" alt="AMZN Final technical chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-technical-20260802-142309.png"
+                data-title="AMZN — Historical technical · source through 2026-07-27"
+                aria-label="Open Historical technical · source through 2026-07-27 chart for AMZN">
+          <img src="../../charts/AMZN-final-technical-20260802-142309.png" alt="AMZN Historical technical · source through 2026-07-27 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
@@ -158,20 +162,20 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Final simple</h2></div>
-          <p>A focused view of the same exact walk-forward historical reproduction.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-07-27</h2></div>
+          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-08-02 14:23:20.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-simple-20260802-100606.png"
-                data-title="AMZN — Final simple"
-                aria-label="Open Final simple chart for AMZN">
-          <img src="../../charts/AMZN-final-simple-20260802-100606.png" alt="AMZN Final simple chart" loading="lazy">
+        <button class="chart-button" type="button" data-src="../../charts/AMZN-final-simple-20260802-142309.png"
+                data-title="AMZN — Historical simple · source through 2026-07-27"
+                aria-label="Open Historical simple · source through 2026-07-27 chart for AMZN">
+          <img src="../../charts/AMZN-final-simple-20260802-142309.png" alt="AMZN Historical simple · source through 2026-07-27 chart" loading="lazy">
           <span>Open full screen</span>
         </button>
       </section>
     
     </section>
 
-    <footer>Generated 2026-08-02 10:06:50 from final_backtest_summary_20260802_100356.csv.</footer>
+    <footer>Generated 2026-08-02 14:24:21 from final_backtest_summary_20260802_142142.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>

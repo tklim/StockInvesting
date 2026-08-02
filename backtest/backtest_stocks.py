@@ -30,6 +30,7 @@ from common import (
     fund_label_from_data_file,
     infer_total_return_method,
 )
+from chart_output import save_figure_png
 from walk_forward_replay import evaluate_parameter_window, save_replay_artifacts
 
 try:
@@ -3164,7 +3165,7 @@ def run_backtest_for_csv(csv_file, lookback_years_value, offset_months_value,
 
         formatted = datetime.now().strftime("%Y%m%d-%H%M%S")
         png_file = CHARTS_DIR / f"{csv_name}-{lookback_years}Y-{offset_months}M-{strategy_profile}-ga10-tuned-{formatted}.png"
-        plt.savefig(png_file, dpi=200, bbox_inches="tight")
+        save_figure_png(fig, png_file)
         plt.close()
         log_print(f"\nChart saved to: {png_file}")
 
