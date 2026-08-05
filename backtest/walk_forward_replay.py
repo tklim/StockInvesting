@@ -64,8 +64,8 @@ def _canonical_snapshot_frame(data):
     return frame
 
 
-def save_replay_artifacts(data, schedule, base_dir, fund_label, run_id):
-    run_dir = (
+def run_artifact_dir(base_dir, fund_label, run_id):
+    return (
         Path(base_dir)
         / "outputs"
         / "funds"
@@ -73,6 +73,10 @@ def save_replay_artifacts(data, schedule, base_dir, fund_label, run_id):
         / "runs"
         / str(run_id)
     )
+
+
+def save_replay_artifacts(data, schedule, base_dir, fund_label, run_id):
+    run_dir = run_artifact_dir(base_dir, fund_label, run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
     snapshot_path = run_dir / "source_snapshot.csv"
     schedule_path = run_dir / "parameter_schedule.csv"
@@ -310,6 +314,49 @@ def _number(row, key, integer=False, default=None):
     return int(round(float(value))) if integer else float(value)
 
 
+def _flag(value, default=False):
+    """Parse a boolean that may arrive as a real bool or a CSV string."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return default if pd.isna(value) else bool(value)
+    return str(value).strip().lower() in ("true", "1", "yes")
+
+
+def extract_carry_exit_params(params, default_rsi_oversold=30):
+    """Exit-relevant subset of a window's params, used by the grandfather
+    transition policy so a carried position keeps the exit rules of the
+    window that opened it. Works for live best_params dicts and for
+    schedule rows recovered from CSV."""
+    return {
+        "short_ema": _number(params, "short_ema", integer=True),
+        "long_ema": _number(params, "long_ema", integer=True),
+        "stop_loss_pct": _number(params, "stop_loss"),
+        "use_take_profit": _flag(params.get("use_take_profit", False)),
+        "take_profit_pct": _number(params, "take_profit_pct", default=10.0),
+        "drawdown_exit_pct": _number(params, "drawdown_exit_pct"),
+        "rsi_oversold": _number(
+            params, "rsi_oversold", integer=True, default=default_rsi_oversold
+        ),
+    }
+
+
+def advance_carry_exit_params(active_exit_params, carry_state, window_params,
+                              default_rsi_oversold=30):
+    """Roll the grandfathered exit params forward after a window is evaluated.
+
+    Keeps the existing params only while the position that entered the window
+    is still open; a position opened (or fully re-cycled) inside the window is
+    governed by that window's params; flat means nothing to grandfather."""
+    if not carry_state or float(carry_state.get("position", 0.0) or 0.0) <= 1e-9:
+        return None
+    if carry_state.get("carried_position_open") and active_exit_params is not None:
+        return active_exit_params
+    return extract_carry_exit_params(window_params, default_rsi_oversold)
+
+
 def evaluate_parameter_window(
     lookback_data,
     next_period_data,
@@ -320,6 +367,7 @@ def evaluate_parameter_window(
     strategy_profile,
     default_rsi_period,
     debug=False,
+    carry_exit_params=None,
 ):
     if next_period_data.empty:
         raise ValueError("Cannot replay an empty test window")
@@ -351,6 +399,10 @@ def evaluate_parameter_window(
         "debug": debug,
         "strategy_profile_name": strategy_profile,
     }
+    if carry_exit_params is not None:
+        # Only forwarded when the grandfather policy is active, so backtest
+        # functions without the kwarg keep working under policy "none".
+        config["carry_exit_params"] = carry_exit_params
     return backtest_fn(
         eval_data,
         _number(params, "short_ema", integer=True),
@@ -370,6 +422,7 @@ def replay_parameter_schedule(
     backtest_fn,
     metrics_fn,
     default_rsi_period,
+    transition_policy="none",
 ):
     frame = data.copy()
     if "Date" in frame.columns:
@@ -381,6 +434,8 @@ def replay_parameter_schedule(
 
     portfolio_value = float(initial_capital)
     carry_state = None
+    active_exit_params = None
+    grandfather = str(transition_policy or "none") == "grandfather"
     portfolio_history = []
     adaptive_results = []
     all_trades = []
@@ -410,6 +465,7 @@ def replay_parameter_schedule(
             backtest_fn,
             strategy_profile,
             default_rsi_period,
+            carry_exit_params=active_exit_params if grandfather else None,
         )
         (
             df_result,
@@ -423,6 +479,10 @@ def replay_parameter_schedule(
             _,
             carry_state,
         ) = result
+        if grandfather:
+            active_exit_params = advance_carry_exit_params(
+                active_exit_params, carry_state, params
+            )
         portfolio_value = float(df_result["Portfolio_Value"].iloc[-1])
         trade_count += int(num_trades)
         all_trades.extend(trades)
@@ -454,6 +514,7 @@ def replay_parameter_schedule(
         "metrics": metrics,
         "schedule": normalized_schedule,
         "window_count": len(normalized_schedule),
+        "transition_policy": str(transition_policy or "none"),
     }
 
 

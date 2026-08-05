@@ -17,8 +17,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
+from chart_output import save_figure_png
 from common import fund_group_from_label
 from dashboard_master import build_dashboard_suite
+from dashboard_render import pdf_target_write_failed
 from walk_forward_replay import (
     assert_metrics_match,
     load_replay_artifacts,
@@ -468,6 +470,12 @@ def ensure_nav(data, price_column):
     return frame.dropna(subset=["NAV"]).sort_index()
 
 
+def transition_policy_from_row(row):
+    """Recorded transition policy for a run; legacy rows predate the column."""
+    value = row.get("transition_policy", "")
+    return "none" if is_blank(value) else str(value).strip()
+
+
 def replay_once(snapshot, schedule, row, initial_capital, strategy_profile, price_column):
     replay_data = ensure_nav(snapshot, price_column)
     result = replay_parameter_schedule(
@@ -478,6 +486,7 @@ def replay_once(snapshot, schedule, row, initial_capital, strategy_profile, pric
         bt.backtest_enhanced_dual_ema,
         bt.calculate_index_strategy_metrics,
         bt.DEFAULT_RSI_PERIOD,
+        transition_policy=transition_policy_from_row(row),
     )
     assert_metrics_match(result["metrics"], row)
     return result
@@ -890,17 +899,19 @@ def build_buy_hold_series(df, initial_capital):
 
 
 def current_position_context(df_result):
-    """Return the ending signal and last trade date from a completed replay."""
+    """Return ending signal, last trade action, and date from a completed replay."""
     if df_result is None or df_result.empty or "Position" not in df_result.columns:
-        return "unknown", ""
+        return "unknown", "", ""
     positions = pd.to_numeric(df_result["Position"], errors="coerce").fillna(0.0)
     signal = "BUY/HOLD invested" if float(positions.iloc[-1]) > 1e-6 else "SELL/CASH"
     position_changes = positions.diff().abs() > 1e-9
     if not position_changes.any():
-        return signal, ""
+        return signal, "", ""
     last_trade_row = df_result.loc[position_changes].iloc[-1]
+    last_trade_delta = positions.loc[last_trade_row.name]
+    action = "BUY" if float(last_trade_delta) > 0 else "SELL"
     last_trade_value = last_trade_row.get("Date", last_trade_row.name)
-    return signal, pd.Timestamp(last_trade_value).strftime("%Y-%m-%d")
+    return signal, action, pd.Timestamp(last_trade_value).strftime("%Y-%m-%d")
 
 
 def format_final_parameter_box(params, price_column, initial_capital):
@@ -1069,7 +1080,7 @@ def plot_technical_chart(
     plt.xticks(rotation=45)
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=200, bbox_inches="tight")
+    save_figure_png(fig, output_path)
     plt.close()
 
 
@@ -1110,7 +1121,7 @@ def plot_simple_chart(fund_label, df_result, buy_hold_series, buy_hold_return, m
     x_axis = df_result["Date"] if "Date" in df_result.columns else df_result.index
     strategy_value = df_result["Portfolio_Value"]
 
-    plt.figure(figsize=(13, 7))
+    fig = plt.figure(figsize=(13, 7))
     plt.plot(x_axis, strategy_value, label="Walk-forward strategy", color="#1f8f4d", linewidth=3)
     plt.plot(buy_hold_series.index, buy_hold_series, label="Buy and hold", color="#2f65d9", linewidth=3)
     plt.fill_between(x_axis, strategy_value, initial_capital, color="#1f8f4d", alpha=0.08)
@@ -1170,7 +1181,7 @@ def plot_simple_chart(fund_label, df_result, buy_hold_series, buy_hold_return, m
     plt.grid(True, alpha=0.22)
     plt.xticks(rotation=30)
     plt.tight_layout()
-    plt.savefig(output_path, dpi=200, bbox_inches="tight")
+    save_figure_png(fig, output_path)
     plt.close()
 
 
@@ -1320,6 +1331,7 @@ def run_one_fund(row, args, run_timestamp):
         bt.backtest_enhanced_dual_ema,
         bt.calculate_index_strategy_metrics,
         bt.DEFAULT_RSI_PERIOD,
+        transition_policy=transition_policy_from_row(row),
     )
     df_result_latest = latest_replay["adaptive_df"]
     metrics_latest = latest_replay["metrics"]
@@ -1330,7 +1342,7 @@ def run_one_fund(row, args, run_timestamp):
     latest_status = (
         "adaptive_continuation" if continuation_count else historical_status
     )
-    ga_signal, last_trade_date = current_position_context(df_result_latest)
+    ga_signal, last_trade_action, last_trade_date = current_position_context(df_result_latest)
 
     if use_original_chart:
         import shutil
@@ -1446,7 +1458,7 @@ def run_one_fund(row, args, run_timestamp):
         f"Trades: {num_trades}",
         f"Win rate: {win_rate:.2f}%",
         f"Current GA signal: {ga_signal}",
-        f"Last trade date: {last_trade_date or 'n/a'}",
+        f"Last trade: {last_trade_action or 'n/a'} on {last_trade_date or 'n/a'}",
         "",
         "Latest adaptive continuation:",
         f"Strategy return: {metrics_latest['adaptive_return']:.2f}%",
@@ -1540,6 +1552,7 @@ def run_one_fund(row, args, run_timestamp):
         "missed_upside_after_exit_pct": metrics["missed_upside_after_exit_pct"],
         "stop_loss_count": metrics["stop_loss_count"],
         "ga_signal": ga_signal,
+        "last_trade_action": last_trade_action,
         "last_trade_date": last_trade_date,
         "log_file": str(log_path),
         "technical_chart_file": str(technical_chart),
@@ -1619,9 +1632,10 @@ def write_latest_dashboard(results, run_timestamp):
     *{{box-sizing:border-box}}
     body{{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}}
     header{{position:sticky;top:0;z-index:10;padding:20px clamp(18px,4vw,52px);background:rgba(243,245,247,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}}
+    .back-link{{display:inline-flex;align-items:center;margin-bottom:7px;color:var(--accent);font-size:.8rem;font-weight:800;text-decoration:none}}.back-link:hover{{text-decoration:underline}}
     header h1{{margin:0 0 5px;font-size:clamp(1.45rem,3vw,2.2rem)}}
     header p{{margin:0;color:var(--muted)}}
-    main{{display:grid;gap:22px;padding:28px clamp(16px,3vw,42px) 56px;max-width:1900px;margin:auto}}
+    main{{display:grid;gap:14px;padding:24px clamp(16px,4vw,48px) 56px;margin:0}}
     .fund-card{{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 26px rgba(19,33,55,.06)}}
     .card-heading,.card-heading>div,.metrics{{display:flex;align-items:center}}
     .card-heading{{justify-content:space-between;gap:18px;margin-bottom:13px}}
@@ -1647,7 +1661,9 @@ def write_latest_dashboard(results, run_timestamp):
     .viewport{{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}}
     .viewport.dragging{{cursor:grabbing}}
     #viewerImage{{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}}
-    @media (min-width:1200px){{main{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
+    @media (min-width:1500px){{main{{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}.fund-card{{padding:12px}}.card-heading{{margin-bottom:8px}}.metrics{{margin-bottom:10px;gap:5px}}.metrics span{{padding:5px 7px;font-size:.72rem}}}}
+    @media (min-width:2100px){{main{{grid-template-columns:repeat(4,minmax(0,1fr))}}}}
+    @media (max-width:760px){{main{{grid-template-columns:1fr}}}}
     @page{{size:A4 landscape;margin:8mm}}
     @media print{{
       body{{background:#fff}}
@@ -1664,7 +1680,7 @@ def write_latest_dashboard(results, run_timestamp):
   </style>
 </head>
 <body>
-  <header><h1>Latest Fund Backtest Dashboard</h1><p>{len(completed)} funds · sorted by latest strategy annualized return · generated {generated_at}</p></header>
+  <header><a class="back-link" href="dashboard.html">← Master dashboard</a><h1>Latest Fund Backtest Dashboard</h1><p>{len(completed)} funds · sorted by latest strategy annualized return · generated {generated_at}</p></header>
   <main>{''.join(cards) if cards else '<p>No completed latest charts were available.</p>'}</main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><div class="controls"><button id="zoomOut" type="button">−</button><button id="resetZoom" type="button">Reset</button><button id="zoomIn" type="button">+</button><button id="closeViewer" type="button">Close</button></div></div>
@@ -1728,10 +1744,12 @@ def write_latest_pdf(results):
     try:
         write_pdf(pdf_path)
         return pdf_path
-    except PermissionError:
+    except OSError as exc:
+        if not pdf_target_write_failed(exc):
+            raise
         fallback = REPORTS_DIR / f"dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         write_pdf(fallback)
-        print(f"Warning: {pdf_path} is locked. Saved PDF to {fallback}")
+        print(f"Warning: {pdf_path} could not be replaced. Saved PDF to {fallback}")
         return fallback
 
 
