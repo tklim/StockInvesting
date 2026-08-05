@@ -7,9 +7,9 @@
     combination in the requested grid. Unlike the old run10a.bat / run10b.bat
     loop, this script:
 
-      * Skips any combo already marked "completed" in backtest_run_history.csv,
-        so it resumes cleanly after a reboot or interruption -- just run it
-        again and it picks up the remaining combos.
+      * Skips only recently completed combos from backtest_run_history.csv
+        (24 hours by default), so it resumes a recent interruption without
+        silently treating an old sweep as the current invocation.
       * Checks the Python exit code for every combo and stops after
         -MaxConsecutiveFailures failures in a row, instead of spinning forever.
       * Makes exactly one pass (no infinite goto loop) and prints a summary.
@@ -30,17 +30,11 @@
     .\run_grid.ps1 -Funds AAPL -DataSuffix '-4Y' -LogFile run4-4Y.log
 
 .EXAMPLE
-    # Keep matching runs for three days, then automatically tune them again.
-    .\run_grid2.ps1 -Funds NVDA -Population 8 -Generations 4 `
-        -ShortEmaBounds 1,100 -LongEmaBounds 30,600 -CompletedMaxAgeDays 3
-
-.EXAMPLE
-    # A/B the offset-month transition policy and/or GA warm start at a pinned
-    # seed. Policy, seed, and warm-start settings are all part of the resume
-    # identity, so these two passes do not skip each other.
-    .\run_grid2.ps1 -Funds MSFT -Population 6 -Generations 3 -GaSeed 999 `
+    # A/B the offset-month transition policy at a pinned seed. The two passes
+    # do not skip each other: policy and seed are part of the resume identity.
+    .\run_grid.ps1 -Funds MSFT,SPY,NVDA -DataSuffix '-3Y' -GaSeed 999 `
         -TransitionPolicy none        -LogFile ab-none.log
-    .\run_grid2.ps1 -Funds MSFT -Population 6 -Generations 3 -GaSeed 999 `
+    .\run_grid.ps1 -Funds MSFT,SPY,NVDA -DataSuffix '-3Y' -GaSeed 999 `
         -TransitionPolicy grandfather -LogFile ab-grandfather.log
 #>
 [CmdletBinding()]
@@ -64,38 +58,38 @@ param(
                  "buyhold-1x", "qqq", "qqq-return-plus", "qqq-return-plus-nolev",
                  "qqq-buyhold-plus")]
     [string]$StrategyProfile = "generic",
-    # Search bounds, each supplied as "MIN MAX". These are deliberately
-    # broader than run_grid.ps1's defaults, but can now be customized per run.
-    [ValidateCount(2, 2)][int[]]$ShortEmaBounds = @(1, 100),
-    [ValidateCount(2, 2)][int[]]$LongEmaBounds = @(30, 600),
-    [ValidateCount(2, 2)][int[]]$RsiOversoldBounds = @(1, 49),
-    [ValidateCount(2, 2)][int[]]$RsiOverboughtBounds = @(51, 99),
-    [ValidateCount(2, 2)][double[]]$StopLossBounds = @(5, 50),
-    # Enables GA take-profit tuning from 0 through this percentage.
-    [ValidateRange(0, 100)][double]$TakeProfitPct = 100,
-    [ValidateCount(2, 2)][double[]]$DrawdownExitBounds = @(2, 100),
-    [ValidateCount(2, 2)][double[]]$ReentryReboundBounds = @(0, 30),
-    [ValidateCount(2, 2)][int[]]$CooldownBounds = @(0, 10),
-    # Fixed GA seed. Omit for the backtester's deterministic per-window seeding
-    # (recorded as "deterministic"). Part of the resume identity below, so an
-    # A/B at a pinned seed never resumes off differently-seeded history.
-    [int]$GaSeed,
     # How a position carried across an offset-month boundary is exited.
-    # 'grandfather' keeps the exit rules of the window that opened the
-    # position until it closes. Part of the resume identity: the same combo
-    # run under a different policy is a DIFFERENT experiment, not a repeat.
+    # 'grandfather' keeps the exit rules of the window that opened the position
+    # until it closes. Part of the resume identity below: the same combo run
+    # under a different policy is a DIFFERENT experiment, not a repeat.
     [ValidateSet("none", "grandfather")]
     [string]$TransitionPolicy = "none",
-    # Seed each window's GA with the previous window's best parameters instead
-    # of starting from random guesses (H-014). Also part of the resume identity.
+    # Fixed GA seed. Omit for the backtester's deterministic per-window seeding
+    # (recorded as "deterministic"). Also part of the resume identity, so an
+    # A/B at a pinned seed never resumes off differently-seeded history.
+    [int]$GaSeed,
+    # Seed each window's GA with the previous window's winner instead of
+    # re-tuning from random guesses (H-014). Also part of the resume identity.
     [switch]$GaWarmStart,
     [ValidateRange(0.0, 1.0)][double]$GaWarmStartFraction = 0.5,
+    # Exit-gene bound overrides, each "MIN MAX". These beat the profile's own
+    # gene_bounds, so e.g. -StopLossBounds 20,60 searches wider stops than the
+    # profile would allow. Omit to let the profile decide.
+    [double[]]$StopLossBounds,
+    [double[]]$DrawdownExitBounds,
+    [double[]]$ReentryReboundBounds,
+    [int[]]$CooldownBounds,
     [string]$LogFile = "run_grid.log",
     [int]$MaxConsecutiveFailures = 3,
     [int]$TimeoutMinutes = 0,          # 0 = no per-combo timeout
-    # A completed row is skipped only while it is this recent. Set 0 to re-run
-    # all completed rows without using -Force; negative values are rejected.
-    [ValidateRange(0, 3650)][int]$CompletedMaxAgeDays = 3,
+    # Completed rows are reusable only while this recent. This lets a cancelled
+    # grid continue from its fresh successes while re-running old history.
+    # Set 0 to ignore all completed history; increase it for a longer window.
+    [ValidateRange(0, 8760)][int]$CompletedMaxAgeHours = 24,
+    # Uses the same <history>.lock sentinel as backtest_stocks.py while taking
+    # the resume snapshot. Time out safely instead of treating a mid-write CSV
+    # as an empty history and launching duplicate work.
+    [ValidateRange(1, 900)][int]$HistoryReadLockTimeoutSeconds = 180,
     [switch]$Force,                    # re-run combos even if already completed
     [switch]$DryRun                    # print the skip/run plan, launch nothing
 )
@@ -118,8 +112,10 @@ if ($useGaSeed) { $gaSeedLabel = "$GaSeed" } else { $gaSeedLabel = "deterministi
 # leaves the fraction blank when warm start is off.
 if ($GaWarmStart) {
     $warmStartLabel = "True"
+    $warmStartFractionLabel = "$GaWarmStartFraction"
 } else {
     $warmStartLabel = "False"
+    $warmStartFractionLabel = ""
 }
 
 $repoRoot       = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -170,17 +166,93 @@ function Get-RowValue {
     return $value
 }
 
-function Test-NumberPairMatch {
+function Enter-RunHistoryLock {
     param(
-        [object]$First,
-        [object]$Second,
-        [double[]]$Expected
+        [string]$LockPath,
+        [int]$TimeoutSeconds
     )
-    if ($null -eq $First -or $null -eq $Second -or "$First" -eq "" -or "$Second" -eq "") {
-        return $false
+
+    # Match backtest/common.py's O_CREAT|O_EXCL sentinel protocol. The unique
+    # token ensures this process only removes the lock it created.
+    $token = "pid=$PID host=$env:COMPUTERNAME at=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') nonce=$([guid]::NewGuid().ToString('N'))"
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $delayMilliseconds = 100
+
+    while ($true) {
+        $stream = $null
+        $writer = $null
+        try {
+            $stream = [System.IO.File]::Open(
+                $LockPath,
+                [System.IO.FileMode]::CreateNew,
+                [System.IO.FileAccess]::Write,
+                [System.IO.FileShare]::None
+            )
+            $writer = New-Object System.IO.StreamWriter($stream)
+            $writer.Write($token)
+            $writer.Flush()
+            return $token
+        } catch [System.IO.IOException] {
+            if ((Get-Date) -ge $deadline) {
+                throw "Timed out after $TimeoutSeconds seconds waiting for run-history lock: $LockPath"
+            }
+            Start-Sleep -Milliseconds $delayMilliseconds
+            $delayMilliseconds = [math]::Min($delayMilliseconds * 2, 1000)
+        } finally {
+            if ($writer) {
+                $writer.Dispose()
+            } elseif ($stream) {
+                $stream.Dispose()
+            }
+        }
     }
-    return ([math]::Abs(([double]$First) - $Expected[0]) -lt 0.000001) -and
-           ([math]::Abs(([double]$Second) - $Expected[1]) -lt 0.000001)
+}
+
+function Exit-RunHistoryLock {
+    param(
+        [string]$LockPath,
+        [string]$Token
+    )
+
+    try {
+        if (Test-Path -LiteralPath $LockPath) {
+            $owner = (Get-Content -LiteralPath $LockPath -Raw -ErrorAction Stop).Trim()
+            if ($owner -eq $Token) {
+                Remove-Item -LiteralPath $LockPath -Force -ErrorAction Stop
+            }
+        }
+    } catch {
+        # A stale-lock breaker may already have removed or replaced the lock.
+        # Never delete an unverified lock belonging to another process.
+        Write-Log "WARN could not release run-history lock ($($_.Exception.Message))."
+    }
+}
+
+function Get-RunHistorySnapshot {
+    param(
+        [string]$HistoryPath,
+        [int]$TimeoutSeconds
+    )
+
+    $lockPath = "$HistoryPath.lock"
+    $token = Enter-RunHistoryLock -LockPath $lockPath -TimeoutSeconds $TimeoutSeconds
+    try {
+        if (-not (Test-Path -LiteralPath $HistoryPath)) {
+            return [pscustomobject]@{ Exists = $false; Rows = @() }
+        }
+
+        $item = Get-Item -LiteralPath $HistoryPath
+        if ($item.Length -eq 0) {
+            throw "Run history is empty while locked: $HistoryPath"
+        }
+
+        return [pscustomobject]@{
+            Exists = $true
+            Rows   = @(Import-Csv -LiteralPath $HistoryPath -ErrorAction Stop)
+        }
+    } finally {
+        Exit-RunHistoryLock -LockPath $lockPath -Token $token
+    }
 }
 
 # --- Build the set of already-completed combos from the run history ---------
@@ -191,21 +263,25 @@ function Test-NumberPairMatch {
 # records the fund group (AAPL) in fund_label, so keying on it would make a
 # no-suffix AAPL sweep skip combos that were only ever run on the 3Y/4Y slices.
 # fund_slice_label carries the slice; rows written before that column existed
-# fall back to fund_label, which held the slice label back then.
+# fall back to fund_label, which held the slice label back then. Old or
+# unparseable completion timestamps are deliberately stale, not resumable.
 #
-# transition_policy, ga_seed, and ga_warm_start(+fraction) join the bound
-# checks below as row FILTERS, not key parts: a combo already run under a
-# different policy, seed, or warm-start setting answers a different question,
-# so it must not satisfy this invocation. Without this, an A/B sweep of any of
-# these would skip every combo as "completed" and report success having
-# launched nothing. Rows predating these columns read as policy "none", seed
-# "deterministic", warm start "False" -- exactly what those rows actually were.
-$completed = @{}
-$staleCount = 0
-$freshAfter = (Get-Date).AddDays(-$CompletedMaxAgeDays)
-if ((-not $Force) -and (Test-Path $runHistory)) {
+# transition_policy and ga_seed join preset/profile/pop/gen/price as row
+# FILTERS, not key parts: a combo already run under a different policy or seed
+# answers a different question, so it must not satisfy this invocation. Without
+# this, an A/B sweep of the same grid would skip every combo as "completed" and
+# report success having launched nothing.
+$completed = New-Object 'System.Collections.Generic.HashSet[string]'
+$staleCompleted = New-Object 'System.Collections.Generic.HashSet[string]'
+$freshAfter = (Get-Date).AddHours(-$CompletedMaxAgeHours)
+if (-not $Force) {
     try {
-        Import-Csv -LiteralPath $runHistory | ForEach-Object {
+        $historySnapshot = Get-RunHistorySnapshot `
+            -HistoryPath $runHistory `
+            -TimeoutSeconds $HistoryReadLockTimeoutSeconds
+        $historySnapshot.Rows | ForEach-Object {
+            # Rows predating the transition_policy column were all produced by
+            # the original behavior, which is exactly what "none" now means.
             $rowPolicy = Get-RowValue -Row $_ -Name 'transition_policy' -Default 'none'
             $rowSeed   = Get-RowValue -Row $_ -Name 'ga_seed' -Default 'deterministic'
             $rowWarm   = Get-RowValue -Row $_ -Name 'ga_warm_start' -Default 'False'
@@ -223,18 +299,7 @@ if ((-not $Force) -and (Test-Path $runHistory)) {
                 $warmMatches -and
                 $_.pop_ranges -eq [string]$Population -and
                 $_.gen_ranges -eq [string]$Generations -and
-                $_.price_column -eq $PriceColumn -and
-                (Test-NumberPairMatch $_.short_ema_min $_.short_ema_max $ShortEmaBounds) -and
-                (Test-NumberPairMatch $_.long_ema_min $_.long_ema_max $LongEmaBounds) -and
-                (Test-NumberPairMatch $_.rsi_oversold_min $_.rsi_oversold_max $RsiOversoldBounds) -and
-                (Test-NumberPairMatch $_.rsi_overbought_min $_.rsi_overbought_max $RsiOverboughtBounds) -and
-                (Test-NumberPairMatch $_.stop_loss_min $_.stop_loss_max $StopLossBounds) -and
-                $null -ne $_.PSObject.Properties['take_profit_max'] -and
-                "$($_.take_profit_max)" -ne "" -and
-                ([math]::Abs(([double]$_.take_profit_max) - $TakeProfitPct) -lt 0.000001) -and
-                (Test-NumberPairMatch $_.drawdown_exit_min $_.drawdown_exit_max $DrawdownExitBounds) -and
-                (Test-NumberPairMatch $_.reentry_rebound_min $_.reentry_rebound_max $ReentryReboundBounds) -and
-                (Test-NumberPairMatch $_.cooldown_min $_.cooldown_max $CooldownBounds)) {
+                $_.price_column -eq $PriceColumn) {
                 $sliceProp = $_.PSObject.Properties['fund_slice_label']
                 if ($sliceProp -and "$($sliceProp.Value)".Trim() -ne "") {
                     $slice = $sliceProp.Value
@@ -249,21 +314,18 @@ if ((-not $Force) -and (Test-Path $runHistory)) {
                 # match a current file, so they are re-run rather than trusted.
                 $key = "{0}|{1}|{2}|{3}" -f $slice, $lb, $_.offset_months, $rowDataHash
                 $completedAt = [datetime]::MinValue
-                if (-not [datetime]::TryParse("$($_.run_completed_at)", [ref]$completedAt)) {
-                    $staleCount++
+                if ($CompletedMaxAgeHours -eq 0 -or
+                    -not [datetime]::TryParse("$($_.run_completed_at)", [ref]$completedAt) -or
+                    $completedAt -lt $freshAfter) {
+                    [void]$staleCompleted.Add($key)
                     return
                 }
-                if ($completedAt -lt $freshAfter) {
-                    $staleCount++
-                    return
-                }
-                if ((-not $completed.ContainsKey($key)) -or $completed[$key] -lt $completedAt) {
-                    $completed[$key] = $completedAt
-                }
+                [void]$completed.Add($key)
+                [void]$staleCompleted.Remove($key)
             }
         }
     } catch {
-        Write-Log "WARN could not parse run history ($($_.Exception.Message)); running all combos."
+        throw "Could not read a stable run-history snapshot. Refusing to launch a duplicate grid: $($_.Exception.Message)"
     }
 }
 
@@ -294,17 +356,24 @@ $doneCount = 0
 $failCount = 0
 $consecFailures = 0
 $aborted   = $false
+$freshPlanCount = @($plan | Where-Object { $completed.Contains($_.Key) }).Count
+$stalePlanCount = @($plan | Where-Object {
+    (-not $completed.Contains($_.Key)) -and $staleCompleted.Contains($_.Key)
+}).Count
 
-Write-Log "==== run_grid2 start: $($Funds -join ',') | suffix='$DataSuffix' profile=$StrategyProfile preset=$GaSearchPreset pop=$Population gen=$Generations transition=$TransitionPolicy seed=$gaSeedLabel warmstart=$warmStartLabel$(if ($GaWarmStart) { "/$GaWarmStartFraction" }) | $total combos ===="
-Write-Log "Bounds: shortEMA=$($ShortEmaBounds -join '-') longEMA=$($LongEmaBounds -join '-') RSI-OS=$($RsiOversoldBounds -join '-') RSI-OB=$($RsiOverboughtBounds -join '-') stop=$($StopLossBounds -join '-') takeProfit=0-$TakeProfitPct drawdown=$($DrawdownExitBounds -join '-') rebound=$($ReentryReboundBounds -join '-') cooldown=$($CooldownBounds -join '-')"
-Write-Log "Fresh completed combos (will skip): $($completed.Count), within $CompletedMaxAgeDays day(s); stale/unparseable matching rows: $staleCount."
+Write-Log "==== run_grid start: $($Funds -join ',') | suffix='$DataSuffix' profile=$StrategyProfile preset=$GaSearchPreset pop=$Population gen=$Generations transition=$TransitionPolicy seed=$gaSeedLabel warmstart=$warmStartLabel$(if ($GaWarmStart) { "/$GaWarmStartFraction" }) | $total combos ===="
+if ($Force) {
+    Write-Log "Force mode: completion history ignored."
+} else {
+    Write-Log "Fresh completed combos (will skip): $freshPlanCount/$total within $CompletedMaxAgeHours hour(s); stale/unparseable plan combos: $stalePlanCount."
+}
 
 $idx = 0
 foreach ($item in $plan) {
     $idx++
     $label = "$($item.Fund) $($item.Lookback)Y/$($item.Offset)M"
 
-    if ((-not $Force) -and $completed.ContainsKey($item.Key)) {
+    if ((-not $Force) -and $completed.Contains($item.Key)) {
         $skipCount++
         Write-Log "SKIP  [$idx/$total] $label (already completed)"
         continue
@@ -330,15 +399,6 @@ foreach ($item in $plan) {
         "--transition-policy", $TransitionPolicy
         "--price-column", $PriceColumn
         "--reuse-tuned-params"
-        "--short-ema-bounds", "$($ShortEmaBounds[0])", "$($ShortEmaBounds[1])"
-        "--long-ema-bounds", "$($LongEmaBounds[0])", "$($LongEmaBounds[1])"
-        "--rsi-oversold-bounds", "$($RsiOversoldBounds[0])", "$($RsiOversoldBounds[1])"
-        "--rsi-overbought-bounds", "$($RsiOverboughtBounds[0])", "$($RsiOverboughtBounds[1])"
-        "--stop-loss-bounds", "$($StopLossBounds[0])", "$($StopLossBounds[1])"
-        "--take-profit-pct", "$TakeProfitPct"
-        "--drawdown-exit-bounds", "$($DrawdownExitBounds[0])", "$($DrawdownExitBounds[1])"
-        "--reentry-rebound-bounds", "$($ReentryReboundBounds[0])", "$($ReentryReboundBounds[1])"
-        "--cooldown-bounds", "$($CooldownBounds[0])", "$($CooldownBounds[1])"
         "--data-file", "$($item.Fund).csv"
         "--fund-group", "$($item.Group)"
     )
@@ -349,6 +409,20 @@ foreach ($item in $plan) {
     }
     if ($GaWarmStart) {
         $pyArgs += @("--ga-warm-start", "--ga-warm-start-fraction", "$GaWarmStartFraction")
+    }
+    # Optional exit-gene bound overrides, forwarded only when supplied so the
+    # profile keeps control of anything left unset.
+    if ($PSBoundParameters.ContainsKey('StopLossBounds')) {
+        $pyArgs += @("--stop-loss-bounds", "$($StopLossBounds[0])", "$($StopLossBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('DrawdownExitBounds')) {
+        $pyArgs += @("--drawdown-exit-bounds", "$($DrawdownExitBounds[0])", "$($DrawdownExitBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('ReentryReboundBounds')) {
+        $pyArgs += @("--reentry-rebound-bounds", "$($ReentryReboundBounds[0])", "$($ReentryReboundBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('CooldownBounds')) {
+        $pyArgs += @("--cooldown-bounds", "$($CooldownBounds[0])", "$($CooldownBounds[1])")
     }
 
     $exit = 0
@@ -391,7 +465,7 @@ foreach ($item in $plan) {
     }
 }
 
-Write-Log "==== run_grid2 done: ran=$doneCount skipped=$skipCount failed=$failCount of $total | aborted=$aborted ===="
+Write-Log "==== run_grid done: ran=$doneCount skipped=$skipCount failed=$failCount of $total | aborted=$aborted ===="
 
 if ($aborted) { exit 2 }
 if ($failCount -gt 0) { exit 1 }
