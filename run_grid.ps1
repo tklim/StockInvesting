@@ -36,6 +36,17 @@
         -TransitionPolicy none        -LogFile ab-none.log
     .\run_grid.ps1 -Funds MSFT,SPY,NVDA -DataSuffix '-3Y' -GaSeed 999 `
         -TransitionPolicy grandfather -LogFile ab-grandfather.log
+
+.EXAMPLE
+    # Widen the GA search space. The bounds are part of the resume identity, so
+    # this pass neither skips nor is skipped by a default-bounds sweep of the
+    # same cell. Keep long EMA under the training window (a 1Y lookback is only
+    # ~250 trading days) and RSI bounds inside 0-100, or the genes stop binding.
+    .\run_grid.ps1 -Funds JPM -DataSuffix '-3Y' -LookbackYears 1 -OffsetMonths 3 `
+        -Population 16 -Generations 8 -GaSeed 1111 -TransitionPolicy grandfather `
+        -ShortEmaBounds 2,100 -LongEmaBounds 30,240 `
+        -RsiOversoldBounds 5,45 -RsiOverboughtBounds 55,95 `
+        -StopLossBounds 3,25 -LogFile jpm-wide.log
 #>
 [CmdletBinding()]
 param(
@@ -72,6 +83,14 @@ param(
     # re-tuning from random guesses (H-014). Also part of the resume identity.
     [switch]$GaWarmStart,
     [ValidateRange(0.0, 1.0)][double]$GaWarmStartFraction = 0.5,
+    # Search-space bound overrides, each "MIN MAX". Unlike the exit-gene bounds
+    # below, these four have profile-INDEPENDENT defaults in backtest_stocks.py,
+    # so run_grid always knows what a run would have used and can therefore hold
+    # them in the resume identity unconditionally (see $expectedBounds).
+    [int[]]$ShortEmaBounds,
+    [int[]]$LongEmaBounds,
+    [int[]]$RsiOversoldBounds,
+    [int[]]$RsiOverboughtBounds,
     # Exit-gene bound overrides, each "MIN MAX". These beat the profile's own
     # gene_bounds, so e.g. -StopLossBounds 20,60 searches wider stops than the
     # profile would allow. Omit to let the profile decide.
@@ -116,6 +135,95 @@ if ($GaWarmStart) {
 } else {
     $warmStartLabel = "False"
     $warmStartFractionLabel = ""
+}
+
+# --- Search-space bounds, as part of the resume identity --------------------
+# A run made over a WIDER search space answers a different question than one
+# made over the default space, exactly like a different policy or seed does.
+# Before this was enforced, a hand-launched wide-bounds run (e.g. JPM with
+# --short-ema-bounds 1 100 --long-ema-bounds 30 600) was recorded as "completed"
+# for its cell and silently satisfied a later default-bounds sweep.
+#
+# These four mirror DEFAULT_SHORT_EMA_BOUNDS / DEFAULT_LONG_EMA_BOUNDS /
+# DEFAULT_RSI_OVERSOLD_BOUNDS / DEFAULT_RSI_OVERBOUGHT_BOUNDS in
+# backtest_stocks.py. They are argparse defaults, NOT profile-derived, so the
+# value a run used is knowable here without duplicating STRATEGY_PROFILE_SETTINGS.
+# If the Python defaults ever change, these stop matching and every old row is
+# treated as stale -- runs get repeated rather than wrongly skipped, which is
+# the safe direction to fail.
+$BACKTESTER_DEFAULT_BOUNDS = @{
+    short_ema      = @(2, 60)
+    long_ema       = @(30, 300)
+    rsi_oversold   = @(10, 40)
+    rsi_overbought = @(60, 90)
+}
+
+# Mirrors GA_MIN_EMA_SEPARATION in backtest_stocks.py: individuals whose fast and
+# slow EMA spans are closer than this are rejected outright, so it bounds the
+# searchable (short, long) space just as the bounds above do. Changing it there
+# without changing it here makes every row stale -- runs repeat rather than being
+# wrongly skipped, the safe direction to fail.
+$BACKTESTER_MIN_EMA_SEPARATION = 5
+
+# Rows written before the column existed were all produced under the original
+# floor of 40, so that is what a blank value means -- not "unknown". A sweep at
+# today's value therefore correctly declines to resume off them.
+$LEGACY_MIN_EMA_SEPARATION = 40
+
+# Expected bounds for THIS invocation: the override when supplied, else the
+# backtester default. Held unconditionally in the resume filter below.
+$expectedBounds = @{}
+foreach ($b in @(
+    @{ Key = "short_ema";      Param = "ShortEmaBounds";      Value = $ShortEmaBounds },
+    @{ Key = "long_ema";       Param = "LongEmaBounds";       Value = $LongEmaBounds },
+    @{ Key = "rsi_oversold";   Param = "RsiOversoldBounds";   Value = $RsiOversoldBounds },
+    @{ Key = "rsi_overbought"; Param = "RsiOverboughtBounds"; Value = $RsiOverboughtBounds }
+)) {
+    if ($PSBoundParameters.ContainsKey($b.Param)) {
+        if (@($b.Value).Count -ne 2) { throw "-$($b.Param) needs exactly two values: MIN MAX." }
+        $expectedBounds[$b.Key] = @([double]$b.Value[0], [double]$b.Value[1])
+    } else {
+        $expectedBounds[$b.Key] = @([double]$BACKTESTER_DEFAULT_BOUNDS[$b.Key][0],
+                                    [double]$BACKTESTER_DEFAULT_BOUNDS[$b.Key][1])
+    }
+}
+
+# The four exit-gene bounds resolve from the active profile's gene_bounds when
+# not supplied, and run_grid has no copy of that table -- so they join the
+# identity only when explicitly overridden here. Residual gap: a hand-launched
+# run that overrode ONLY an exit-gene bound (and left the four above at their
+# defaults) can still satisfy a sweep that omits it. Drive such experiments
+# through -StopLossBounds etc. so both sides carry the same override.
+$expectedExitBounds = @{}
+foreach ($b in @(
+    @{ Key = "stop_loss";       Param = "StopLossBounds";       Value = $StopLossBounds },
+    @{ Key = "drawdown_exit";   Param = "DrawdownExitBounds";   Value = $DrawdownExitBounds },
+    @{ Key = "reentry_rebound"; Param = "ReentryReboundBounds"; Value = $ReentryReboundBounds },
+    @{ Key = "cooldown";        Param = "CooldownBounds";       Value = $CooldownBounds }
+)) {
+    if ($PSBoundParameters.ContainsKey($b.Param)) {
+        if (@($b.Value).Count -ne 2) { throw "-$($b.Param) needs exactly two values: MIN MAX." }
+        $expectedExitBounds[$b.Key] = @([double]$b.Value[0], [double]$b.Value[1])
+    }
+}
+
+function Test-BoundMatch {
+    # History stores bounds as strings and mixes int/float spellings ("15" vs
+    # "15.0"), so compare numerically. A row missing the column (written before
+    # it existed) can never match a known bound and is therefore not resumable.
+    param(
+        [Parameter(Mandatory = $true)]$Row,
+        [Parameter(Mandatory = $true)][string]$MinColumn,
+        [Parameter(Mandatory = $true)][string]$MaxColumn,
+        [Parameter(Mandatory = $true)][double[]]$Expected
+    )
+    $rowMin = Get-RowValue -Row $Row -Name $MinColumn
+    $rowMax = Get-RowValue -Row $Row -Name $MaxColumn
+    if ($rowMin -eq "" -or $rowMax -eq "") { return $false }
+    $parsedMin = 0.0; $parsedMax = 0.0
+    if (-not [double]::TryParse($rowMin, [ref]$parsedMin)) { return $false }
+    if (-not [double]::TryParse($rowMax, [ref]$parsedMax)) { return $false }
+    return ($parsedMin -eq $Expected[0]) -and ($parsedMax -eq $Expected[1])
 }
 
 $repoRoot       = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -285,13 +393,44 @@ if (-not $Force) {
             $rowPolicy = Get-RowValue -Row $_ -Name 'transition_policy' -Default 'none'
             $rowSeed   = Get-RowValue -Row $_ -Name 'ga_seed' -Default 'deterministic'
             $rowWarm   = Get-RowValue -Row $_ -Name 'ga_warm_start' -Default 'False'
+            $rowSep    = Get-RowValue -Row $_ -Name 'ga_min_ema_separation' `
+                                      -Default "$LEGACY_MIN_EMA_SEPARATION"
             $rowWarmFraction = Get-RowValue -Row $_ -Name 'ga_warm_start_fraction' -Default ''
             # The fraction only distinguishes runs while warm start is on; when
             # it is off the backtester leaves the column blank.
             $warmMatches = ($rowWarm -eq $warmStartLabel) -and
                            ((-not $GaWarmStart) -or
                             ([double]("0" + $rowWarmFraction) -eq $GaWarmStartFraction))
+            # Search-space identity. The four profile-independent bounds are
+            # always checked; the exit-gene bounds only when this invocation
+            # overrode them (see $expectedExitBounds). The EMA-separation floor
+            # joins them: it constrains the same (short, long) space.
+            $parsedSep = 0.0
+            $separationMatches = [double]::TryParse($rowSep, [ref]$parsedSep) -and
+                                 ($parsedSep -eq $BACKTESTER_MIN_EMA_SEPARATION)
+            $boundsMatch = $separationMatches -and
+                (Test-BoundMatch -Row $_ -MinColumn 'short_ema_min'      -MaxColumn 'short_ema_max'      -Expected $expectedBounds['short_ema']) -and
+                (Test-BoundMatch -Row $_ -MinColumn 'long_ema_min'       -MaxColumn 'long_ema_max'       -Expected $expectedBounds['long_ema']) -and
+                (Test-BoundMatch -Row $_ -MinColumn 'rsi_oversold_min'   -MaxColumn 'rsi_oversold_max'   -Expected $expectedBounds['rsi_oversold']) -and
+                (Test-BoundMatch -Row $_ -MinColumn 'rsi_overbought_min' -MaxColumn 'rsi_overbought_max' -Expected $expectedBounds['rsi_overbought'])
+            if ($boundsMatch) {
+                foreach ($exit in @(
+                    @{ Key = 'stop_loss';       Min = 'stop_loss_min';       Max = 'stop_loss_max' },
+                    @{ Key = 'drawdown_exit';   Min = 'drawdown_exit_min';   Max = 'drawdown_exit_max' },
+                    @{ Key = 'reentry_rebound'; Min = 'reentry_rebound_min'; Max = 'reentry_rebound_max' },
+                    @{ Key = 'cooldown';        Min = 'cooldown_min';        Max = 'cooldown_max' }
+                )) {
+                    if ($expectedExitBounds.ContainsKey($exit.Key)) {
+                        if (-not (Test-BoundMatch -Row $_ -MinColumn $exit.Min -MaxColumn $exit.Max `
+                                                  -Expected $expectedExitBounds[$exit.Key])) {
+                            $boundsMatch = $false
+                            break
+                        }
+                    }
+                }
+            }
             if ($_.run_status -eq "completed" -and
+                $boundsMatch -and
                 $_.ga_search_preset -eq $GaSearchPreset -and
                 $_.strategy_profile -eq $StrategyProfile -and
                 $rowPolicy -eq $TransitionPolicy -and
@@ -361,7 +500,18 @@ $stalePlanCount = @($plan | Where-Object {
     (-not $completed.Contains($_.Key)) -and $staleCompleted.Contains($_.Key)
 }).Count
 
-Write-Log "==== run_grid start: $($Funds -join ',') | suffix='$DataSuffix' profile=$StrategyProfile preset=$GaSearchPreset pop=$Population gen=$Generations transition=$TransitionPolicy seed=$gaSeedLabel warmstart=$warmStartLabel$(if ($GaWarmStart) { "/$GaWarmStartFraction" }) | $total combos ===="
+$boundsLabel = "minSep=$BACKTESTER_MIN_EMA_SEPARATION" +
+               " sEMA=$($expectedBounds['short_ema'][0])-$($expectedBounds['short_ema'][1])" +
+               " lEMA=$($expectedBounds['long_ema'][0])-$($expectedBounds['long_ema'][1])" +
+               " rsiOS=$($expectedBounds['rsi_oversold'][0])-$($expectedBounds['rsi_oversold'][1])" +
+               " rsiOB=$($expectedBounds['rsi_overbought'][0])-$($expectedBounds['rsi_overbought'][1])"
+foreach ($k in @('stop_loss', 'drawdown_exit', 'reentry_rebound', 'cooldown')) {
+    if ($expectedExitBounds.ContainsKey($k)) {
+        $boundsLabel += " $k=$($expectedExitBounds[$k][0])-$($expectedExitBounds[$k][1])"
+    }
+}
+
+Write-Log "==== run_grid start: $($Funds -join ',') | suffix='$DataSuffix' profile=$StrategyProfile preset=$GaSearchPreset pop=$Population gen=$Generations transition=$TransitionPolicy seed=$gaSeedLabel warmstart=$warmStartLabel$(if ($GaWarmStart) { "/$GaWarmStartFraction" }) | bounds: $boundsLabel | $total combos ===="
 if ($Force) {
     Write-Log "Force mode: completion history ignored."
 } else {
@@ -409,6 +559,20 @@ foreach ($item in $plan) {
     }
     if ($GaWarmStart) {
         $pyArgs += @("--ga-warm-start", "--ga-warm-start-fraction", "$GaWarmStartFraction")
+    }
+    # Optional search-space bound overrides, forwarded only when supplied so the
+    # backtester keeps its own defaults for anything left unset.
+    if ($PSBoundParameters.ContainsKey('ShortEmaBounds')) {
+        $pyArgs += @("--short-ema-bounds", "$($ShortEmaBounds[0])", "$($ShortEmaBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('LongEmaBounds')) {
+        $pyArgs += @("--long-ema-bounds", "$($LongEmaBounds[0])", "$($LongEmaBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('RsiOversoldBounds')) {
+        $pyArgs += @("--rsi-oversold-bounds", "$($RsiOversoldBounds[0])", "$($RsiOversoldBounds[1])")
+    }
+    if ($PSBoundParameters.ContainsKey('RsiOverboughtBounds')) {
+        $pyArgs += @("--rsi-overbought-bounds", "$($RsiOverboughtBounds[0])", "$($RsiOverboughtBounds[1])")
     }
     # Optional exit-gene bound overrides, forwarded only when supplied so the
     # profile keeps control of anything left unset.

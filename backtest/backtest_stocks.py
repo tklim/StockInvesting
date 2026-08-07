@@ -2209,9 +2209,17 @@ GA_BASE_GENE_KEYS = (
     'drawdown_exit_pct', 'reentry_rebound_pct',
     'rsi_oversold', 'rsi_overbought',
 )
-# Mirrors the hard rejects in fitness_func: violating individuals score -inf, so
-# repair them rather than wasting seeded slots.
-GA_MIN_EMA_SEPARATION = 40
+# Minimum spread between the fast and slow EMA spans. Two spans close together
+# track each other and cross on noise rather than on trend, so violating
+# individuals are rejected outright in fitness_func and repaired in
+# repair_gene_vector rather than wasting seeded slots.
+#
+# Lowered 40 -> 5 on 2026-08-07 to open the fast-crossover region the old floor
+# closed off. At 40 the constraint rejected 15.1% of the default (short, long)
+# grid and 14% of tuned windows landed within 5 of the floor, so this materially
+# changes the space the GA searches: runs recorded before that date were
+# searched under 40 and are NOT comparable to runs made after it.
+GA_MIN_EMA_SEPARATION = 5
 
 
 def snap_gene_to_space(value, spec):
@@ -2372,7 +2380,10 @@ def genetic_optimize_params(df, short_ema_bounds=DEFAULT_SHORT_EMA_BOUNDS, long_
         rsi_oversold = int(rsi_oversold)
         rsi_overbought = int(rsi_overbought)
 
-        if short_ema >= long_ema or (long_ema - short_ema) < 40 or rsi_oversold >= rsi_overbought:
+        # The separation test subsumes short_ema >= long_ema (that gives a gap of
+        # <= 0), so it needs no separate clause while GA_MIN_EMA_SEPARATION >= 1.
+        # Restore an explicit ordering check if it is ever set to 0.
+        if (long_ema - short_ema) < GA_MIN_EMA_SEPARATION or rsi_oversold >= rsi_overbought:
             return -np.inf
 
         split_idx = int(len(df) * 0.8)
@@ -3064,6 +3075,10 @@ def run_backtest_for_csv(csv_file, lookback_years_value, offset_months_value,
             "long_ema_bounds": long_ema_bounds_value,
             "rsi_oversold_bounds": rsi_oversold_bounds_value,
             "rsi_overbought_bounds": rsi_overbought_bounds_value,
+            # A hard constraint on the (short, long) EMA space -- individuals
+            # closer than this are rejected outright -- so two runs at different
+            # separations searched different spaces and must not share a run_id.
+            "ga_min_ema_separation": GA_MIN_EMA_SEPARATION,
             "mutation_rates": mutation_rates or "default grid",
             "crossover_rates": crossover_rates or "default grid",
             "rebuild_source_run_id": rebuild_source_run_id_value,
@@ -3124,6 +3139,10 @@ def run_backtest_for_csv(csv_file, lookback_years_value, offset_months_value,
         )
         run_metadata["data_fingerprint"] = data_fingerprint
         run_metadata["data_file_sha256"] = data_file_sha256
+        # Recorded so a sweep can tell runs searched under different EMA-separation
+        # floors apart. Rows written before this column existed were all produced
+        # under 40, which is what run_grid.ps1 assumes for a blank value.
+        run_metadata["ga_min_ema_separation"] = GA_MIN_EMA_SEPARATION
         strategy_parameter_metadata = build_strategy_parameter_metadata(
             {
                 "use_take_profit": take_profit_pct_value is not None,
