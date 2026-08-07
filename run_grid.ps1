@@ -158,6 +158,18 @@ $BACKTESTER_DEFAULT_BOUNDS = @{
     rsi_overbought = @(60, 90)
 }
 
+# Mirrors GA_MIN_EMA_SEPARATION in backtest_stocks.py: individuals whose fast and
+# slow EMA spans are closer than this are rejected outright, so it bounds the
+# searchable (short, long) space just as the bounds above do. Changing it there
+# without changing it here makes every row stale -- runs repeat rather than being
+# wrongly skipped, the safe direction to fail.
+$BACKTESTER_MIN_EMA_SEPARATION = 5
+
+# Rows written before the column existed were all produced under the original
+# floor of 40, so that is what a blank value means -- not "unknown". A sweep at
+# today's value therefore correctly declines to resume off them.
+$LEGACY_MIN_EMA_SEPARATION = 40
+
 # Expected bounds for THIS invocation: the override when supplied, else the
 # backtester default. Held unconditionally in the resume filter below.
 $expectedBounds = @{}
@@ -381,6 +393,8 @@ if (-not $Force) {
             $rowPolicy = Get-RowValue -Row $_ -Name 'transition_policy' -Default 'none'
             $rowSeed   = Get-RowValue -Row $_ -Name 'ga_seed' -Default 'deterministic'
             $rowWarm   = Get-RowValue -Row $_ -Name 'ga_warm_start' -Default 'False'
+            $rowSep    = Get-RowValue -Row $_ -Name 'ga_min_ema_separation' `
+                                      -Default "$LEGACY_MIN_EMA_SEPARATION"
             $rowWarmFraction = Get-RowValue -Row $_ -Name 'ga_warm_start_fraction' -Default ''
             # The fraction only distinguishes runs while warm start is on; when
             # it is off the backtester leaves the column blank.
@@ -389,8 +403,12 @@ if (-not $Force) {
                             ([double]("0" + $rowWarmFraction) -eq $GaWarmStartFraction))
             # Search-space identity. The four profile-independent bounds are
             # always checked; the exit-gene bounds only when this invocation
-            # overrode them (see $expectedExitBounds).
-            $boundsMatch =
+            # overrode them (see $expectedExitBounds). The EMA-separation floor
+            # joins them: it constrains the same (short, long) space.
+            $parsedSep = 0.0
+            $separationMatches = [double]::TryParse($rowSep, [ref]$parsedSep) -and
+                                 ($parsedSep -eq $BACKTESTER_MIN_EMA_SEPARATION)
+            $boundsMatch = $separationMatches -and
                 (Test-BoundMatch -Row $_ -MinColumn 'short_ema_min'      -MaxColumn 'short_ema_max'      -Expected $expectedBounds['short_ema']) -and
                 (Test-BoundMatch -Row $_ -MinColumn 'long_ema_min'       -MaxColumn 'long_ema_max'       -Expected $expectedBounds['long_ema']) -and
                 (Test-BoundMatch -Row $_ -MinColumn 'rsi_oversold_min'   -MaxColumn 'rsi_oversold_max'   -Expected $expectedBounds['rsi_oversold']) -and
@@ -482,7 +500,8 @@ $stalePlanCount = @($plan | Where-Object {
     (-not $completed.Contains($_.Key)) -and $staleCompleted.Contains($_.Key)
 }).Count
 
-$boundsLabel = "sEMA=$($expectedBounds['short_ema'][0])-$($expectedBounds['short_ema'][1])" +
+$boundsLabel = "minSep=$BACKTESTER_MIN_EMA_SEPARATION" +
+               " sEMA=$($expectedBounds['short_ema'][0])-$($expectedBounds['short_ema'][1])" +
                " lEMA=$($expectedBounds['long_ema'][0])-$($expectedBounds['long_ema'][1])" +
                " rsiOS=$($expectedBounds['rsi_oversold'][0])-$($expectedBounds['rsi_oversold'][1])" +
                " rsiOB=$($expectedBounds['rsi_overbought'][0])-$($expectedBounds['rsi_overbought'][1])"

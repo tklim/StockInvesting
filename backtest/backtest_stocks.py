@@ -3075,6 +3075,10 @@ def run_backtest_for_csv(csv_file, lookback_years_value, offset_months_value,
             "long_ema_bounds": long_ema_bounds_value,
             "rsi_oversold_bounds": rsi_oversold_bounds_value,
             "rsi_overbought_bounds": rsi_overbought_bounds_value,
+            # A hard constraint on the (short, long) EMA space -- individuals
+            # closer than this are rejected outright -- so two runs at different
+            # separations searched different spaces and must not share a run_id.
+            "ga_min_ema_separation": GA_MIN_EMA_SEPARATION,
             "mutation_rates": mutation_rates or "default grid",
             "crossover_rates": crossover_rates or "default grid",
             "rebuild_source_run_id": rebuild_source_run_id_value,
@@ -3135,6 +3139,10 @@ def run_backtest_for_csv(csv_file, lookback_years_value, offset_months_value,
         )
         run_metadata["data_fingerprint"] = data_fingerprint
         run_metadata["data_file_sha256"] = data_file_sha256
+        # Recorded so a sweep can tell runs searched under different EMA-separation
+        # floors apart. Rows written before this column existed were all produced
+        # under 40, which is what run_grid.ps1 assumes for a blank value.
+        run_metadata["ga_min_ema_separation"] = GA_MIN_EMA_SEPARATION
         strategy_parameter_metadata = build_strategy_parameter_metadata(
             {
                 "use_take_profit": take_profit_pct_value is not None,
