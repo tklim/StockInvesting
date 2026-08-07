@@ -520,6 +520,57 @@ the pop=4 finding that the fair comparison is a wash.
 
 ---
 
+### Third sweep — pop=8/gen=4, two stocks, six seeds (2026-08-05)
+
+The proper test at last: Microsoft **and JPMorgan** (a stock grandfathering had
+never been tried on), six random seeds each, twelve matched pairs. Within each
+pair both runs use an identical set of tuned settings, so the only difference
+is the transition rule.
+
+**Nine better, two worse, one tied. Average +0.98 points.** Both stocks agree
+almost exactly on their own (MSFT +1.01, JPM +0.95), which is the strongest
+part of the result — JPM had never been tested before, so that is genuine
+confirmation rather than a re-run.
+
+The risk side moves the right way too: risk-adjusted return improved in 9 of 12
+pairs, worst-case loss improved or held level in 11 of 12, and the number of
+trades barely moved (34.2 to 34.4). So it is not buying returns by trading more
+or taking more risk.
+
+**It is still not statistically significant** (p = 0.066). With twelve pairs and
+this much seed-to-seed variation, roughly 25-30 pairs would be needed to prove
+an effect this size. Two pairs did get worse, so the earlier "never hurts"
+claim is retired: **usually helps, occasionally hurts, positive on average.**
+
+**A partial replication:** in a separate run of the same comparison at a
+different tuner setting, grandfathering scored +1.60 and reached p = 0.019 --
+an independent repeat of the same finding.
+
+**And an important limit — the benefit depends on how often we re-tune.** At a
+**one-month** offset instead of three, the effect disappears: **+0.05 average
+across nine pairs** (7 of 9 better, but p = 0.94 — indistinguishable from
+nothing). Both stocks were tested; JPMorgan came out +1.21 and Microsoft −0.52,
+which at three and six pairs is well inside noise.
+
+*(An earlier three-pair sample suggested grandfathering was actively harmful
+here, at −2.20. That was wrong — with the full nine pairs the harm vanishes.
+But so does the benefit.)*
+
+The mechanism fits: with monthly re-tuning a position can span many windows, so
+keeping its original exit rules alive holds them far longer than intended,
+diluting the protection rather than reversing it. What is worth a point over a
+quarter is worth nothing over a month.
+
+**Verdict: Accepted for the 3-month offset, with caveats.** Recommended as the
+default *at that offset*: consistently positive across two stocks, better on
+risk, no leverage. It is **not** universally good — at a 1-month offset it is
+worth nothing (confirmed on nine pairs, above), and it remains untested at 6, 9
+and 12 months. The working picture is that the benefit **grows with offset
+length**, which the 1-month null is consistent with; testing 6/9/12 months would
+turn that from a pattern into a mechanism.
+
+---
+
 ## H-014 — Give the tuner a running start
 
 **Date:** 2026-08-03 to 2026-08-04
@@ -586,6 +637,153 @@ buy & hold differed by 6.6 points between two runs of the "same" test. Runs now
 record a **data fingerprint**, the sweep drivers refuse to treat an old-vintage
 run as completed, and the analysis tools warn when pooled results span more
 than one vintage.
+
+---
+
+### Follow-up — how much to inherit, and does re-tuning frequency change it?
+**(2026-08-05)**
+
+Two obvious escape routes remained: maybe half the population was simply too
+much to inherit, and maybe the whole idea works better when re-tuning happens
+more often, since last month's settings are more likely still relevant than
+last quarter's. Both were tested at the larger tuner setting.
+
+**Inheriting less does not help.** Average result by how much of the population
+is inherited (3-month offset):
+
+| inherited | average |
+|---|---|
+| **nothing (cold)** | **−2.48** |
+| a quarter | −6.84 |
+| a half | −7.92 |
+
+Steadily worse the more we inherit, so the best amount is none. But the *shape*
+of the damage is the real story: at a quarter, seven of twelve comparisons were
+essentially unchanged and three actually improved — yet four were catastrophic,
+the worst losing **19 points**. Inheriting less did not make the harm smaller,
+only rarer. For a trading strategy an occasional disaster is worse than a
+steady small loss.
+
+**And its best possible conditions did not rescue it.** At a **one-month**
+offset — where inheriting recent settings should make the most sense — cold
+still won: cold +0.97, a quarter −2.36, a half −4.21. It lost every single
+paired comparison at a quarter (0 of 5, p = 0.045).
+
+**Verdict: Rejected, finally.** Six independent tests now point the same way,
+including the one deliberately designed to favour it. The option stays in the
+code (`--ga-warm-start`, default off) for the record, but this line of enquiry
+is closed.
+
+---
+
+## H-015 — Re-tune every month instead of every quarter
+
+**Date:** 2026-08-05
+**Stock:** Microsoft (MSFT), 3-year file
+
+**The idea:** an incidental observation from the tests above, worth its own
+entry. Everything so far re-tuned every three months. What happens with monthly
+re-tuning — 24 adjustment points across the test period instead of 8?
+
+**What happened:** with no inheritance between windows, monthly re-tuning
+averaged **+0.97** excess annualized return, and one run reached **+6.01**.
+
+That is worth pausing on. **Almost every configuration tested in this entire
+project has averaged a loss against buy-and-hold.** This is the first with a
+positive average, and it came out of an experiment aimed at something else.
+
+**Why it is not a result yet:** three seeds, one stock, no cross-check. The
+project's own history is unkind to findings like this — H-002 looked
+conclusive on ten runs and was overturned; the first grandfathering write-up
+rested on one favourable cell and was wrong. The honest description is **a lead,
+not a finding.** It also costs about four times as much compute per run (24
+windows instead of 8, 86-100 minutes versus 23).
+
+**Verdict at the time: Promising lead, unproven.** Next step was the obvious
+one: more seeds and a second stock, which is the exact test that overturned
+earlier optimism.
+
+### The replication — and the retraction (2026-08-06)
+
+We ran it: three more Microsoft seeds and three on JPMorgan as an independent
+check. **The lead did not survive.**
+
+| | runs | average |
+|---|---|---|
+| the original three seeds | 3 | **+2.07** |
+| all six Microsoft seeds | 6 | −1.74 |
+| JPMorgan (independent check) | 3 | −3.57 |
+| **everything pooled** | **9** | **−2.35** |
+
+Only **2 of 9** runs beat buy-and-hold. The three new Microsoft seeds came in at
+−11.66, −4.67 and −0.30; JPMorgan was negative in all three of its runs. The
+original three seeds were simply the lucky ones.
+
+**Verdict: Rejected.** Monthly re-tuning is not better than quarterly, and the
+project's long-standing conclusion is unbroken: no configuration tested so far
+beats buy-and-hold at fair size.
+
+**The grandfathering note above was also wrong**, in the same way and for the
+same reason. The −2.20 came from three pairs; with all nine the figure is
+**+0.05** (7 of 9 pairs, p = 0.94). Grandfathering does not backfire at monthly
+offsets — it simply stops helping. See the correction in H-013.
+
+**The lesson, for the third time in this log.** H-002 looked conclusive on ten
+runs and was overturned. The first grandfathering write-up rested on one
+favourable cell and was wrong. This entry rested on three seeds and was wrong.
+The pattern is consistent enough to be a rule: **treat any result from fewer
+than about six seeds across two stocks as a hypothesis, never a finding** — and
+run the second stock early, because it is what settled this one.
+
+---
+
+## H-016 — Is the tuner actually finding the best answer? (QUEUED, not yet run)
+
+**Status:** Planned for a future session. The diagnostic below is already done;
+the experiment it calls for is not.
+
+**Where this came from:** the transition experiments kept running into the same
+obstacle — the same settings run with different random starting points gave
+answers up to 20 points apart. A tuner that works should find much the same
+answer whichever way it starts. So either the tuner is not searching hard
+enough, or something deeper is wrong. That question was set aside to finish the
+transition work; this entry preserves it.
+
+**What we already know (diagnostic run 2026-08-05, MSFT, 3-month offset):**
+
+Looking inside the tuner at the *training* score of the settings it picked —
+before any live trading — the six seeds split into two camps. In one window,
+four seeds found settings scoring 52-56 while two got stuck around 21-23, less
+than half the quality **on the same training data**. Another window split the
+same way. Averaged over windows the disagreement is **78% of a typical score**.
+
+**That is a genuine failure to converge**, and it confirms the concern. But two
+further facts complicate the obvious fix:
+
+- The disagreement *grows* when it reaches live data: training-score spread
+  across seeds is about 5 points, live-result spread about 20 — four times
+  larger.
+- Seeds that fit the training window **better** tended to do **worse** live
+  (correlation −0.60, six seeds, not conclusive). Window 7's best-fitting seed
+  returned −0.50 live; the "failed" seed returned +3.06.
+
+This matches H-002, where giving the tuner more effort *halved* its apparent
+advantage. Same signature, now with a measurement behind it.
+
+**The experiment to run:** repeat one configuration at roughly double the search
+effort (population 16, 8 generations) on the same six seeds, and compare two
+things separately — does the *training-score* disagreement shrink, and does the
+*live-result* spread shrink?
+
+**The prediction worth testing:** training spread collapses while live spread
+does not. If that happens, the problem is not search depth but the target being
+searched for — the tuner would be succeeding at fitting the past and that would
+simply not be the thing that pays. The follow-on work is then about the
+objective and validation (what the tuner is asked to maximize), not about
+bigger populations.
+
+**Cost note:** this doubles an already slow run; the 8/4 runs took ~23 minutes
+each at a 3-month offset.
 
 ---
 

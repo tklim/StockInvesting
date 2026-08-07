@@ -1,0 +1,526 @@
+<title>Transition experiments — visual review</title>
+<style>
+.viz-root{
+  color-scheme:light;
+  --surface-1:#fcfcfb; --surface-2:#f4f3f0;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#7a7873;
+  --grid:#e4e2dd; --axis:#c9c7c1;
+  --series-1:#2a78d6;   /* baseline / none */
+  --series-2:#eb6834;   /* grandfather */
+  --good:#0ca30c; --critical:#d03b3b;
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--surface-1); color:var(--text-primary);
+  max-width:1100px; margin:0 auto; padding:28px 20px 60px;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme:dark;
+    --surface-1:#1a1a19; --surface-2:#232322;
+    --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#94938b;
+    --grid:#333331; --axis:#4a4a47;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good:#0ca30c; --critical:#d03b3b;
+  }
+}
+:root[data-theme="dark"] .viz-root{
+  color-scheme:dark;
+  --surface-1:#1a1a19; --surface-2:#232322;
+  --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#94938b;
+  --grid:#333331; --axis:#4a4a47;
+  --series-1:#3987e5; --series-2:#d95926;
+}
+.viz-root h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
+.viz-root .sub{color:var(--text-secondary);font-size:.9rem;margin:0 0 28px}
+.viz-root h2{font-size:1.05rem;margin:34px 0 2px;letter-spacing:-.01em}
+.viz-root .note{color:var(--text-secondary);font-size:.85rem;margin:0 0 14px;max-width:74ch;line-height:1.5}
+.viz-root figure{margin:0 0 8px;background:var(--surface-1);overflow-x:auto}
+.viz-root svg{display:block;max-width:100%;height:auto}
+.viz-root .legend{display:flex;gap:18px;align-items:center;font-size:.82rem;color:var(--text-secondary);margin:6px 0 10px}
+.viz-root .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.viz-root table{border-collapse:collapse;font-size:.82rem;margin-top:10px;width:100%}
+.viz-root th,.viz-root td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+.viz-root th:first-child,.viz-root td:first-child{text-align:left}
+.viz-root th{color:var(--text-secondary);font-weight:600}
+.viz-root details{margin:6px 0 0}
+.viz-root summary{cursor:pointer;font-size:.82rem;color:var(--text-secondary)}
+.viz-root .tag{display:inline-block;font-size:.72rem;padding:2px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-secondary);margin-left:8px}
+.viz-root .cap{font-size:.78rem;color:var(--text-muted);margin:2px 0 0}
+.viz-root .tiles{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0 4px}
+.viz-root .tile{flex:1 1 260px;background:var(--surface-2);border-radius:10px;padding:14px 16px}
+.viz-root .tile-k{font-size:.78rem;color:var(--text-secondary);margin-bottom:2px}
+.viz-root .tile-v{font-size:2.1rem;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.viz-root .tile-s{font-size:.76rem;color:var(--text-secondary);margin-top:4px;line-height:1.45}
+</style>
+
+<div class="viz-root">
+
+<h1>Offset-month transition experiments</h1>
+<p class="sub">MSFT &amp; JPM, 3-year slices, 1-year lookback, pop=8/gen=4. Metric is excess annualized return vs buy &amp; hold — higher is better, zero means matching the benchmark. Every comparison is <strong>paired by seed</strong>: both runs share an identical tuned parameter schedule, so the only difference is the setting under test.</p>
+
+<!-- ============ HEADLINE ============ -->
+<div class="tiles">
+  <div class="tile">
+    <div class="tile-k">Grandfather — how often it wins</div>
+    <div class="tile-v" style="color:var(--series-2)">81.8%</div>
+    <div class="tile-s">9 wins / 2 losses of 11 decisive pairs (1 tied)<br>sign test <strong>p&nbsp;=&nbsp;0.033</strong> · 95% CI 52–95%</div>
+  </div>
+  <div class="tile">
+    <div class="tile-k">Warm start — how often it wins</div>
+    <div class="tile-v" style="color:var(--critical)">31.4%</div>
+    <div class="tile-s">11 wins / 24 losses of 35 pairs, all settings pooled<br>sign test <strong>p&nbsp;=&nbsp;0.021</strong> · 95% CI 19–48%</div>
+  </div>
+  <div class="tile">
+    <div class="tile-k">Grandfather at a 1-month offset</div>
+    <div class="tile-v" style="color:var(--text-secondary)">+0.05</div>
+    <div class="tile-s">7 of 9 pairs, but p&nbsp;=&nbsp;0.94 — the benefit does not<br>carry over from quarterly to monthly re-tuning</div>
+  </div>
+</div>
+<p class="cap" style="margin-bottom:6px">A coin flip would be 50%. Grandfather beats it, warm start loses to it — and warm start's rejection rests on 3&times; more comparisons.</p>
+
+<!-- ============ 1. PAIRED SLOPE ============ -->
+<h2>1. Grandfather vs baseline — all 12 matched pairs <span class="tag">offset = 3 months</span> <span class="tag">accepted here</span></h2>
+<p class="note">Each line is one seed on one stock. Both ends share an identical tuned parameter schedule, so the only difference is the transition rule. Upward slope = grandfather helped.</p>
+<div class="legend">
+  <span><i style="background:var(--series-1)"></i>baseline (none)</span>
+  <span><i style="background:var(--series-2)"></i>grandfather</span>
+  <span style="color:var(--text-muted)">9 up · 2 down · 1 flat &nbsp;→&nbsp; <strong style="color:var(--text-primary)">81.8% win rate</strong>, p&nbsp;=&nbsp;0.033</span>
+</div>
+<figure>
+<svg viewBox="0 0 900 420" role="img" aria-label="Slope chart of 12 paired runs comparing baseline and grandfather">
+  <g font-size="11" fill="var(--text-secondary)">
+    <!-- y grid: -20..+6 -->
+    <line x1="120" y1="380" x2="820" y2="380" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="120" y1="315" x2="820" y2="315" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="120" y1="250" x2="820" y2="250" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="120" y1="185" x2="820" y2="185" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="120" y1="120" x2="820" y2="120" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="120" y1="55"  x2="820" y2="55"  stroke="var(--grid)" stroke-width="1"/>
+    <text x="112" y="384" text-anchor="end">−20</text>
+    <text x="112" y="319" text-anchor="end">−15</text>
+    <text x="112" y="254" text-anchor="end">−10</text>
+    <text x="112" y="189" text-anchor="end">−5</text>
+    <text x="112" y="124" text-anchor="end">0</text>
+    <text x="112" y="59"  text-anchor="end">+5</text>
+  </g>
+  <!-- zero reference -->
+  <line x1="120" y1="120" x2="820" y2="120" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="826" y="124" font-size="10.5" fill="var(--text-muted)">buy &amp; hold</text>
+
+  <!-- pairs: x=260 (none) -> x=660 (gf);  y = 120 - v*13 -->
+  <g stroke-width="2" fill="none" stroke-linecap="round">
+    <!-- JPM 1111 -5.69 -> -2.31  (up) -->
+    <line x1="260" y1="194.0" x2="660" y2="150.0" stroke="var(--series-2)" opacity=".85"/>
+    <!-- JPM 2222 -4.42 -> -3.50 -->
+    <line x1="260" y1="177.5" x2="660" y2="165.5" stroke="var(--series-2)" opacity=".85"/>
+    <!-- JPM 5555 -0.01 -> -1.96  (DOWN) -->
+    <line x1="260" y1="120.1" x2="660" y2="145.5" stroke="var(--critical)" opacity=".9"/>
+    <!-- JPM 6666 -8.09 -> -7.20 -->
+    <line x1="260" y1="225.2" x2="660" y2="213.6" stroke="var(--series-2)" opacity=".85"/>
+    <!-- JPM 7777 -7.96 -> -5.52 -->
+    <line x1="260" y1="223.5" x2="660" y2="191.8" stroke="var(--series-2)" opacity=".85"/>
+    <!-- JPM 999 1.99 -> 1.99 (flat) -->
+    <line x1="260" y1="94.1" x2="660" y2="94.1" stroke="var(--text-muted)" opacity=".7"/>
+    <!-- MSFT 1111 2.95 -> 3.85 -->
+    <line x1="260" y1="81.7" x2="660" y2="69.9" stroke="var(--series-2)" opacity=".85"/>
+    <!-- MSFT 2222 -16.59 -> -14.93 -->
+    <line x1="260" y1="335.7" x2="660" y2="314.1" stroke="var(--series-2)" opacity=".85"/>
+    <!-- MSFT 5555 -3.61 -> -4.96 (DOWN) -->
+    <line x1="260" y1="166.9" x2="660" y2="184.5" stroke="var(--critical)" opacity=".9"/>
+    <!-- MSFT 6666 -0.50 -> 3.08 -->
+    <line x1="260" y1="126.5" x2="660" y2="80.0" stroke="var(--series-2)" opacity=".85"/>
+    <!-- MSFT 7777 -7.34 -> -6.85 -->
+    <line x1="260" y1="215.4" x2="660" y2="209.1" stroke="var(--series-2)" opacity=".85"/>
+    <!-- MSFT 999 3.06 -> 3.86 -->
+    <line x1="260" y1="80.2" x2="660" y2="69.8" stroke="var(--series-2)" opacity=".85"/>
+  </g>
+  <!-- endpoint dots -->
+  <g>
+    <circle cx="260" cy="194.0" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="150.0" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="177.5" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="165.5" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="120.1" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="145.5" r="4.5" fill="var(--critical)"/>
+    <circle cx="260" cy="225.2" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="213.6" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="223.5" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="191.8" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="94.1"  r="4.5" fill="var(--series-1)"/><circle cx="660" cy="94.1"  r="4.5" fill="var(--text-muted)"/>
+    <circle cx="260" cy="81.7"  r="4.5" fill="var(--series-1)"/><circle cx="660" cy="69.9"  r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="335.7" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="314.1" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="166.9" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="184.5" r="4.5" fill="var(--critical)"/>
+    <circle cx="260" cy="126.5" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="80.0"  r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="215.4" r="4.5" fill="var(--series-1)"/><circle cx="660" cy="209.1" r="4.5" fill="var(--series-2)"/>
+    <circle cx="260" cy="80.2"  r="4.5" fill="var(--series-1)"/><circle cx="660" cy="69.8"  r="4.5" fill="var(--series-2)"/>
+  </g>
+  <!-- selective direct labels: the two losses + best gain -->
+  <g font-size="10.5" fill="var(--text-secondary)">
+    <text x="672" y="149.5">JPM 5555 · −1.95</text>
+    <text x="672" y="188.5">MSFT 5555 · −1.35</text>
+    <text x="672" y="76.5">MSFT 6666 · +3.58</text>
+  </g>
+  <g font-size="12" fill="var(--text-primary)" font-weight="600">
+    <text x="260" y="404" text-anchor="middle">baseline</text>
+    <text x="660" y="404" text-anchor="middle">grandfather</text>
+  </g>
+  <text x="30" y="215" font-size="11" fill="var(--text-secondary)" transform="rotate(-90 30 215)" text-anchor="middle">excess annualized return (%)</text>
+</svg>
+</figure>
+<p class="cap">Red lines mark the two pairs where grandfather lost. Mean +0.98, median +0.90. Note the two tests disagree in strength: the <strong>win rate</strong> clears significance (p = 0.033) while the <strong>average size</strong> of the win does not (p = 0.066) — direction is more reproducible than magnitude at this sample size.</p>
+<details><summary>Show the numbers</summary>
+<table><thead><tr><th>stock</th><th>seed</th><th>baseline</th><th>grandfather</th><th>Δ</th></tr></thead><tbody>
+<tr><td>JPM</td><td>1111</td><td>−5.69</td><td>−2.31</td><td>+3.39</td></tr>
+<tr><td>JPM</td><td>2222</td><td>−4.42</td><td>−3.50</td><td>+0.92</td></tr>
+<tr><td>JPM</td><td>5555</td><td>−0.01</td><td>−1.96</td><td>−1.95</td></tr>
+<tr><td>JPM</td><td>6666</td><td>−8.09</td><td>−7.20</td><td>+0.89</td></tr>
+<tr><td>JPM</td><td>7777</td><td>−7.96</td><td>−5.52</td><td>+2.44</td></tr>
+<tr><td>JPM</td><td>999</td><td>+1.99</td><td>+1.99</td><td>0.00</td></tr>
+<tr><td>MSFT</td><td>1111</td><td>+2.95</td><td>+3.85</td><td>+0.90</td></tr>
+<tr><td>MSFT</td><td>2222</td><td>−16.59</td><td>−14.93</td><td>+1.65</td></tr>
+<tr><td>MSFT</td><td>5555</td><td>−3.61</td><td>−4.96</td><td>−1.34</td></tr>
+<tr><td>MSFT</td><td>6666</td><td>−0.50</td><td>+3.08</td><td>+3.57</td></tr>
+<tr><td>MSFT</td><td>7777</td><td>−7.34</td><td>−6.85</td><td>+0.49</td></tr>
+<tr><td>MSFT</td><td>999</td><td>+3.06</td><td>+3.86</td><td>+0.79</td></tr>
+</tbody></table></details>
+
+<!-- ============ 2. DOSE RESPONSE ============ -->
+<h2>2. Warm start — the more you inherit, the worse it gets <span class="tag">offset = 3 months</span></h2>
+<p class="note">Average excess annualized return by how much of the GA population is inherited from the previous window. Monotonic decline in both policies: the best amount to inherit is none.</p>
+<div class="legend">
+  <span><i style="background:var(--series-1)"></i>baseline (none)</span>
+  <span><i style="background:var(--series-2)"></i>grandfather</span>
+</div>
+<figure>
+<svg viewBox="0 0 900 320" role="img" aria-label="Line chart showing performance declining as inherited fraction rises">
+  <g font-size="11" fill="var(--text-secondary)">
+    <line x1="130" y1="40"  x2="830" y2="40"  stroke="var(--grid)"/>
+    <line x1="130" y1="100" x2="830" y2="100" stroke="var(--grid)"/>
+    <line x1="130" y1="160" x2="830" y2="160" stroke="var(--grid)"/>
+    <line x1="130" y1="220" x2="830" y2="220" stroke="var(--grid)"/>
+    <text x="122" y="44"  text-anchor="end">0</text>
+    <text x="122" y="104" text-anchor="end">−3</text>
+    <text x="122" y="164" text-anchor="end">−6</text>
+    <text x="122" y="224" text-anchor="end">−9</text>
+  </g>
+  <line x1="130" y1="40" x2="830" y2="40" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <!-- x: 0 -> 220, .25 -> 480, .5 -> 740 ; y = 40 + (-v)*20 -->
+  <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="220,102.4 480,192.8 740,201.8" stroke="var(--series-1)"/>
+    <polyline points="220,76.8  480,160.6 740,195.0" stroke="var(--series-2)"/>
+  </g>
+  <g>
+    <circle cx="220" cy="102.4" r="5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="480" cy="192.8" r="5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="740" cy="201.8" r="5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="220" cy="76.8"  r="5" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="480" cy="160.6" r="5" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="740" cy="195.0" r="5" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  </g>
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="220" y="68" text-anchor="middle">−1.84</text>
+    <text x="220" y="120" text-anchor="middle">−3.12</text>
+    <text x="740" y="187" text-anchor="middle">−7.75</text>
+    <text x="740" y="220" text-anchor="middle">−8.09</text>
+  </g>
+  <g font-size="12" fill="var(--text-primary)" font-weight="600">
+    <text x="220" y="270" text-anchor="middle">nothing (cold)</text>
+    <text x="480" y="270" text-anchor="middle">a quarter</text>
+    <text x="740" y="270" text-anchor="middle">a half</text>
+  </g>
+  <text x="480" y="296" font-size="11" fill="var(--text-secondary)" text-anchor="middle">share of GA population inherited from previous window</text>
+  <text x="34" y="140" font-size="11" fill="var(--text-secondary)" transform="rotate(-90 34 140)" text-anchor="middle">mean excess annualized (%)</text>
+</svg>
+</figure>
+
+<!-- ============ 3. FAT TAIL ============ -->
+<h2>3. Why "inherit less" doesn't fix it — the damage is fat-tailed</h2>
+<p class="note">Every pair at a quarter-inheritance, versus its own cold-start twin. Most are harmless and three improve — but four collapse, the worst by 19 points. Inheriting less made disaster <em>rarer</em>, not smaller. For a trading strategy that is worse than a steady small loss. Win rate here is <strong>41.7%</strong> (5 of 12) — near a coin flip, yet the average is −4.36 because the losses are so much larger than the wins.</p>
+<figure>
+<svg viewBox="0 0 900 250" role="img" aria-label="Dot plot of per-pair change at quarter inheritance, showing four catastrophic outliers">
+  <!-- x scale: -20 -> 150, +2 -> 840 ; x = 150 + (v+20)*31.36 -->
+  <g font-size="11" fill="var(--text-secondary)">
+    <line x1="150" y1="150" x2="840" y2="150" stroke="var(--axis)"/>
+    <line x1="777.2" y1="60" x2="777.2" y2="160" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="777.2" y="180" text-anchor="middle" fill="var(--text-muted)">no change</text>
+    <text x="150" y="172" text-anchor="middle">−20</text>
+    <text x="306.8" y="172" text-anchor="middle">−15</text>
+    <text x="463.6" y="172" text-anchor="middle">−10</text>
+    <text x="620.4" y="172" text-anchor="middle">−5</text>
+    <text x="840" y="172" text-anchor="middle">+2</text>
+  </g>
+  <g>
+    <circle cx="180.4" cy="120" r="6.5" fill="var(--critical)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="198.3" cy="120" r="6.5" fill="var(--critical)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="503.1" cy="120" r="6.5" fill="var(--critical)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="503.1" cy="103" r="6.5" fill="var(--critical)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="724.7" cy="120" r="6.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="766.4" cy="120" r="6.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="774.4" cy="103" r="6.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="784.1" cy="120" r="6.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="805.1" cy="103" r="6.5" fill="var(--good)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="815.7" cy="120" r="6.5" fill="var(--good)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="815.9" cy="86"  r="6.5" fill="var(--good)" stroke="var(--surface-1)" stroke-width="2"/>
+    <circle cx="816.8" cy="103" r="6.5" fill="var(--good)" stroke="var(--surface-1)" stroke-width="2"/>
+  </g>
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="189" y="66" text-anchor="middle">−19.0, −18.5</text>
+    <text x="504" y="66" text-anchor="middle">−8.7 ×2</text>
+    <text x="800" y="206" text-anchor="middle">7 of 12 essentially unchanged · 3 improved</text>
+  </g>
+  <text x="495" y="232" font-size="11" fill="var(--text-secondary)" text-anchor="middle">change vs cold start, per matched pair (percentage points)</text>
+</svg>
+</figure>
+
+<!-- ============ 3b. WIN RATES ============ -->
+<h2>3b. Win rate — how often each setting actually beats its own baseline</h2>
+<p class="note">The share of matched pairs where the setting won. <strong>50% is a coin flip</strong> — a setting that does nothing lands there. Grandfather sits well above it; every warm-start variant sits below. Bars show the point estimate, the thin line its 95% confidence interval.</p>
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="Horizontal bars of win rate per setting against a 50 percent coin-flip reference">
+  <!-- x = 150 + rate*690 ; 50% -> 495 -->
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="150" y="34" text-anchor="middle">0%</text>
+    <text x="495" y="34" text-anchor="middle">50%</text>
+    <text x="840" y="34" text-anchor="middle">100%</text>
+  </g>
+  <line x1="495" y1="42" x2="495" y2="288" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="495" y="308" font-size="11" fill="var(--text-muted)" text-anchor="middle">coin flip — a setting that does nothing lands here</text>
+
+  <g font-size="11.5" fill="var(--text-primary)">
+    <text x="140" y="72"  text-anchor="end">grandfather</text>
+    <text x="140" y="122" text-anchor="end">warm 25%, offset 3</text>
+    <text x="140" y="158" text-anchor="end">warm 50%, offset 3</text>
+    <text x="140" y="194" text-anchor="end">warm 25%, offset 1</text>
+    <text x="140" y="230" text-anchor="end">warm 50%, offset 1</text>
+    <text x="140" y="272" text-anchor="end" font-weight="650">warm start, pooled</text>
+  </g>
+
+  <!-- grandfather 81.8%, CI 52.3-94.9 -->
+  <rect x="150" y="58" width="564.5" height="20" rx="4" fill="var(--series-2)"/>
+  <line x1="510.9" y1="68" x2="804.8" y2="68" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <line x1="510.9" y1="63" x2="510.9" y2="73" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <line x1="804.8" y1="63" x2="804.8" y2="73" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <text x="724" y="73" font-size="12" font-weight="650" fill="var(--text-primary)">81.8%  ·  p=0.033</text>
+
+  <!-- warm 25 offset3 41.7%, CI 19.3-68.0 -->
+  <rect x="150" y="110" width="287.5" height="18" rx="4" fill="var(--series-1)" opacity=".75"/>
+  <line x1="283.2" y1="119" x2="619.2" y2="119" stroke="var(--text-primary)" stroke-width="1.5" opacity=".45"/>
+  <text x="448" y="124" font-size="11.5" fill="var(--text-secondary)">41.7%</text>
+
+  <!-- warm 50 offset3 33.3%, CI 13.8-60.9 -->
+  <rect x="150" y="146" width="230" height="18" rx="4" fill="var(--series-1)" opacity=".75"/>
+  <line x1="245.2" y1="155" x2="570.2" y2="155" stroke="var(--text-primary)" stroke-width="1.5" opacity=".45"/>
+  <text x="390" y="160" font-size="11.5" fill="var(--text-secondary)">33.3%</text>
+
+  <!-- warm 25 offset1 0%, CI 0-43.4 -->
+  <line x1="150" y1="191" x2="449.5" y2="191" stroke="var(--text-primary)" stroke-width="1.5" opacity=".45"/>
+  <circle cx="150" cy="191" r="5" fill="var(--critical)"/>
+  <text x="160" y="196" font-size="11.5" fill="var(--critical)" font-weight="600">0% — lost all 5 pairs · p=0.031</text>
+
+  <!-- warm 50 offset1 33.3%, CI 9.7-70.0 -->
+  <rect x="150" y="218" width="230" height="18" rx="4" fill="var(--series-1)" opacity=".75"/>
+  <line x1="216.9" y1="227" x2="633" y2="227" stroke="var(--text-primary)" stroke-width="1.5" opacity=".45"/>
+  <text x="390" y="232" font-size="11.5" fill="var(--text-secondary)">33.3%</text>
+
+  <!-- pooled 31.4%, CI 18.6-48.0 -->
+  <rect x="150" y="258" width="216.9" height="20" rx="4" fill="var(--critical)"/>
+  <line x1="278.3" y1="268" x2="481.2" y2="268" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <line x1="278.3" y1="263" x2="278.3" y2="273" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <line x1="481.2" y1="263" x2="481.2" y2="273" stroke="var(--text-primary)" stroke-width="1.5" opacity=".55"/>
+  <text x="492" y="273" font-size="12" font-weight="650" fill="var(--text-primary)">31.4%  ·  p=0.021</text>
+</svg>
+</figure>
+<p class="cap">Confidence intervals are wide because each row rests on 5–12 pairs; only the two bold rows (grandfather, and warm start pooled across 35 pairs) reach significance on their own.</p>
+<details><summary>Show the win/loss counts</summary>
+<table><thead><tr><th>setting</th><th>wins</th><th>losses</th><th>win rate</th><th>95% CI</th><th>p</th></tr></thead><tbody>
+<tr><td>grandfather (ties excluded)</td><td>9</td><td>2</td><td>81.8%</td><td>52.3–94.9%</td><td>0.033</td></tr>
+<tr><td>warm 25%, offset 3</td><td>5</td><td>7</td><td>41.7%</td><td>19.3–68.0%</td><td>0.387</td></tr>
+<tr><td>warm 50%, offset 3</td><td>4</td><td>8</td><td>33.3%</td><td>13.8–60.9%</td><td>0.194</td></tr>
+<tr><td>warm 25%, offset 1</td><td>0</td><td>5</td><td>0.0%</td><td>0–43.4%</td><td>0.031</td></tr>
+<tr><td>warm 50%, offset 1</td><td>2</td><td>4</td><td>33.3%</td><td>9.7–70.0%</td><td>0.344</td></tr>
+<tr><td><strong>warm start, pooled</strong></td><td>11</td><td>24</td><td><strong>31.4%</strong></td><td>18.6–48.0%</td><td><strong>0.021</strong></td></tr>
+</tbody></table></details>
+
+<!-- ============ 4. RETRACTED LEAD ============ -->
+<h2>4. Monthly re-tuning — a lead that did not survive replication <span class="tag">RETRACTED</span></h2>
+<p class="note">
+Three MSFT seeds at a 1-month offset averaged <strong>+2.07</strong>, which looked like the first
+configuration in this whole project to beat buy &amp; hold. Adding three more MSFT seeds and a second
+stock killed it: the pooled average is <strong>−2.35</strong>, and only <strong>2 of 9</strong> runs
+are positive. The original three simply happened to be the lucky ones.
+</p>
+<div class="legend">
+  <span><i style="background:var(--series-1)"></i>MSFT</span>
+  <span><i style="background:var(--series-2)"></i>JPM (independent check)</span>
+  <span style="color:var(--text-muted)">rings mark the original three seeds</span>
+</div>
+<figure>
+<svg viewBox="0 0 900 290" role="img" aria-label="Dot plot of all nine monthly re-tuning runs, showing the original three seeds were the favourable ones">
+  <!-- x = 150 + (v+13)*34.5 -->
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="150" y="36" text-anchor="middle">−13</text>
+    <text x="322.5" y="36" text-anchor="middle">−8</text>
+    <text x="598.5" y="36" text-anchor="middle">0</text>
+    <text x="840" y="36" text-anchor="middle">+7</text>
+  </g>
+  <line x1="598.5" y1="44" x2="598.5" y2="200" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="598.5" y="218" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">buy &amp; hold</text>
+
+  <!-- individual runs, y=100 -->
+  <g stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="196.1" cy="100" r="6.5" fill="var(--series-1)"/>
+    <circle cx="411.2" cy="100" r="6.5" fill="var(--series-2)"/>
+    <circle cx="437.2" cy="100" r="6.5" fill="var(--series-1)"/>
+    <circle cx="459.1" cy="100" r="6.5" fill="var(--series-2)"/>
+    <circle cx="471.9" cy="100" r="6.5" fill="var(--series-1)"/>
+    <circle cx="556.0" cy="100" r="6.5" fill="var(--series-2)"/>
+    <circle cx="588.1" cy="100" r="6.5" fill="var(--series-1)"/>
+    <circle cx="732.2" cy="100" r="6.5" fill="var(--series-1)"/>
+    <circle cx="805.7" cy="100" r="6.5" fill="var(--series-1)"/>
+  </g>
+  <!-- rings on the original three MSFT seeds: -3.67, 3.88, 6.01 -->
+  <g fill="none" stroke="var(--text-primary)" stroke-width="1.5" opacity=".65">
+    <circle cx="471.9" cy="100" r="10.5"/>
+    <circle cx="732.2" cy="100" r="10.5"/>
+    <circle cx="805.7" cy="100" r="10.5"/>
+  </g>
+  <text x="670" y="72" font-size="11" fill="var(--text-secondary)" text-anchor="middle">the original three seeds</text>
+
+  <!-- mean markers -->
+  <g stroke-width="2.5">
+    <line x1="669.9" y1="140" x2="669.9" y2="164" stroke="var(--text-muted)"/>
+    <line x1="517.5" y1="140" x2="517.5" y2="164" stroke="var(--critical)"/>
+  </g>
+  <text x="669.9" y="180" font-size="11.5" fill="var(--text-secondary)" text-anchor="middle">claimed +2.07</text>
+  <text x="669.9" y="195" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">(3 seeds)</text>
+  <text x="517.5" y="180" font-size="11.5" fill="var(--critical)" text-anchor="middle" font-weight="600">actual −2.35</text>
+  <text x="517.5" y="195" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">(all 9 runs)</text>
+
+  <text x="495" y="248" font-size="11" fill="var(--text-secondary)" text-anchor="middle">excess annualized return (%) — each dot is one run, cold tuning, no transition policy</text>
+  <text x="495" y="272" font-size="11" fill="var(--text-secondary)" text-anchor="middle">JPM was negative in all three of its runs — the independent check that settled it</text>
+</svg>
+</figure>
+<p class="cap">Third time in this project a small-sample lead has evaporated on replication (see also H-002 and the first grandfather write-up). The caution about annualizing ~21-day windows still stands.</p>
+
+<!-- ============ 4b. OFFSET DEPENDENCE ============ -->
+<h2>4b. Grandfather works at quarterly offsets, not monthly</h2>
+<p class="note">The same paired test at both re-tuning frequencies. At a 3-month offset grandfather is worth about a point and wins 9 of 12; at 1 month the effect vanishes to essentially zero. It does not backfire — it simply stops helping, which fits the mechanism: at monthly offsets a position spans many windows, so its original exit rules persist far longer than intended.</p>
+<figure>
+<svg viewBox="0 0 900 230" role="img" aria-label="Comparison of the grandfather effect at three-month versus one-month offsets">
+  <!-- x = 400 + v*120 ; 0 -> 400 -->
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="160" y="40" text-anchor="middle">−0.5</text>
+    <text x="400" y="40" text-anchor="middle">0</text>
+    <text x="640" y="40" text-anchor="middle">+0.5</text>
+    <text x="820" y="40" text-anchor="middle">+1.0</text>
+  </g>
+  <line x1="400" y1="50" x2="400" y2="170" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="400" y="192" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">no effect</text>
+
+  <g font-size="12" fill="var(--text-primary)" font-weight="600">
+    <text x="150" y="82" text-anchor="end">offset 3 months</text>
+    <text x="150" y="140" text-anchor="end">offset 1 month</text>
+  </g>
+  <!-- +0.98 -> x=517.6 ; bar from 400 -->
+  <rect x="400" y="66" width="117.6" height="22" rx="4" fill="var(--series-2)"/>
+  <text x="530" y="82" font-size="12" fill="var(--text-primary)" font-weight="600">+0.98</text>
+  <text x="600" y="82" font-size="11" fill="var(--text-secondary)">9 of 12 pairs · p = 0.033</text>
+  <!-- +0.05 -> x=406 -->
+  <rect x="400" y="124" width="6.5" height="22" rx="3" fill="var(--series-2)"/>
+  <text x="420" y="140" font-size="12" fill="var(--text-primary)" font-weight="600">+0.05</text>
+  <text x="490" y="140" font-size="11" fill="var(--text-secondary)">7 of 9 pairs · p = 0.94 — indistinguishable from nothing</text>
+
+  <text x="450" y="222" font-size="11" fill="var(--text-secondary)" text-anchor="middle">mean paired difference, grandfather minus baseline (percentage points)</text>
+</svg>
+</figure>
+<p class="cap">An earlier 3-pair sample suggested grandfather was actively harmful at monthly offsets (−2.20). With all 9 pairs that reverses to +0.05 — the harm was noise, but so was the benefit.</p>
+
+<!-- ============ 5. NOISE VS EFFECT ============ -->
+<h2>5. Why a single run proves nothing</h2>
+<p class="note">
+The strategy's result swings wildly depending on the tuner's random starting point. Run the
+<strong>exact same settings</strong> six times with six different random seeds and you get six very
+different answers. Grandfather's real benefit is about <strong>1 point</strong> — roughly
+<strong>20&times; smaller than that random swing</strong>. So comparing two single runs measures luck,
+not policy. The fix is to compare each seed <em>against itself</em>.
+</p>
+
+<h3 style="font-size:.95rem;margin:22px 0 2px;color:var(--text-primary)">Top: one run on its own &nbsp;·&nbsp; Bottom: the same runs, paired by seed</h3>
+<div class="legend">
+  <span><i style="background:var(--series-1)"></i>baseline (none)</span>
+  <span><i style="background:var(--series-2)"></i>grandfather</span>
+  <span style="color:var(--text-muted)">both panels share one scale</span>
+</div>
+<figure>
+<svg viewBox="0 0 900 430" role="img" aria-label="Top panel: individual run results overlap heavily. Bottom panel: within-seed differences cluster just above zero.">
+  <!-- x = 150 + (v+18)*28.75 -->
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="150" y="34" text-anchor="middle">−18</text>
+    <text x="322.5" y="34" text-anchor="middle">−12</text>
+    <text x="495" y="34" text-anchor="middle">−6</text>
+    <text x="667.5" y="34" text-anchor="middle">0</text>
+    <text x="840" y="34" text-anchor="middle">+6</text>
+  </g>
+  <line x1="667.5" y1="42" x2="667.5" y2="392" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- ---------- PANEL A ---------- -->
+  <text x="150" y="66" font-size="12.5" font-weight="600" fill="var(--text-primary)">Each run judged alone — the two policies overlap completely</text>
+  <text x="150" y="84" font-size="11" fill="var(--text-secondary)">24 runs (2 stocks × 6 seeds × 2 policies). You cannot tell the colours apart by position.</text>
+
+  <g font-size="11" fill="var(--text-secondary)">
+    <text x="140" y="116" text-anchor="end">MSFT</text>
+    <text x="140" y="150" text-anchor="end">JPM</text>
+  </g>
+  <!-- MSFT baseline y=108, gf y=124 -->
+  <g fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="190.5" cy="108" r="6"/><circle cx="456.5" cy="108" r="6"/><circle cx="563.7" cy="108" r="6"/>
+    <circle cx="653.1" cy="108" r="6"/><circle cx="752.3" cy="108" r="6"/><circle cx="755.5" cy="108" r="6"/>
+  </g>
+  <g fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="238.3" cy="124" r="6"/><circle cx="470.6" cy="124" r="6"/><circle cx="524.9" cy="124" r="6"/>
+    <circle cx="756.0" cy="124" r="6"/><circle cx="778.2" cy="124" r="6"/><circle cx="778.5" cy="124" r="6"/>
+  </g>
+  <!-- JPM baseline y=142, gf y=158 -->
+  <g fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="434.9" cy="142" r="6"/><circle cx="438.6" cy="142" r="6"/><circle cx="503.9" cy="142" r="6"/>
+    <circle cx="540.4" cy="142" r="6"/><circle cx="667.2" cy="142" r="6"/><circle cx="724.7" cy="142" r="6"/>
+  </g>
+  <g fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="460.5" cy="158" r="6"/><circle cx="508.8" cy="158" r="6"/><circle cx="566.9" cy="158" r="6"/>
+    <circle cx="601.1" cy="158" r="6"/><circle cx="611.1" cy="158" r="6"/><circle cx="724.7" cy="158" r="6"/>
+  </g>
+
+  <!-- span bracket for MSFT -->
+  <g stroke="var(--text-muted)" stroke-width="1">
+    <line x1="190.5" y1="190" x2="778.5" y2="190"/>
+    <line x1="190.5" y1="185" x2="190.5" y2="195"/>
+    <line x1="778.5" y1="185" x2="778.5" y2="195"/>
+  </g>
+  <text x="484" y="209" font-size="11.5" fill="var(--text-secondary)" text-anchor="middle">MSFT spans 20.5 points on identical settings — this is luck, not skill</text>
+
+  <!-- the trap callout -->
+  <g>
+    <circle cx="755.5" cy="108" r="9.5" fill="none" stroke="var(--critical)" stroke-width="2"/>
+    <circle cx="238.3" cy="124" r="9.5" fill="none" stroke="var(--critical)" stroke-width="2"/>
+    <line x1="238.3" y1="124" x2="755.5" y2="108" stroke="var(--critical)" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>
+  </g>
+  <text x="497" y="243" font-size="11.5" fill="var(--critical)" text-anchor="middle">Trap: baseline seed 999 (+3.06) vs grandfather seed 2222 (−14.93)</text>
+  <text x="497" y="259" font-size="11.5" fill="var(--text-secondary)" text-anchor="middle">looks like grandfather is a disaster — but those are different seeds</text>
+
+  <!-- divider -->
+  <line x1="150" y1="285" x2="840" y2="285" stroke="var(--grid)" stroke-width="1"/>
+
+  <!-- ---------- PANEL B ---------- -->
+  <text x="150" y="312" font-size="12.5" font-weight="600" fill="var(--text-primary)">Each seed compared with itself — the luck cancels out</text>
+  <text x="150" y="330" font-size="11" fill="var(--text-secondary)">The same 24 runs, now as 12 within-seed differences. 10 of 12 land at or above zero.</text>
+
+  <g fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="1.5">
+    <circle cx="611.4" cy="366" r="6"/><circle cx="629.0" cy="366" r="6"/>
+    <circle cx="667.5" cy="366" r="6"/><circle cx="681.6" cy="366" r="6"/>
+    <circle cx="690.2" cy="366" r="6"/><circle cx="693.1" cy="350" r="6"/>
+    <circle cx="693.4" cy="366" r="6"/><circle cx="694.0" cy="350" r="6"/>
+    <circle cx="714.9" cy="366" r="6"/><circle cx="737.7" cy="366" r="6"/>
+    <circle cx="765.0" cy="366" r="6"/><circle cx="770.1" cy="366" r="6"/>
+  </g>
+  <text x="620" y="392" font-size="11" fill="var(--critical)" text-anchor="middle">2 losses</text>
+  <text x="745" y="392" font-size="11" fill="var(--text-secondary)" text-anchor="middle">9 wins →</text>
+  <text x="497" y="418" font-size="11" fill="var(--text-secondary)" text-anchor="middle">excess annualized return, or difference in it (percentage points)</text>
+</svg>
+</figure>
+<p class="cap">Same data in both panels. Judged alone, the policies are indistinguishable; paired by seed, grandfather wins 9 of 12. That is the entire argument for the paired design.</p>
+
+</div>
