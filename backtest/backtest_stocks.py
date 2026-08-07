@@ -2209,9 +2209,17 @@ GA_BASE_GENE_KEYS = (
     'drawdown_exit_pct', 'reentry_rebound_pct',
     'rsi_oversold', 'rsi_overbought',
 )
-# Mirrors the hard rejects in fitness_func: violating individuals score -inf, so
-# repair them rather than wasting seeded slots.
-GA_MIN_EMA_SEPARATION = 40
+# Minimum spread between the fast and slow EMA spans. Two spans close together
+# track each other and cross on noise rather than on trend, so violating
+# individuals are rejected outright in fitness_func and repaired in
+# repair_gene_vector rather than wasting seeded slots.
+#
+# Lowered 40 -> 5 on 2026-08-07 to open the fast-crossover region the old floor
+# closed off. At 40 the constraint rejected 15.1% of the default (short, long)
+# grid and 14% of tuned windows landed within 5 of the floor, so this materially
+# changes the space the GA searches: runs recorded before that date were
+# searched under 40 and are NOT comparable to runs made after it.
+GA_MIN_EMA_SEPARATION = 5
 
 
 def snap_gene_to_space(value, spec):
@@ -2372,7 +2380,10 @@ def genetic_optimize_params(df, short_ema_bounds=DEFAULT_SHORT_EMA_BOUNDS, long_
         rsi_oversold = int(rsi_oversold)
         rsi_overbought = int(rsi_overbought)
 
-        if short_ema >= long_ema or (long_ema - short_ema) < 40 or rsi_oversold >= rsi_overbought:
+        # The separation test subsumes short_ema >= long_ema (that gives a gap of
+        # <= 0), so it needs no separate clause while GA_MIN_EMA_SEPARATION >= 1.
+        # Restore an explicit ordering check if it is ever set to 0.
+        if (long_ema - short_ema) < GA_MIN_EMA_SEPARATION or rsi_oversold >= rsi_overbought:
             return -np.inf
 
         split_idx = int(len(df) * 0.8)
