@@ -1,0 +1,1228 @@
+<title>Strategy Experiment Log — H-001 to H-016</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --plane:      #eef1f5;
+    --surface:    #ffffff;
+    --surface-2:  #f6f8fa;
+    --ink:        #0d1117;
+    --ink-2:      #47535f;
+    --ink-3:      #7b8794;
+    --rule:       #dae0e7;
+    --rule-soft:  #e8ecf1;
+    --accent:     #2a78d6;
+    --accent-ink: #1c5cab;
+    --s-msft:     #2a78d6;
+    --s-jpm:      #eb6834;
+    --good:       #0ca30c;
+    --warning:    #fab219;
+    --serious:    #ec835a;
+    --critical:   #d03b3b;
+    --shadow:     0 1px 2px rgba(13,17,23,.05), 0 8px 24px -16px rgba(13,17,23,.25);
+
+    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --plane:      #0a0c0f;
+      --surface:    #14181d;
+      --surface-2:  #191e24;
+      --ink:        #eef2f6;
+      --ink-2:      #a8b3bf;
+      --ink-3:      #75818e;
+      --rule:       #242c35;
+      --rule-soft:  #1d242b;
+      --accent:     #3987e5;
+      --accent-ink: #6da7ec;
+      --s-msft:     #3987e5;
+      --s-jpm:      #d95926;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane:      #0a0c0f;
+    --surface:    #14181d;
+    --surface-2:  #191e24;
+    --ink:        #eef2f6;
+    --ink-2:      #a8b3bf;
+    --ink-3:      #75818e;
+    --rule:       #242c35;
+    --rule-soft:  #1d242b;
+    --accent:     #3987e5;
+    --accent-ink: #6da7ec;
+    --s-msft:     #3987e5;
+    --s-jpm:      #d95926;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --plane:      #eef1f5;
+    --surface:    #ffffff;
+    --surface-2:  #f6f8fa;
+    --ink:        #0d1117;
+    --ink-2:      #47535f;
+    --ink-3:      #7b8794;
+    --rule:       #dae0e7;
+    --rule-soft:  #e8ecf1;
+    --accent:     #2a78d6;
+    --accent-ink: #1c5cab;
+    --s-msft:     #2a78d6;
+    --s-jpm:      #eb6834;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  .prose { max-width: 68ch; }
+
+  /* ---- eyebrow / label register: the project's native monospace ---- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  /* ---------- masthead ---------- */
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 56px 0 40px;
+  }
+  .masthead h1 {
+    font-size: clamp(2rem, 5.2vw, 3.4rem);
+    line-height: 1.03;
+    letter-spacing: -.035em;
+    font-weight: 760;
+    margin: 18px 0 0;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  .masthead .standfirst {
+    margin: 20px 0 0;
+    font-size: 1.12rem;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+  .runbar {
+    display: flex; flex-wrap: wrap; gap: 0 28px;
+    margin-top: 32px; padding-top: 20px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+  }
+  .runbar b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---------- sections ---------- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  h2 {
+    font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+    letter-spacing: -.022em; font-weight: 700; margin: 0; text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem; font-weight: 650; margin: 0 0 6px;
+    letter-spacing: -.012em;
+  }
+  section > .wrap > p { color: var(--ink-2); }
+  p { margin: 14px 0; }
+  a { color: var(--accent-ink); }
+
+  /* ---------- stat tiles ---------- */
+  .tiles {
+    display: grid; gap: 1px; margin-top: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    background: var(--rule); border: 1px solid var(--rule);
+    border-radius: 3px; overflow: hidden;
+  }
+  .tile { background: var(--surface); padding: 20px 20px 18px; }
+  .tile .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em;
+             text-transform: uppercase; color: var(--ink-3); }
+  .tile .v { font-size: 2.05rem; font-weight: 680; letter-spacing: -.03em;
+             margin-top: 10px; line-height: 1; }
+  .tile .d { font-family: var(--mono); font-size: 11.5px; margin-top: 9px; color: var(--ink-2); }
+  .tile .d .was { color: var(--ink-3); }
+  .worse { color: var(--critical); }
+  .better { color: var(--good); }
+
+  /* ---------- chart plates ---------- */
+  .plate {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 22px 22px 18px; box-shadow: var(--shadow);
+  }
+  .plate-head { margin-bottom: 4px; }
+  .plate-note { font-size: 13.5px; color: var(--ink-2); margin: 12px 0 0; max-width: 60ch; }
+  .duo { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); margin-top: 30px; }
+  .scroller { overflow-x: auto; }
+  svg.chart { display: block; width: 100%; height: auto; min-width: 300px; }
+
+  .grid-line { stroke: var(--rule-soft); stroke-width: 1; }
+  .axis-line { stroke: var(--rule); stroke-width: 1; }
+  .zero-line { stroke: var(--ink-3); stroke-width: 1; }
+  .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-3); }
+  .axis-title { font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+                text-transform: uppercase; fill: var(--ink-3); }
+  .slope-line { fill: none; stroke-width: 2; }
+  .slope-dot { stroke: var(--surface); stroke-width: 2; }
+  .slope-label { font-family: var(--mono); font-size: 11.5px; font-weight: 600; }
+  .dot { stroke-width: 2; }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 18px 0 0;
+            font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .swatch.hollow { background: transparent !important; border: 2px solid currentColor; border-radius: 50%; }
+  .swatch.solid-dot { border-radius: 50%; }
+
+  /* ---------- seed rails ---------- */
+  .rails { display: grid; gap: 1px; margin-top: 30px;
+           background: var(--rule); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .rail-row { background: var(--surface); display: grid; grid-template-columns: 150px 1fr 74px;
+              align-items: center; gap: 16px; padding: 13px 18px; }
+  .rail-lab { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); }
+  .rail-lab b { color: var(--ink); font-weight: 600; }
+  .rail-val { font-family: var(--mono); font-size: 12px; text-align: right;
+              font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+  .rail-track { position: relative; height: 22px; }
+  .rail-track::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: var(--rule-soft);
+  }
+  .rail-span { position: absolute; top: 50%; height: 3px; transform: translateY(-50%);
+               border-radius: 2px; opacity: .3; }
+  .rail-dot { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%;
+              transform: translate(-50%, -50%); border: 2px solid var(--surface); }
+  .rail-zero { position: absolute; top: 2px; bottom: 2px; width: 1px; background: var(--ink-3); }
+
+  /* ---------- table ---------- */
+  .tablewrap { margin-top: 28px; overflow-x: auto; border: 1px solid var(--rule);
+               border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 780px; font-size: 13px; }
+  thead th {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 500; text-align: right; padding: 13px 14px;
+    border-bottom: 1px solid var(--rule); white-space: nowrap; background: var(--surface-2);
+    position: sticky; top: 0;
+  }
+  thead th:first-child, thead th.l { text-align: left; }
+  tbody td {
+    padding: 9px 14px; text-align: right; border-bottom: 1px solid var(--rule-soft);
+    font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px;
+  }
+  tbody td.l { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: var(--surface-2); }
+  .grp td { background: var(--surface-2); font-family: var(--mono); font-size: 10px;
+            letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding: 9px 14px; }
+  .pos { color: var(--good); font-weight: 600; }
+  .neg { color: var(--critical); }
+  .fundtag { display: inline-flex; align-items: center; gap: 6px; }
+  .fundtag::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+
+  /* ---------- verdict chips ---------- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px 3px 7px; border-radius: 2px; font-weight: 600;
+    border: 1px solid; white-space: nowrap;
+  }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  .chip.rejected { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 40%, transparent); }
+  .chip.accepted { color: var(--good);     border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .chip.inconclusive { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 45%, transparent); }
+  .chip.review { color: var(--serious);    border-color: color-mix(in srgb, var(--serious) 45%, transparent); }
+  .chip.live { color: var(--accent);       border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  :root[data-theme="light"] .chip.inconclusive,
+  :root:not([data-theme="dark"]) .chip.inconclusive { color: #8a6100; }
+
+  /* ---------- timeline ledger ---------- */
+  .ledger { margin-top: 30px; border: 1px solid var(--rule); border-radius: 3px;
+            background: var(--surface); overflow: hidden; }
+  .entry { display: grid; grid-template-columns: 70px 1fr; gap: 20px;
+           padding: 18px 20px; border-bottom: 1px solid var(--rule-soft); }
+  .entry:last-child { border-bottom: 0; }
+  .entry.now { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+  .entry-id { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-3); padding-top: 2px; }
+  .entry.now .entry-id { color: var(--accent-ink); }
+  .entry-top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 5px; }
+  .entry-title { font-weight: 640; font-size: .98rem; letter-spacing: -.01em; }
+  .entry p { margin: 0; font-size: 13.8px; color: var(--ink-2); max-width: 74ch; }
+
+  /* ---------- callout ---------- */
+  .callout {
+    margin-top: 30px; padding: 22px 24px; background: var(--surface);
+    border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 3px;
+  }
+  .callout p { margin: 10px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 70ch; }
+  .callout p:first-of-type { margin-top: 8px; }
+  .callout strong { color: var(--ink); }
+
+  /* ---------- notes ---------- */
+  .notes { display: grid; gap: 26px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); margin-top: 28px; }
+  .notes p { font-size: 13.8px; margin: 6px 0 0; color: var(--ink-2); }
+  code { font-family: var(--mono); font-size: .88em; background: var(--surface-2);
+         border: 1px solid var(--rule-soft); border-radius: 2px; padding: 1px 5px; }
+
+  /* ---------- tooltip ---------- */
+  #tip {
+    position: fixed; z-index: 50; pointer-events: none; opacity: 0;
+    transition: opacity .12s ease; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow);
+    padding: 9px 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
+    color: var(--ink); max-width: 240px;
+  }
+  #tip .t-h { font-weight: 700; margin-bottom: 3px; }
+  #tip .t-r { color: var(--ink-2); display: flex; justify-content: space-between; gap: 14px; }
+  #tip .t-r b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .hit { cursor: crosshair; }
+  .hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  footer { padding: 40px 0 64px; }
+  footer p { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 620px) {
+    .rail-row { grid-template-columns: 108px 1fr 64px; gap: 10px; padding: 12px 14px; }
+    .entry { grid-template-columns: 56px 1fr; gap: 12px; padding: 16px 14px; }
+    .wrap { padding: 0 18px; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Backtest research log · H-001 → H-016</p>
+    <h1>More search effort made the tuner surer, and its results worse.</h1>
+    <p class="standfirst">
+      Sixteen experiments testing whether a dip-avoidance trading strategy can beat buying
+      and holding. The newest, H-016, doubled the optimiser's search budget to find out
+      whether the tuner was simply not looking hard enough — then widened the search space
+      when that failed. Neither helped, and both point at the same culprit.
+    </p>
+    <div class="runbar">
+      <span><b>Report</b> 2026-08-07</span>
+      <span><b>Funds</b> MSFT · JPM</span>
+      <span><b>Cell</b> 1.0Y lookback / 3M offset</span>
+      <span><b>Seeds</b> 999 · 1111 · 2222</span>
+      <span><b>Runs</b> 33 completed (24 core + 9 search-space)</span>
+      <span><b>Data</b> 2023-08-04 → 2026-08-04 (752 rows, single vintage)</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HEADLINE NUMBERS ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">01 — What changed</p>
+    </div>
+    <h2>Doubling the budget, measured six ways</h2>
+    <p class="prose">
+      Every figure below compares the same 12 runs at the old search budget
+      (population 8, 4 generations) against 12 fresh runs at double the effort
+      (population 16, 8 generations). Same funds, same seeds, same transition
+      policies, same data file. Only the search effort changed.
+    </p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="k">Experiment win rate</div>
+        <div class="v worse">25<span style="font-size:1.2rem;color:var(--ink-3);font-weight:500">%</span></div>
+        <div class="d"><span class="was">was 50%</span> · 3/12 runs beat B&amp;H, down from 6/12</div>
+      </div>
+      <div class="tile">
+        <div class="k">Mean trade win rate</div>
+        <div class="v">40.9%</div>
+        <div class="d"><span class="was">was 43.9%</span> · <span class="worse">−3.0 pts</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">Mean excess return</div>
+        <div class="v worse">−5.04</div>
+        <div class="d"><span class="was">was −2.48</span> · pts/yr vs B&amp;H</div>
+      </div>
+      <div class="tile">
+        <div class="k">Training disagreement</div>
+        <div class="v better">↓ 2.2×</div>
+        <div class="d">MSFT 8.24 → 3.70 pts</div>
+      </div>
+      <div class="tile">
+        <div class="k">Live disagreement</div>
+        <div class="v worse">↑ wider</div>
+        <div class="d">all 4 arms grew</div>
+      </div>
+      <div class="tile">
+        <div class="k">Compute spent</div>
+        <div class="v">10.4<span style="font-size:1.1rem;color:var(--ink-3);font-weight:500">h</span></div>
+        <div class="d"><span class="was">was 5.3h</span> · 1.97× slower</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ H-016 CORE FINDING ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">02 — H-016</p>
+      <span class="chip live">Result in</span>
+    </div>
+    <h2>The tuner converged. The returns didn't follow.</h2>
+    <p class="prose">
+      H-016 asked one question in two halves: with twice the search effort, does the
+      <em>training-score</em> disagreement between random seeds shrink, and does the
+      <em>live-result</em> disagreement shrink? The log recorded a prediction in advance —
+      that training spread would collapse while live spread would not. That is what happened.
+    </p>
+
+    <div class="duo">
+      <div class="plate">
+        <div class="plate-head">
+          <p class="eyebrow">Panel A — in-sample</p>
+          <h3>Training-score spread narrowed</h3>
+        </div>
+        <div class="scroller">
+          <svg class="chart" viewBox="0 0 460 280" role="img"
+               aria-label="Training-score spread between seeds falls from 8.24 to 3.70 for MSFT and from 19.60 to 18.57 for JPM when the search budget doubles.">
+            <line class="grid-line" x1="64" y1="28"    x2="350" y2="28"/>
+            <line class="grid-line" x1="64" y1="69.6"  x2="350" y2="69.6"/>
+            <line class="grid-line" x1="64" y1="111.2" x2="350" y2="111.2"/>
+            <line class="grid-line" x1="64" y1="152.8" x2="350" y2="152.8"/>
+            <line class="grid-line" x1="64" y1="194.4" x2="350" y2="194.4"/>
+            <line class="axis-line" x1="64" y1="236"   x2="350" y2="236"/>
+            <text class="tick" x="56" y="32"    text-anchor="end">25</text>
+            <text class="tick" x="56" y="73.6"  text-anchor="end">20</text>
+            <text class="tick" x="56" y="115.2" text-anchor="end">15</text>
+            <text class="tick" x="56" y="156.8" text-anchor="end">10</text>
+            <text class="tick" x="56" y="198.4" text-anchor="end">5</text>
+            <text class="tick" x="56" y="240"   text-anchor="end">0</text>
+            <text class="axis-title" x="6" y="18">Score points</text>
+            <text class="tick" x="64"  y="256" text-anchor="middle">pop 8 / gen 4</text>
+            <text class="tick" x="350" y="256" text-anchor="middle">pop 16 / gen 8</text>
+
+            <line class="slope-line" stroke="var(--s-jpm)"  x1="64" y1="72.93"  x2="350" y2="81.50"/>
+            <line class="slope-line" stroke="var(--s-msft)" x1="64" y1="167.44" x2="350" y2="205.22"/>
+
+            <circle class="slope-dot hit" cx="64"  cy="72.93"  r="5" fill="var(--s-jpm)"  tabindex="0"
+                    data-h="JPM · pop 8 / gen 4" data-k="Training spread" data-v="19.60 pts"/>
+            <circle class="slope-dot hit" cx="350" cy="81.50"  r="5" fill="var(--s-jpm)"  tabindex="0"
+                    data-h="JPM · pop 16 / gen 8" data-k="Training spread" data-v="18.57 pts"/>
+            <circle class="slope-dot hit" cx="64"  cy="167.44" r="5" fill="var(--s-msft)" tabindex="0"
+                    data-h="MSFT · pop 8 / gen 4" data-k="Training spread" data-v="8.24 pts"/>
+            <circle class="slope-dot hit" cx="350" cy="205.22" r="5" fill="var(--s-msft)" tabindex="0"
+                    data-h="MSFT · pop 16 / gen 8" data-k="Training spread" data-v="3.70 pts"/>
+
+            <text class="slope-label" fill="var(--s-jpm)"  x="362" y="85">JPM 18.6</text>
+            <text class="slope-label" fill="var(--s-msft)" x="362" y="209">MSFT 3.7</text>
+          </svg>
+        </div>
+        <p class="plate-note">
+          How far apart three seeds land on the <em>same</em> training window, averaged
+          over 8 windows. MSFT's disagreement fell 2.2× — and measured against a typical
+          score, from 56% down to 16%. The tuner is now finding much the same answer
+          whichever way it starts.
+        </p>
+      </div>
+
+      <div class="plate">
+        <div class="plate-head">
+          <p class="eyebrow">Panel B — out-of-sample</p>
+          <h3>Live-result spread widened</h3>
+        </div>
+        <div class="scroller">
+          <svg class="chart" viewBox="0 0 460 280" role="img"
+               aria-label="Live excess-return spread between seeds rises from 19.65 to 22.30 for MSFT and from 7.69 to 8.79 for JPM when the search budget doubles.">
+            <line class="grid-line" x1="64" y1="28"    x2="350" y2="28"/>
+            <line class="grid-line" x1="64" y1="69.6"  x2="350" y2="69.6"/>
+            <line class="grid-line" x1="64" y1="111.2" x2="350" y2="111.2"/>
+            <line class="grid-line" x1="64" y1="152.8" x2="350" y2="152.8"/>
+            <line class="grid-line" x1="64" y1="194.4" x2="350" y2="194.4"/>
+            <line class="axis-line" x1="64" y1="236"   x2="350" y2="236"/>
+            <text class="tick" x="56" y="32"    text-anchor="end">25</text>
+            <text class="tick" x="56" y="73.6"  text-anchor="end">20</text>
+            <text class="tick" x="56" y="115.2" text-anchor="end">15</text>
+            <text class="tick" x="56" y="156.8" text-anchor="end">10</text>
+            <text class="tick" x="56" y="198.4" text-anchor="end">5</text>
+            <text class="tick" x="56" y="240"   text-anchor="end">0</text>
+            <text class="axis-title" x="6" y="18">Return points/yr</text>
+            <text class="tick" x="64"  y="256" text-anchor="middle">pop 8 / gen 4</text>
+            <text class="tick" x="350" y="256" text-anchor="middle">pop 16 / gen 8</text>
+
+            <line class="slope-line" stroke="var(--s-msft)" x1="64" y1="72.51"  x2="350" y2="50.46"/>
+            <line class="slope-line" stroke="var(--s-jpm)"  x1="64" y1="172.02" x2="350" y2="162.87"/>
+
+            <circle class="slope-dot hit" cx="64"  cy="72.51"  r="5" fill="var(--s-msft)" tabindex="0"
+                    data-h="MSFT · pop 8 / gen 4" data-k="Live spread" data-v="19.65 pts"/>
+            <circle class="slope-dot hit" cx="350" cy="50.46"  r="5" fill="var(--s-msft)" tabindex="0"
+                    data-h="MSFT · pop 16 / gen 8" data-k="Live spread" data-v="22.30 pts"/>
+            <circle class="slope-dot hit" cx="64"  cy="172.02" r="5" fill="var(--s-jpm)"  tabindex="0"
+                    data-h="JPM · pop 8 / gen 4" data-k="Live spread" data-v="7.69 pts"/>
+            <circle class="slope-dot hit" cx="350" cy="162.87" r="5" fill="var(--s-jpm)"  tabindex="0"
+                    data-h="JPM · pop 16 / gen 8" data-k="Live spread" data-v="8.79 pts"/>
+
+            <text class="slope-label" fill="var(--s-msft)" x="362" y="54">MSFT 22.3</text>
+            <text class="slope-label" fill="var(--s-jpm)"  x="362" y="166">JPM 8.8</text>
+          </svg>
+        </div>
+        <p class="plate-note">
+          How far apart the same three seeds land on <em>live</em> excess annualized return.
+          Shown for the no-transition-policy arm; the grandfather arm moved the same way
+          (JPM +2.58, MSFT +3.36). All four arms widened — none narrowed.
+        </p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--s-msft)"></i>MSFT</span>
+      <span><i class="swatch" style="background:var(--s-jpm)"></i>JPM</span>
+      <span style="color:var(--ink-3)">Panels share a 0–25 grid but carry different units — compare direction, not height.</span>
+    </div>
+
+    <div class="callout">
+      <p class="eyebrow">Verdict — recorded in EXPERIMENT_LOG.md</p>
+      <p>
+        <strong>Search depth is not the bottleneck — the objective is.</strong> The tuner
+        got measurably better at the job it was given, and the results got worse. A model
+        that fits its training window more consistently is not finding settings that
+        survive contact with new data.
+      </p>
+      <p>
+        This is the fourth independent sighting of the same signature. H-002 found that more
+        tuning effort <em>halved</em> the apparent advantage; H-010 found a 10× harder search
+        made two stocks worse, not better; the H-016 diagnostic found seeds that fit the
+        training window best performed worst live (ρ = −0.60); and now a controlled doubling
+        reproduces it with both halves measured separately. The follow-on work belongs on what
+        the tuner is asked to maximise and how it is validated — not on bigger populations.
+      </p>
+      <p>
+        One qualification, from the search-space arm in section 03: this conclusion is drawn
+        inside the <em>default</em> bounds. Given a wider space to cover, the extra budget
+        did help. "Search depth is not the bottleneck" may be a statement about this
+        particular space rather than about depth as such.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SEARCH SPACE ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">03 — Search space</p>
+      <span class="chip live">JPM · 9 new runs</span>
+    </div>
+    <h2>Widening the search made it worse — and fixing the bad bounds didn't rescue it</h2>
+    <p class="prose">
+      If deeper search isn't the bottleneck, maybe the <em>space</em> is too small. There
+      was real evidence for that: under the default bounds, three of the four JPM runs
+      pinned the short EMA to exactly <strong>2</strong> — the floor of its own allowed
+      range — in seven of eight windows. A parameter parked on its own bound usually means
+      the bound is binding. So the bounds were widened by hand and the cell re-run.
+    </p>
+
+    <div class="plate" style="margin-top:30px">
+      <div class="plate-head">
+        <p class="eyebrow">JPM · seed 1111 · grandfather · pop 16 / gen 8</p>
+        <h3>The one cell run under all three bound sets</h3>
+      </div>
+      <div class="scroller">
+        <svg class="chart" viewBox="0 0 720 200" role="img"
+             aria-label="Excess annualized return for JPM seed 1111 grandfather at pop 16 gen 8 under three search-space bound sets: default bounds minus 3.77, widened but invalid bounds minus 9.51, widened and corrected bounds minus 11.72.">
+          <line class="grid-line" x1="218" y1="20" x2="218" y2="150"/>
+          <line class="grid-line" x1="320" y1="20" x2="320" y2="150"/>
+          <line class="grid-line" x1="422" y1="20" x2="422" y2="150"/>
+          <line class="grid-line" x1="524" y1="20" x2="524" y2="150"/>
+          <line class="zero-line" x1="626" y1="16" x2="626" y2="154"/>
+
+          <rect x="497.8" y="28" width="128.2" height="26" rx="3" fill="var(--s-jpm)" opacity=".92"/>
+          <rect x="302.7" y="72" width="323.3" height="26" rx="3" fill="var(--s-jpm)" opacity=".55"/>
+          <rect x="227.5" y="116" width="398.5" height="26" rx="3" fill="var(--s-jpm)" opacity=".55"/>
+
+          <text class="tick" x="140" y="45"  text-anchor="end">default bounds</text>
+          <text class="tick" x="140" y="89"  text-anchor="end">widened (invalid)</text>
+          <text class="tick" x="140" y="133" text-anchor="end">widened (corrected)</text>
+
+          <text class="slope-label" fill="var(--ink)" x="489.8" y="45"  text-anchor="end">−3.77</text>
+          <text class="slope-label" fill="var(--ink)" x="294.7" y="89"  text-anchor="end">−9.51</text>
+          <text class="slope-label" fill="var(--ink)" x="219.5" y="133" text-anchor="end">−11.72</text>
+
+          <text class="tick" x="218" y="170" text-anchor="middle">−12</text>
+          <text class="tick" x="320" y="170" text-anchor="middle">−9</text>
+          <text class="tick" x="422" y="170" text-anchor="middle">−6</text>
+          <text class="tick" x="524" y="170" text-anchor="middle">−3</text>
+          <text class="tick" x="626" y="170" text-anchor="middle">0</text>
+          <text class="axis-title" x="626" y="192" text-anchor="middle">Excess return pts/yr · buy &amp; hold at 0</text>
+        </svg>
+      </div>
+      <p class="plate-note">
+        The corrected rerun repaired every invalid bound — RSI back inside 0–100, long EMA
+        back under the training window, stop loss to a sane 3–25% — and still finished
+        <strong>2.2 points below</strong> the run with the broken bounds, and 7.9 below the
+        default-bounds baseline. Fixing the bounds did not recover the loss.
+      </p>
+    </div>
+
+    <div class="callout">
+      <p class="eyebrow">Three bounds were outside the physically valid range</p>
+      <p>
+        <strong><code>--rsi-overbought-bounds 51 6994</code></strong> — almost certainly a
+        typo for <code>69 94</code>. RSI is capped at 100 by construction, so only 50 of
+        those 6,944 integers can ever bind: <strong>99.3% of the range is dead</strong>.
+        Every window of every run landed in the dead zone (188 to 6503) with the filter
+        switched on but unable to fire, and since all dead values score identically there
+        is no gradient back out. One of eight genes became free noise.
+      </p>
+      <p>
+        <strong><code>--long-ema-bounds 30 600</code></strong> — a 1.0Y lookback is only
+        ~250 trading days, but runs selected spans of 555, 484, 475, 392 and 325.
+        <code>ewm(span=…, adjust=False)</code> has no <code>min_periods</code>, so those
+        return a near-flat line anchored to the first price rather than erroring.
+      </p>
+      <p>
+        <strong><code>--stop-loss-bounds 1 50</code></strong> — one run's eight windows ran
+        1.4%, 37.1%, 48.6%, 15.3%, 17.3%, 50.0%, 14.7%, 13.5%. At JPM's volatility a 50%
+        stop never triggers and a 1.4% stop triggers constantly.
+      </p>
+      <p>
+        <strong>But these defects are not the explanation.</strong> That is what the
+        corrected rerun tested, and it came back worse. The honest reading is that
+        <em>widening the space itself</em> is what hurts here — the invalid bounds were
+        real bugs worth fixing, not the cause.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Budget</th><th class="l">Seed</th><th class="l">Transition</th>
+            <th>Default bounds</th><th>Widened</th><th>Δ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="l">8/4</td><td class="l">999</td><td class="l">grandfather</td><td class="pos">+1.99</td><td class="neg">−19.74</td><td class="neg">−21.74</td></tr>
+          <tr><td class="l">8/4</td><td class="l">999</td><td class="l">none</td><td class="pos">+1.99</td><td class="neg">−15.98</td><td class="neg">−17.98</td></tr>
+          <tr><td class="l">8/4</td><td class="l">1111</td><td class="l">grandfather</td><td class="neg">−2.31</td><td class="neg">−17.05</td><td class="neg">−14.75</td></tr>
+          <tr><td class="l">8/4</td><td class="l">1111</td><td class="l">none</td><td class="neg">−5.69</td><td class="neg">−20.55</td><td class="neg">−14.86</td></tr>
+          <tr><td class="l">16/8</td><td class="l">999</td><td class="l">grandfather</td><td class="neg">−2.86</td><td class="neg">−22.39</td><td class="neg">−19.53</td></tr>
+          <tr><td class="l">16/8</td><td class="l">999</td><td class="l">none</td><td class="neg">−3.79</td><td class="neg">−7.58</td><td class="neg">−3.79</td></tr>
+          <tr><td class="l">16/8</td><td class="l">1111</td><td class="l">grandfather</td><td class="neg">−3.77</td><td class="neg">−9.51</td><td class="neg">−5.74</td></tr>
+          <tr><td class="l">16/8</td><td class="l">1111</td><td class="l">none</td><td class="neg">−4.69</td><td class="neg">−10.26</td><td class="neg">−5.56</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tiles" style="margin-top:24px">
+      <div class="tile">
+        <div class="k">Matched pairs lost</div>
+        <div class="v worse">8<span style="color:var(--ink-3);font-weight:500">/8</span></div>
+        <div class="d">mean <span class="worse">−12.99</span> pts/yr</div>
+      </div>
+      <div class="tile">
+        <div class="k">Best widened run</div>
+        <div class="v neg">−7.58</div>
+        <div class="d">still below the <em>worst</em> default run (−4.69)</div>
+      </div>
+      <div class="tile">
+        <div class="k">Parameter churn</div>
+        <div class="v worse">4.50</div>
+        <div class="d"><span class="was">default 2.75</span> · distinct short-EMA values / 8 windows</div>
+      </div>
+      <div class="tile">
+        <div class="k">Depth inside wide space</div>
+        <div class="v better">+5.90</div>
+        <div class="d">−18.33 at 8/4 → −12.44 at 16/8</div>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:26px">
+      That last tile is the one genuinely encouraging number on this page, and it points
+      the opposite way to section 02. Inside the <em>wide</em> space, doubling the budget
+      <strong>helped</strong> by 5.90 points; inside the default space it <strong>hurt</strong>
+      by 2.78. Search depth appears to matter in proportion to how much space there is to
+      cover — which would make the H-016 headline a statement about an already-tight
+      space rather than about search depth in general. Two seeds, one fund, one cell: a
+      hypothesis, not a finding.
+    </p>
+  </div>
+</section>
+
+<!-- ============ SEED RAILS ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">04 — The noise floor</p></div>
+    <h2>Where the three seeds actually landed</h2>
+    <p class="prose">
+      This project's recurring obstacle is that identical settings under different random
+      starts produce answers further apart than any effect being measured. Each rail below
+      spans the three seeds for one fund and budget; the vertical mark is buy &amp; hold.
+      Anything left of it lost to simply holding the stock.
+    </p>
+
+    <div class="rails" id="rails"></div>
+
+    <div class="legend">
+      <span><i class="swatch solid-dot" style="background:var(--s-msft)"></i>MSFT</span>
+      <span><i class="swatch solid-dot" style="background:var(--s-jpm)"></i>JPM</span>
+      <span style="color:var(--ink-3)">│ = buy &amp; hold (zero excess) · scale −20 to +10 pts/yr</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WIN RATE ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">05 — Win rates</p></div>
+    <h2>Two win rates — only one of them is the verdict</h2>
+    <p class="prose">
+      <strong>Experiment win rate</strong> is the share of runs that beat buy &amp; hold —
+      the metric a budget change is judged on. <strong>Trade win rate</strong> is the share
+      of individual round-trip trades closed in profit — a diagnostic of how the strategy
+      behaves, not of whether it won. The doubled budget hurt the first and barely moved
+      the second.
+    </p>
+
+    <div class="tiles" style="margin-top:28px">
+      <div class="tile">
+        <div class="k">MSFT · pop 8/4</div>
+        <div class="v">4<span style="color:var(--ink-3);font-weight:500">/6</span></div>
+        <div class="d">beat B&amp;H · mean excess <span class="neg">−2.97</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">MSFT · pop 16/8</div>
+        <div class="v">3<span style="color:var(--ink-3);font-weight:500">/6</span></div>
+        <div class="d">beat B&amp;H · mean excess <span class="neg">−3.65</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">JPM · pop 8/4</div>
+        <div class="v">2<span style="color:var(--ink-3);font-weight:500">/6</span></div>
+        <div class="d">beat B&amp;H · mean excess <span class="neg">−1.99</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">JPM · pop 16/8</div>
+        <div class="v worse">0<span style="color:var(--ink-3);font-weight:500">/6</span></div>
+        <div class="d">beat B&amp;H · mean excess <span class="neg">−6.44</span></div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:24px">
+      <p class="eyebrow">Per-fund read — matched seed pairs, 16/8 minus 8/4</p>
+      <p>
+        <strong>The two funds tell different stories, and neither is "deeper search
+        works."</strong> On JPM the deeper search is consistently worse: 5 of 6 matched
+        pairs deteriorated (mean −4.45 pts), and the experiment win rate fell to 0 of 6.
+        All six JPM runs at 16/8 also converged onto an identical 41-trade shape — the
+        tuner now agrees on <em>what</em> to do, and what it agrees on loses.
+      </p>
+      <p>
+        On MSFT the average is nearly flat (mean −0.68) but the seed pairs are violent:
+        seed 2222 improved by <strong>+21 points</strong> (−16.6 → +5.0) while seed 999
+        deteriorated by <strong>−20 points</strong> (+3.1 → −17.3). The best single run in
+        the whole matrix (MSFT +6.16) does come from the 16/8 budget — but it is seed 2222
+        flipping from the bad mode to the good one while another seed flipped the opposite
+        way. That is the bimodal signature H-014 documented, reshuffled by the budget
+        change, not a fund that responds to deeper search.
+      </p>
+    </div>
+
+    <div class="plate" style="margin-top:30px">
+      <div class="plate-head">
+        <p class="eyebrow">24 runs · trade win rate vs excess annualized return</p>
+        <h3>Every run, plotted against the only thing that matters</h3>
+      </div>
+      <div class="scroller">
+        <svg class="chart" id="scatter" viewBox="0 0 720 420" role="img"
+             aria-label="Scatter plot of trade win rate against excess annualized return for 24 runs. Within each fund the two rise together, but JPM's high win rates still sit below the zero line. Full values are in the run table below.">
+          <g id="sc-grid"></g>
+          <g id="sc-dots"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch solid-dot" style="background:var(--s-msft)"></i>MSFT</span>
+        <span><i class="swatch solid-dot" style="background:var(--s-jpm)"></i>JPM</span>
+        <span style="color:var(--ink-3)"><i class="swatch hollow"></i><span style="color:var(--ink-2)">hollow = pop 8 / gen 4</span></span>
+        <span><i class="swatch solid-dot" style="background:var(--ink-3)"></i>filled = pop 16 / gen 8</span>
+      </div>
+      <p class="plate-note">
+        The horizontal rule is buy &amp; hold. Within a single fund, trade win rate tracks
+        excess return closely (JPM ρ = 0.71, MSFT ρ = 0.82) — but across funds it inverts.
+        JPM's benchmark returned +37.5%/yr over this window and MSFT's +12.0%/yr, which is
+        why JPM can win 55% of its trades and still finish 4.7 points a year behind. A high
+        trade win rate against a strong benchmark is still a losing experiment.
+      </p>
+    </div>
+
+    <div class="tiles" style="margin-top:24px">
+      <div class="tile">
+        <div class="k">Trade win rate range</div>
+        <div class="v">25<span style="color:var(--ink-3);font-weight:500">–</span>61.5<span style="font-size:1.2rem;color:var(--ink-3);font-weight:500">%</span></div>
+        <div class="d">across all 24 runs</div>
+      </div>
+      <div class="tile">
+        <div class="k">Best trade win rate</div>
+        <div class="v">61.5%</div>
+        <div class="d">JPM seed 1111 · 8/4 · <span class="neg">−2.31 excess</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">Best excess return</div>
+        <div class="v better">+6.16</div>
+        <div class="d">MSFT seed 2222 · 16/8 · 42.9% trade win rate</div>
+      </div>
+      <div class="tile">
+        <div class="k">ρ trade win ↔ excess</div>
+        <div class="v">0.24</div>
+        <div class="d">pooled · but 0.71 / 0.82 within fund</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RUN TABLE ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">06 — Full results</p></div>
+    <h2>All 24 runs of the core matrix</h2>
+    <p class="prose">
+      The 24 default-bounds runs behind sections 01–05. Excess is annualized strategy
+      return minus annualized buy &amp; hold over the same window; positive means it beat
+      holding. The nine search-space runs are tabulated separately in section 03.
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Fund</th><th class="l">Seed</th><th class="l">Transition</th>
+            <th>Trade win</th><th>Trades</th><th>Strategy</th><th>Buy &amp; hold</th>
+            <th>Excess</th><th>Sharpe</th><th>Max DD</th><th>Invested</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIMELINE ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">07 — The road here</p></div>
+    <h2>Sixteen experiments, one durable conclusion</h2>
+    <p class="prose">
+      The standing bottom line, unchanged since H-004: no version of this strategy
+      reliably beats buying and holding under a fair, capital-matched comparison. Three
+      results looked like exceptions and each dissolved under stress-testing.
+    </p>
+
+    <div class="ledger">
+      <div class="entry">
+        <div class="entry-id">H-001</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Stricter exit / re-entry confirmation</span><span class="chip rejected">Rejected</span></div>
+          <p>Worse in 5 of 6 comparisons. Waiting for trend confirmation means waiting until the recovery has already happened — it missed <em>more</em> of the rebound, not less.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-002</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Was the MSFT winner just luck?</span><span class="chip rejected">Rejected</span></div>
+          <p>10 of 10 reruns beat buy &amp; hold — but the benchmark itself was falling, and doubling the tuning effort halved the advantage. Initially accepted, then overturned by H-003.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-003</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Same setup, different recheck schedule</span><span class="chip review">Overturned H-002</span></div>
+          <p>Changing only the retune cadence turned 8-of-8 into a coin flip: 5 of 8 at six months, 4 of 8 at three. The win was an accident of one time window.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-004</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Portfolio-wide review of 357 runs</span><span class="chip review">Human review</span></div>
+          <p>No stock or setting both beat buy &amp; hold and made money and held up across seeds and schedules. The best setup in the project succeeded 38% of the time.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-005</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Let the strategy invest more aggressively</span><span class="chip inconclusive">Refine &amp; retest</span></div>
+          <p>Apple beat the market 3 of 3 at up to 1.35× exposure. The best result the project had produced — and the one that prompted the no-leverage rule.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-006</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Stress-testing the Apple result</span><span class="chip rejected">Disqualified</span></div>
+          <p>It survived the schedule test that broke H-002 — but the accept was later retracted under the rule that the strategy may never deploy more capital than buy &amp; hold.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-007</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">The fair rematch: same $10k, no leverage</span><span class="chip rejected">Rejected</span></div>
+          <p>Capped at buy &amp; hold's capital, the "improved" strategy won 2 of 24 instead of 15 of 24. The leverage was the edge; there was no skill underneath it.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-008</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Twenty years, crashes included</span><span class="chip rejected">Rejected</span></div>
+          <p>Lost on return 15 times out of 15, by about 9%/yr — even with the 2020 crash in the window. It did cut worst-case drawdown in 14 of 15.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-009</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Penalise missing the rebound</span><span class="chip accepted">Accepted (MSFT)</span></div>
+          <p>The first fair, no-leverage change that genuinely improved a stock. Helped on choppy MSFT across all three seeds; did nothing for smoothly-rising AAPL and GOOGL.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-010</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Does a 10× harder search crack the risers?</span><span class="chip rejected">Rejected</span></div>
+          <p>It got worse, not better — a tighter fit to each training stretch generalised worse out of sample. The first clear overfitting signature, and a direct precursor to H-016.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-011</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Give it a real crash to dodge</span><span class="chip rejected">Rejected</span></div>
+          <p>The higher-returning the stock, the worse it did. Nvidia missed 162% of upside after its exits. Dip-dodging only pays where there is little upside to miss.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-012</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Deep MSFT optimisation</span><span class="chip inconclusive">Superseded</span></div>
+          <p>Folded into the transition and tuning work that became H-013 onward.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-013</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Grandfather positions across retunes</span><span class="chip accepted">Accepted (3M only)</span></div>
+          <p>Nine better, two worse, one tied over 12 matched pairs (+0.98 avg, p = 0.066). The original "phantom exit" theory was wrong — zero fired in 58 switchovers. At a 1-month offset the benefit is worth nothing (+0.05 over nine pairs, p = 0.94); an earlier three-pair reading of −2.20 was retracted.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-014</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Warm-start each retune from the last</span><span class="chip rejected">Rejected</span></div>
+          <p>Failed its own stability test (spread 11.89). Results proved bimodal, not noisy — warm starting preserves the first roll of the dice rather than damping it. Six tests agree.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">H-015</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Retune monthly instead of quarterly</span><span class="chip rejected">Rejected</span></div>
+          <p>Looked like the project's first positive average excess return, on three seeds. Replication killed it: pooled across nine runs it is −2.35, with only 2 of 9 beating buy &amp; hold. The original three seeds were the lucky ones.</p>
+        </div>
+      </div>
+      <div class="entry now">
+        <div class="entry-id">H-016</div>
+        <div>
+          <div class="entry-top"><span class="entry-title">Is the tuner actually finding the best answer?</span><span class="chip rejected">Rejected as a route</span></div>
+          <p>Yes — and it did not help. Training-score disagreement shrank; live spread widened in all four arms, the experiment win rate halved from 6/12 to 3/12, and mean excess fell from −2.48 to −5.04. A follow-on arm widened the JPM search space instead: worse in 8 of 8 pairs, and a corrected rerun with every invalid bound repaired came back worse again.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NOTES ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">08 — Method</p></div>
+    <h2>How to read this, and what it can't tell you</h2>
+    <div class="notes">
+      <div>
+        <h3>One data vintage</h3>
+        <p>All 24 runs traded byte-identical files (<code>MSFT-3Y.csv</code> <code>b442af0a…</code>, <code>JPM-3Y.csv</code> <code>bce531ed…</code>). Derived slices have silently rolled forward before and invalidated three earlier comparisons, so the hash is checked, not assumed.</p>
+      </div>
+      <div>
+        <h3>Three seeds is thin</h3>
+        <p>Three seeds per arm sets a noise floor wider than most effects this project chases. The direction of travel is consistent across all four arms and both funds, which is the strongest part of the result; the magnitudes are not precise.</p>
+      </div>
+      <div>
+        <h3>Training score ≠ live return</h3>
+        <p>Panel A is the GA's own fitness on the training window; Panel B is realised excess return on data the tuner never saw. They share a grid for readability only — the units are unrelated.</p>
+      </div>
+      <div>
+        <h3>Two win rates, kept apart</h3>
+        <p>"Experiment win rate" counts runs that beat the benchmark; "trade win rate" counts profitable round trips inside a run. Section 04 defines both — they disagree sharply here, and only the first is a verdict.</p>
+      </div>
+      <div>
+        <h3>Buy &amp; hold sits outside the fence</h3>
+        <p>The <code>generic</code> profile forces an active stop-loss (bounds 8–15%) and drawdown exit (2.5–4.0%); disabling either requires a value ≥100, which the search cannot reach. On a +37.5%/yr riser like this JPM window, the best answer — just hold — is literally outside the searchable space, so JPM's 0/6 may be a fence effect as much as a tuner effect. The <code>generic-bh-reachable</code> profile exists to test exactly this.</p>
+      </div>
+      <div>
+        <h3>No leverage anywhere</h3>
+        <p>Every run in this report holds exposure at or below 1.0×. The standing rule disqualifies any result that beats the benchmark by deploying more capital than it does.</p>
+      </div>
+      <div>
+        <h3>One cell only</h3>
+        <p>1.0-year lookback, 3-month offset, <code>generic</code> profile, <code>Adj&nbsp;Close</code>. H-013 showed the transition policy reverses sign at a 1-month offset; nothing here should be assumed to hold at other cells.</p>
+      </div>
+      <div>
+        <h3>Bounds now join the resume identity</h3>
+        <p>The search-space bounds were not part of <code>run_grid.ps1</code>'s completed-run key, so a hand-launched wide-bounds run counted as "done" for a cell a default-bounds sweep wanted, and would have been silently skipped. The four profile-independent bounds are now checked on every resume; exit-gene bounds are checked when the sweep overrides them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Generated 2026-08-07 from backtest_run_history.csv (33 rows) and 24 GA tuning logs · backtest/EXPERIMENT_LOG.md H-001 → H-016</p>
+  </div>
+</footer>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var RUNS = [
+    {b:"16/8",f:"MSFT",s:"2222",p:"grandfather",e:6.16,st:18.16,bh:12.00,w:42.9,t:29,sh:0.88,dd:19.0,ti:52.2},
+    {b:"16/8",f:"MSFT",s:"2222",p:"none",       e:4.98,st:16.98,bh:12.00,w:42.9,t:29,sh:0.83,dd:19.7,ti:53.4},
+    {b:"16/8",f:"MSFT",s:"1111",p:"grandfather",e:1.09,st:13.09,bh:12.00,w:37.5,t:33,sh:0.66,dd:21.3,ti:52.8},
+    {b:"16/8",f:"MSFT",s:"1111",p:"none",       e:-0.80,st:11.20,bh:12.00,w:37.5,t:33,sh:0.59,dd:22.1,ti:53.4},
+    {b:"16/8",f:"MSFT",s:"999", p:"grandfather",e:-15.98,st:-3.98,bh:12.00,w:25.0,t:32,sh:-0.13,dd:22.8,ti:47.6},
+    {b:"16/8",f:"MSFT",s:"999", p:"none",       e:-17.32,st:-5.32,bh:12.00,w:25.0,t:32,sh:-0.21,dd:24.8,ti:48.8},
+    {b:"16/8",f:"JPM", s:"999", p:"grandfather",e:-2.86,st:34.59,bh:37.46,w:45.0,t:41,sh:1.52,dd:14.4,ti:72.8},
+    {b:"16/8",f:"JPM", s:"1111",p:"grandfather",e:-3.77,st:33.68,bh:37.46,w:55.0,t:41,sh:1.48,dd:12.6,ti:74.2},
+    {b:"16/8",f:"JPM", s:"999", p:"none",       e:-3.79,st:33.67,bh:37.46,w:45.0,t:41,sh:1.49,dd:14.5,ti:73.0},
+    {b:"16/8",f:"JPM", s:"1111",p:"none",       e:-4.69,st:32.77,bh:37.46,w:55.0,t:41,sh:1.45,dd:13.1,ti:74.4},
+    {b:"16/8",f:"JPM", s:"2222",p:"grandfather",e:-10.95,st:26.51,bh:37.46,w:40.0,t:41,sh:1.32,dd:16.8,ti:67.8},
+    {b:"16/8",f:"JPM", s:"2222",p:"none",       e:-12.58,st:24.88,bh:37.46,w:40.0,t:41,sh:1.24,dd:17.4,ti:69.8},
+
+    {b:"8/4", f:"MSFT",s:"999", p:"grandfather",e:3.86,st:15.86,bh:12.00,w:35.7,t:29,sh:0.77,dd:20.2,ti:54.2},
+    {b:"8/4", f:"MSFT",s:"1111",p:"grandfather",e:3.85,st:15.85,bh:12.00,w:37.5,t:33,sh:0.77,dd:18.4,ti:55.0},
+    {b:"8/4", f:"MSFT",s:"999", p:"none",       e:3.06,st:15.07,bh:12.00,w:42.9,t:29,sh:0.74,dd:20.2,ti:54.2},
+    {b:"8/4", f:"MSFT",s:"1111",p:"none",       e:2.95,st:14.95,bh:12.00,w:37.5,t:33,sh:0.74,dd:18.4,ti:55.6},
+    {b:"8/4", f:"MSFT",s:"2222",p:"grandfather",e:-14.93,st:-2.93,bh:12.00,w:25.0,t:32,sh:-0.07,dd:23.3,ti:52.6},
+    {b:"8/4", f:"MSFT",s:"2222",p:"none",       e:-16.59,st:-4.58,bh:12.00,w:25.0,t:32,sh:-0.16,dd:23.3,ti:54.0},
+    {b:"8/4", f:"JPM", s:"999", p:"grandfather",e:1.99,st:39.45,bh:37.46,w:60.9,t:52,sh:1.74,dd:12.8,ti:73.4},
+    {b:"8/4", f:"JPM", s:"999", p:"none",       e:1.99,st:39.45,bh:37.46,w:60.9,t:52,sh:1.74,dd:12.8,ti:73.4},
+    {b:"8/4", f:"JPM", s:"1111",p:"grandfather",e:-2.31,st:35.15,bh:37.46,w:61.5,t:27,sh:1.69,dd:9.5, ti:67.4},
+    {b:"8/4", f:"JPM", s:"2222",p:"grandfather",e:-3.50,st:33.96,bh:37.46,w:45.0,t:41,sh:1.58,dd:13.3,ti:72.0},
+    {b:"8/4", f:"JPM", s:"2222",p:"none",       e:-4.42,st:33.04,bh:37.46,w:45.0,t:41,sh:1.55,dd:14.5,ti:72.2},
+    {b:"8/4", f:"JPM", s:"1111",p:"none",       e:-5.69,st:31.76,bh:37.46,w:50.0,t:30,sh:1.56,dd:11.5,ti:66.4}
+  ];
+
+  var NS = "http://www.w3.org/2000/svg";
+  function el(n, a) {
+    var e = document.createElementNS(NS, n);
+    for (var k in a) if (a.hasOwnProperty(k)) e.setAttribute(k, a[k]);
+    return e;
+  }
+  function hue(f) { return f === "MSFT" ? "var(--s-msft)" : "var(--s-jpm)"; }
+  function fmt(v, d) { return (v > 0 ? "+" : "") + v.toFixed(d === undefined ? 2 : d); }
+
+  /* ---------------- tooltip ---------------- */
+  var tip = document.getElementById("tip");
+  function showTip(evt, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = "1";
+    var r = tip.getBoundingClientRect();
+    var x = (evt.clientX !== undefined ? evt.clientX : 0) + 16;
+    var y = (evt.clientY !== undefined ? evt.clientY : 0) + 16;
+    if (x + r.width > window.innerWidth - 12) x = window.innerWidth - r.width - 12;
+    if (y + r.height > window.innerHeight - 12) y = window.innerHeight - r.height - 12;
+    tip.style.left = x + "px";
+    tip.style.top = y + "px";
+  }
+  function hideTip() { tip.style.opacity = "0"; }
+
+  function bindTip(node, html) {
+    node.addEventListener("mousemove", function (e) { showTip(e, html); });
+    node.addEventListener("mouseleave", hideTip);
+    node.addEventListener("focus", function () {
+      var b = node.getBoundingClientRect();
+      showTip({ clientX: b.left + b.width / 2, clientY: b.top }, html);
+    });
+    node.addEventListener("blur", hideTip);
+  }
+
+  /* slope-chart dots authored in markup */
+  Array.prototype.forEach.call(document.querySelectorAll(".hit[data-h]"), function (n) {
+    bindTip(n, '<div class="t-h">' + n.getAttribute("data-h") + '</div>' +
+                '<div class="t-r"><span>' + n.getAttribute("data-k") + '</span><b>' +
+                n.getAttribute("data-v") + '</b></div>');
+  });
+
+  /* ---------------- seed rails ---------------- */
+  (function rails() {
+    var host = document.getElementById("rails");
+    if (!host) return;
+    var LO = -20, HI = 10;
+    var pct = function (v) { return ((v - LO) / (HI - LO)) * 100; };
+    /* spread carried at full precision — deriving it from the rounded
+       per-run values above loses a hundredth on JPM 8/4 (7.68 vs 7.69). */
+    var combos = [
+      { f: "MSFT", b: "8/4",  spread: 19.65 }, { f: "MSFT", b: "16/8", spread: 22.30 },
+      { f: "JPM",  b: "8/4",  spread: 7.69  }, { f: "JPM",  b: "16/8", spread: 8.79  }
+    ];
+    combos.forEach(function (c) {
+      var rows = RUNS.filter(function (r) {
+        return r.f === c.f && r.b === c.b && r.p === "none";
+      });
+      var vals = rows.map(function (r) { return r.e; });
+      var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+
+      var row = document.createElement("div");
+      row.className = "rail-row";
+
+      var lab = document.createElement("div");
+      lab.className = "rail-lab";
+      lab.innerHTML = "<b>" + c.f + "</b> &nbsp;pop " + c.b.replace("/", " / gen ");
+      row.appendChild(lab);
+
+      var track = document.createElement("div");
+      track.className = "rail-track";
+
+      var zero = document.createElement("div");
+      zero.className = "rail-zero";
+      zero.style.left = pct(0) + "%";
+      track.appendChild(zero);
+
+      var span = document.createElement("div");
+      span.className = "rail-span";
+      span.style.left = pct(mn) + "%";
+      span.style.width = (pct(mx) - pct(mn)) + "%";
+      span.style.background = hue(c.f);
+      track.appendChild(span);
+
+      rows.forEach(function (r) {
+        var d = document.createElement("div");
+        d.className = "rail-dot";
+        d.style.left = pct(r.e) + "%";
+        d.style.background = hue(c.f);
+        d.tabIndex = 0;
+        d.setAttribute("role", "img");
+        d.setAttribute("aria-label", c.f + " seed " + r.s + ", excess " + fmt(r.e) + " points per year");
+        bindTip(d, '<div class="t-h">' + c.f + " · seed " + r.s + '</div>' +
+                   '<div class="t-r"><span>Excess</span><b>' + fmt(r.e) + '</b></div>' +
+                   '<div class="t-r"><span>Win rate</span><b>' + r.w.toFixed(1) + '%</b></div>');
+        track.appendChild(d);
+      });
+
+      row.appendChild(track);
+
+      var val = document.createElement("div");
+      val.className = "rail-val";
+      val.textContent = c.spread.toFixed(2);
+      val.title = "spread";
+      row.appendChild(val);
+
+      host.appendChild(row);
+    });
+  })();
+
+  /* ---------------- scatter ---------------- */
+  (function scatter() {
+    var g = document.getElementById("sc-grid"), d = document.getElementById("sc-dots");
+    if (!g || !d) return;
+    var L = 68, R = 692, T = 28, B = 368;
+    var xs = function (v) { return L + ((v - 20) / 45) * (R - L); };
+    var ys = function (v) { return B - ((v + 20) / 30) * (B - T); };
+
+    for (var wv = 25; wv <= 65; wv += 5) {
+      g.appendChild(el("line", { class: "grid-line", x1: xs(wv), y1: T, x2: xs(wv), y2: B }));
+      var xt = el("text", { class: "tick", x: xs(wv), y: B + 20, "text-anchor": "middle" });
+      xt.textContent = wv + "%";
+      g.appendChild(xt);
+    }
+    for (var ev = -20; ev <= 10; ev += 5) {
+      if (ev !== 0) g.appendChild(el("line", { class: "grid-line", x1: L, y1: ys(ev), x2: R, y2: ys(ev) }));
+      var yt = el("text", { class: "tick", x: L - 10, y: ys(ev) + 4, "text-anchor": "end" });
+      yt.textContent = (ev > 0 ? "+" : "") + ev;
+      g.appendChild(yt);
+    }
+    g.appendChild(el("line", { class: "zero-line", x1: L, y1: ys(0), x2: R, y2: ys(0) }));
+    var zl = el("text", { class: "axis-title", x: R, y: ys(0) - 9, "text-anchor": "end" });
+    zl.textContent = "Buy & hold";
+    g.appendChild(zl);
+
+    var xa = el("text", { class: "axis-title", x: (L + R) / 2, y: B + 44, "text-anchor": "middle" });
+    xa.textContent = "Trade win rate";
+    g.appendChild(xa);
+    var ya = el("text", { class: "axis-title", x: 8, y: 16 });
+    ya.textContent = "Excess return pts/yr";
+    g.appendChild(ya);
+
+    RUNS.forEach(function (r) {
+      var cx = xs(r.w), cy = ys(r.e), solid = r.b === "16/8";
+      var hit = el("circle", { cx: cx, cy: cy, r: 13, fill: "transparent", class: "hit", tabindex: "0", role: "img" });
+      hit.setAttribute("aria-label",
+        r.f + " seed " + r.s + ", " + r.p + ", pop " + r.b + ": win rate " +
+        r.w.toFixed(1) + " percent, excess " + fmt(r.e) + " points per year");
+      var dot = el("circle", {
+        cx: cx, cy: cy, r: solid ? 6 : 5.5, class: "dot",
+        fill: solid ? hue(r.f) : "transparent",
+        stroke: solid ? "var(--surface)" : hue(r.f)
+      });
+      d.appendChild(dot);
+      d.appendChild(hit);
+      bindTip(hit,
+        '<div class="t-h">' + r.f + " · seed " + r.s + '</div>' +
+        '<div class="t-r"><span>Budget</span><b>pop ' + r.b + '</b></div>' +
+        '<div class="t-r"><span>Transition</span><b>' + r.p + '</b></div>' +
+        '<div class="t-r"><span>Win rate</span><b>' + r.w.toFixed(1) + '%</b></div>' +
+        '<div class="t-r"><span>Excess</span><b>' + fmt(r.e) + '</b></div>' +
+        '<div class="t-r"><span>Sharpe</span><b>' + r.sh.toFixed(2) + '</b></div>');
+    });
+  })();
+
+  /* ---------------- table ---------------- */
+  (function table() {
+    var tb = document.getElementById("tbody");
+    if (!tb) return;
+    ["16/8", "8/4"].forEach(function (b) {
+      var hr = document.createElement("tr");
+      hr.className = "grp";
+      hr.innerHTML = '<td colspan="11">Population ' + b.split("/")[0] +
+                     " / " + b.split("/")[1] + " generations</td>";
+      tb.appendChild(hr);
+      RUNS.filter(function (r) { return r.b === b; }).forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td class="l"><span class="fundtag" style="--c:' + hue(r.f) + '">' + r.f + '</span></td>' +
+          '<td class="l">' + r.s + '</td>' +
+          '<td class="l">' + r.p + '</td>' +
+          '<td>' + r.w.toFixed(1) + '%</td>' +
+          '<td>' + r.t + '</td>' +
+          '<td>' + fmt(r.st) + '</td>' +
+          '<td>' + r.bh.toFixed(2) + '</td>' +
+          '<td class="' + (r.e > 0 ? "pos" : "neg") + '">' + fmt(r.e) + '</td>' +
+          '<td>' + r.sh.toFixed(2) + '</td>' +
+          '<td>' + r.dd.toFixed(1) + '%</td>' +
+          '<td>' + r.ti.toFixed(1) + '%</td>';
+        tb.appendChild(tr);
+      });
+    });
+  })();
+})();
+</script>

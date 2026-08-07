@@ -737,10 +737,11 @@ run the second stock early, because it is what settled this one.
 
 ---
 
-## H-016 — Is the tuner actually finding the best answer? (QUEUED, not yet run)
+## H-016 — Is the tuner actually finding the best answer?
 
-**Status:** Planned for a future session. The diagnostic below is already done;
-the experiment it calls for is not.
+**Date:** planned 2026-08-05, run 2026-08-06 to 2026-08-07
+**Stocks:** Microsoft (MSFT) and JPMorgan (JPM), 3-year files
+**Scope:** 24 runs in the main comparison, plus 9 more in a follow-on arm
 
 **Where this came from:** the transition experiments kept running into the same
 obstacle — the same settings run with different random starting points gave
@@ -770,20 +771,148 @@ further facts complicate the obvious fix:
 This matches H-002, where giving the tuner more effort *halved* its apparent
 advantage. Same signature, now with a measurement behind it.
 
-**The experiment to run:** repeat one configuration at roughly double the search
-effort (population 16, 8 generations) on the same six seeds, and compare two
-things separately — does the *training-score* disagreement shrink, and does the
-*live-result* spread shrink?
+**The experiment run:** the same configuration at double the search effort
+(population 16, 8 generations) against a matched population-8 / 4-generation
+baseline — two stocks, three seeds, both transition policies, 12 runs each side.
+One cell throughout (1-year lookback, 3-month offset, `generic` profile, no
+leverage), and all 24 runs traded byte-identical data files, so the search
+budget is the only thing that changed.
 
-**The prediction worth testing:** training spread collapses while live spread
-does not. If that happens, the problem is not search depth but the target being
-searched for — the tuner would be succeeding at fitting the past and that would
-simply not be the thing that pays. The follow-on work is then about the
-objective and validation (what the tuner is asked to maximize), not about
-bigger populations.
+**The prediction, written down in advance:** training spread collapses while live
+spread does not. If that happened, the problem would not be search depth but the
+target being searched for.
 
-**Cost note:** this doubles an already slow run; the 8/4 runs took ~23 minutes
-each at a 3-month offset.
+### What happened — the prediction was right
+
+**The tuner did converge.** How far apart three seeds land on the *same* training
+window, averaged over 8 windows:
+
+| stock | pop 8 / gen 4 | pop 16 / gen 8 | |
+|---|---|---|---|
+| Microsoft | 8.24 | **3.70** | 2.2× tighter |
+| JPMorgan | 19.60 | 18.57 | roughly unchanged |
+
+Measured against a typical score, Microsoft's disagreement fell from 56% to 16%.
+On the training data the tuner now largely finds the same answer whichever way it
+starts. **That was the thing we asked it to fix, and it fixed it.**
+
+**Nothing else got better.** Every headline number moved the wrong way:
+
+| | pop 8 / gen 4 | pop 16 / gen 8 |
+|---|---|---|
+| runs that beat buy & hold | **6 of 12** | **3 of 12** |
+| average excess return | −2.48 | −5.04 |
+| live spread, MSFT (no policy) | 19.65 | 22.30 |
+| live spread, MSFT (grandfather) | 18.79 | 22.14 |
+| live spread, JPM (no policy) | 7.69 | 8.79 |
+| live spread, JPM (grandfather) | 5.50 | 8.08 |
+| compute | 5.3 hours | 10.4 hours |
+
+All four live spreads widened. Not one narrowed. **We paid double the compute to
+make the tuner agree with itself, and it bought a halved win rate.**
+
+**The two stocks failed differently, and neither is "deeper search works."**
+Comparing matched pairs — same stock, same seed, same policy, only the budget
+changed:
+
+- **JPMorgan simply got worse:** 5 of 6 pairs deteriorated, average −4.45, and it
+  went from beating buy-and-hold twice to never. All six JPM runs at the higher
+  budget also converged on an identical 41-trade shape — the tuner now agrees
+  about *what to do*, and what it agrees on loses.
+- **Microsoft did not improve, it reshuffled.** The average barely moved (−0.68),
+  but seed 2222 swung **+21 points** (−16.6 → +5.0) while seed 999 swung
+  **−20 points** (+3.1 → −17.3). The best single run in the whole matrix (+6.16)
+  is seed 2222 flipping from the bad mode into the good one while another seed
+  flipped the other way. That is the bimodality H-014 documented, redealt by the
+  budget change — not a stock that responds to deeper search.
+
+### The follow-on question: was the *space* too small?
+
+A fair objection to the above: maybe the tuner converged because it had nowhere
+to go. There was real evidence for it — under the default bounds, three of the
+four JPMorgan runs pinned the short EMA to exactly **2**, the floor of its own
+allowed range, in seven of eight windows. A parameter parked on its own bound
+usually means the bound is binding.
+
+So the bounds were widened by hand on JPMorgan and the cell re-run: 8 runs across
+both budgets, two seeds, both policies.
+
+**Wider was worse in 8 of 8 matched pairs, average −12.99.** The best wide run
+(−7.58) finished below the *worst* default-bounds run (−4.69) — the two sets do
+not overlap at all.
+
+**Three of the widened bounds were outside the physically valid range**, and this
+is worth recording as a trap rather than a one-off:
+
+- `--rsi-overbought-bounds 51 6994` — almost certainly a typo for `69 94`. RSI is
+  capped at 100 by construction, so only 50 of those 6,944 integers can ever
+  bind: **99.3% of the range is dead.** Every window of every run landed in the
+  dead zone (values 188 to 6503) with the filter switched on but unable to fire,
+  and because all dead values score identically there is no gradient back out.
+  One of the eight genes became free noise.
+- `--long-ema-bounds 30 600` — a 1-year lookback is only about 250 trading days,
+  but runs selected spans of 555, 484, 475, 392 and 325. The EMA is computed
+  without a minimum-periods guard, so those return a nearly flat line anchored to
+  the first price instead of failing loudly.
+- `--stop-loss-bounds 1 50` — one run's eight windows ran 1.4%, 37.1%, 48.6%,
+  15.3%, 17.3%, 50.0%, 14.7%, 13.5%. At JPMorgan's volatility a 50% stop never
+  triggers and a 1.4% stop triggers constantly.
+
+**But the invalid bounds were not the explanation.** A corrected rerun — RSI back
+inside 0-100, long EMA under the training window, stop loss at a sane 3-25% —
+came back at **−11.72**, worse than both the broken-bounds run (−9.51) and the
+default-bounds baseline (−3.77). The repair had every chance to recover the loss
+and recovered none of it. One run, so treat the size with caution, but the
+direction is not ambiguous: **widening the space is itself what hurts here.**
+
+The mechanism is the one H-014 already measured. Counting distinct short-EMA
+values across the eight windows, default-bounds runs averaged 2.75 and wide-bounds
+runs 4.50 — and mean excess return was −3.04 against −13.59. Steadier settings
+keep beating thrashing ones.
+
+**One genuinely encouraging number, pointing the other way.** *Inside* the wide
+space, doubling the budget **helped** by 5.90 points (−18.33 → −12.44); inside
+the default space it **hurt** by 2.78. Search depth may matter in proportion to
+how much space there is to cover — which would make this experiment's headline a
+statement about an already-tight space rather than about depth as such. Two
+seeds, one stock, one cell: by this log's own rule, a hypothesis and nothing more.
+
+### Verdict
+
+**Verdict: Rejected as a route to better returns — but the question is answered.**
+More search effort is not what stands between this strategy and buy-and-hold. The
+tuner was genuinely under-converged, that has now been demonstrated *and* fixed,
+and fixing it made results worse. Widening the search space made them worse
+again.
+
+This is the fourth independent sighting of the same signature: H-002 found more
+tuning effort *halved* the apparent advantage; H-010 found a 10× harder search
+made two stocks worse; the H-016 diagnostic found seeds that fit training best
+performed worst live (−0.60); and now a controlled doubling reproduces it with
+both halves measured separately. **The tuner is succeeding at fitting the past,
+and fitting the past is not the thing that pays.**
+
+The follow-on work belongs on the objective and its validation — what the tuner
+is asked to maximize, and how a candidate is judged before it is trusted — not on
+bigger populations or wider bounds.
+
+**Tooling fixed along the way.** The search-space bounds were not part of
+`run_grid.ps1`'s completed-run identity, so a hand-launched wide-bounds run
+counted as "done" for a cell a default-bounds sweep wanted and would have been
+silently skipped — the same class of bug already fixed for policy, seed, warm
+start and data vintage. The four profile-independent bounds (short EMA, long EMA,
+RSI oversold/overbought) are now checked on every resume; the exit-gene bounds
+are checked whenever the sweep overrides them. `run_grid.ps1` also gained
+`-ShortEmaBounds`, `-LongEmaBounds`, `-RsiOversoldBounds` and
+`-RsiOverboughtBounds` so bounds experiments run through the grid instead of by
+hand.
+
+**Still open.** JPMorgan never beat buy-and-hold in any of the 18 runs it appears
+in here, and its benchmark returned +37.5%/yr over this window. The `generic`
+profile forces an active stop loss and drawdown exit, so "just hold" is literally
+outside the searchable space — meaning JPM's 0-for-6 may measure the fence rather
+than the tuner. The `generic-bh-reachable` profile exists to test exactly that,
+and is the cheapest next experiment.
 
 ---
 
