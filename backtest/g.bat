@@ -1,3 +1,4 @@
+rem This is for updating to github and publish to production
 @echo off
 setlocal EnableExtensions
 
