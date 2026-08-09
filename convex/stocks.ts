@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const normalizeTicker = (ticker: string) => ticker.trim().toUpperCase();
@@ -202,16 +202,18 @@ const snapshotToInvestmentThesis = (
 
 export const list = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
-    return await ctx.db.query("stocks").order("asc").collect();
+    return await ctx.db.query("stocks").order("asc").take(100);
   },
 });
 
 export const search = query({
   args: { query: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const searchText = args.query.trim().toLowerCase();
-    const stocks = await ctx.db.query("stocks").order("asc").collect();
+    const stocks = await ctx.db.query("stocks").order("asc").take(100);
     const matches = searchText
       ? stocks.filter((stock) => {
           return (
@@ -235,6 +237,7 @@ export const search = query({
 
 export const getByTicker = query({
   args: { ticker: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const ticker = normalizeTicker(args.ticker);
     return await ctx.db
@@ -246,6 +249,7 @@ export const getByTicker = query({
 
 export const getFinancialReportByTicker = query({
   args: { ticker: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const ticker = normalizeTicker(args.ticker);
     return await ctx.db
@@ -257,6 +261,7 @@ export const getFinancialReportByTicker = query({
 
 export const snapshotHistory = query({
   args: { ticker: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const ticker = normalizeTicker(args.ticker);
     return await ctx.db
@@ -269,12 +274,13 @@ export const snapshotHistory = query({
 
 export const watchlists = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
-    return await ctx.db.query("watchlists").order("asc").collect();
+    return await ctx.db.query("watchlists").order("asc").take(100);
   },
 });
 
-export const initializeWatchlists = mutation({
+export const initializeWatchlists = internalMutation({
   args: { listNames: v.array(v.string()) },
   handler: async (ctx, args) => {
     const existing = await ctx.db.query("watchlists").collect();
@@ -296,7 +302,7 @@ export const initializeWatchlists = mutation({
   },
 });
 
-export const createWatchlist = mutation({
+export const createWatchlist = internalMutation({
   args: { name: v.string() },
   handler: async (ctx, args) => {
     const name = args.name.trim();
@@ -319,7 +325,7 @@ export const createWatchlist = mutation({
   },
 });
 
-export const renameWatchlist = mutation({
+export const renameWatchlist = internalMutation({
   args: {
     currentName: v.string(),
     nextName: v.string(),
@@ -363,7 +369,7 @@ export const renameWatchlist = mutation({
   },
 });
 
-export const deleteWatchlist = mutation({
+export const deleteWatchlist = internalMutation({
   args: {
     name: v.string(),
     fallbackListName: v.optional(v.string()),
@@ -411,7 +417,7 @@ export const deleteWatchlist = mutation({
   },
 });
 
-export const saveToPortfolio = mutation({
+export const saveToPortfolio = internalMutation({
   args: {
     ticker: v.string(),
     listName: v.optional(v.string()),
@@ -438,7 +444,7 @@ export const saveToPortfolio = mutation({
   },
 });
 
-export const removeFromPortfolio = mutation({
+export const removeFromPortfolio = internalMutation({
   args: { ticker: v.string() },
   handler: async (ctx, args) => {
     const ticker = normalizeTicker(args.ticker);
@@ -458,6 +464,7 @@ export const removeFromPortfolio = mutation({
 
 export const portfolio = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const saved = await ctx.db
       .query("portfolioStocks")
@@ -484,7 +491,7 @@ export const portfolio = query({
   },
 });
 
-export const updatePortfolioList = mutation({
+export const updatePortfolioList = internalMutation({
   args: {
     ticker: v.string(),
     listName: v.string(),
@@ -509,7 +516,7 @@ export const updatePortfolioList = mutation({
   },
 });
 
-export const updatePortfolioPosition = mutation({
+export const updatePortfolioPosition = internalMutation({
   args: {
     ticker: v.string(),
     shares: v.number(),
@@ -552,6 +559,7 @@ export const updatePortfolioPosition = mutation({
 
 export const researchBundle = query({
   args: { ticker: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const ticker = normalizeTicker(args.ticker);
     const [
@@ -583,7 +591,7 @@ export const researchBundle = query({
       ctx.db
         .query("researchItems")
         .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
-        .collect(),
+        .take(20),
       ctx.db
         .query("aiReports")
         .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
@@ -630,6 +638,7 @@ export const researchBundle = query({
 
 export const compareCompanies = query({
   args: { tickers: v.array(v.string()) },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const tickers = Array.from(
       new Set(args.tickers.map((ticker) => normalizeTicker(ticker)).filter(Boolean))
@@ -996,7 +1005,7 @@ export const upsertAiReport = internalMutation({
   },
 });
 
-export const saveAiReport = mutation({
+export const saveAiReport = internalMutation({
   args: {
     ticker: v.string(),
     summary: v.string(),
@@ -1036,7 +1045,7 @@ export const saveAiReport = mutation({
   },
 });
 
-export const saveInvestmentThesis = mutation({
+export const saveInvestmentThesis = internalMutation({
   args: {
     ticker: v.string(),
     summary: v.string(),
@@ -1066,7 +1075,7 @@ export const saveInvestmentThesis = mutation({
   },
 });
 
-export const createNote = mutation({
+export const createNote = internalMutation({
   args: {
     ticker: v.string(),
     title: v.string(),
@@ -1093,7 +1102,72 @@ export const createNote = mutation({
   },
 });
 
-export const deleteNote = mutation({
+export const replaceAdminGeneratedNotes = internalMutation({
+  args: {
+    ticker: v.string(),
+    notes: v.array(
+      v.object({
+        title: v.string(),
+        body: v.string(),
+        tag: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const ticker = normalizeTicker(args.ticker);
+    if (args.notes.length !== 5) {
+      throw new Error("The admin AI workflow must replace exactly five notes.");
+    }
+
+    const existing = await ctx.db
+      .query("notes")
+      .withIndex("by_ticker_and_generatedBy", (q) =>
+        q.eq("ticker", ticker).eq("generatedBy", "admin-ai-workflow"),
+      )
+      .take(6);
+    if (existing.length > 5) {
+      throw new Error(
+        "Too many admin AI workflow notes exist for this ticker; refusing an unbounded replacement.",
+      );
+    }
+
+    const normalizedNotes = args.notes.map((note) => ({
+      title: note.title.trim().slice(0, 120),
+      body: note.body.trim().slice(0, 520),
+      tag: note.tag.trim().slice(0, 40) || "AI Note",
+    }));
+    if (normalizedNotes.some((note) => !note.title || !note.body)) {
+      throw new Error("Each admin AI workflow note needs a title and body.");
+    }
+
+    const titles = new Set<string>();
+    for (const note of normalizedNotes) {
+      const normalizedTitle = note.title.toLocaleLowerCase();
+      if (titles.has(normalizedTitle)) {
+        throw new Error("Admin AI workflow notes must have unique titles.");
+      }
+      titles.add(normalizedTitle);
+    }
+
+    for (const note of existing) {
+      await ctx.db.delete(note._id);
+    }
+
+    const createdAt = Date.now();
+    for (const note of normalizedNotes) {
+      await ctx.db.insert("notes", {
+        ticker,
+        ...note,
+        generatedBy: "admin-ai-workflow",
+        createdAt,
+      });
+    }
+
+    return { replacedCount: existing.length, createdCount: normalizedNotes.length };
+  },
+});
+
+export const deleteNote = internalMutation({
   args: {
     noteId: v.id("notes"),
   },
@@ -1108,7 +1182,7 @@ export const deleteNote = mutation({
   },
 });
 
-export const generateAiNotes = mutation({
+export const generateAiNotes = internalMutation({
   args: {
     ticker: v.string(),
   },

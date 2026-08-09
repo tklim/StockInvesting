@@ -16,7 +16,7 @@
     "@convex-dev/auth": "^0.0.94",
     "@convex-dev/migrations": "^0.3.5",
     "@vitejs/plugin-react": "^5.0.0",
-    "convex": "^1.41.0",
+    "convex": "^1.43.0",
     "convex-helpers": "^0.1.115",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",

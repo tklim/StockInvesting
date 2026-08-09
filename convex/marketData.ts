@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 
@@ -1968,7 +1968,7 @@ const buildLiveResearchItems = (input: {
   ];
 };
 
-export const syncFinancials = action({
+export const syncFinancials = internalAction({
   args: { ticker: v.string() },
   handler: async (ctx, args): Promise<{
     ticker: string;
@@ -2107,7 +2107,7 @@ export const syncFinancials = action({
   },
 });
 
-export const syncTicker = action({
+export const syncTicker = internalAction({
   args: { ticker: v.string() },
   handler: async (ctx, args): Promise<{
     ticker: string;
@@ -2430,7 +2430,7 @@ export const syncTicker = action({
   },
 });
 
-export const searchSymbols = action({
+export const searchSymbols = internalAction({
   args: { query: v.string() },
   handler: async (ctx, args) => {
     const apiKey = process.env.FINNHUB_API_KEY;

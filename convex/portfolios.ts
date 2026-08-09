@@ -1,14 +1,12 @@
 import { v } from "convex/values";
 import {
-  action,
   internalAction,
   internalMutation,
   internalQuery,
-  mutation,
   query,
   type QueryCtx,
 } from "./_generated/server";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 
 declare const process: {
@@ -170,6 +168,7 @@ const summarizeHoldings = (
 
 export const list = query({
   args: { includeArchived: v.optional(v.boolean()) },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const active = await ctx.db
       .query("portfolios")
@@ -216,6 +215,7 @@ export const list = query({
 
 export const getDashboard = query({
   args: { portfolioId: v.id("portfolios") },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const portfolio = await getPortfolioOrThrow(ctx, args.portfolioId);
     const rows = await getHoldingsWithStocks(ctx, args.portfolioId);
@@ -272,6 +272,7 @@ export const history = query({
     portfolioId: v.id("portfolios"),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const limit = Math.min(Math.max(Math.floor(args.limit ?? 1300), 1), 1300);
     const rows = await ctx.db
@@ -290,6 +291,7 @@ export const activities = query({
     portfolioId: v.id("portfolios"),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const limit = Math.min(Math.max(Math.floor(args.limit ?? 20), 1), 50);
     return await ctx.db
@@ -304,6 +306,7 @@ export const activities = query({
 
 export const rebalancePreview = query({
   args: { portfolioId: v.id("portfolios") },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const portfolio = await getPortfolioOrThrow(ctx, args.portfolioId);
     const rows = await getHoldingsWithStocks(ctx, args.portfolioId);
@@ -332,7 +335,7 @@ export const rebalancePreview = query({
   },
 });
 
-export const ensureMainPortfolio = mutation({
+export const ensureMainPortfolio = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db
@@ -364,7 +367,7 @@ export const ensureMainPortfolio = mutation({
   },
 });
 
-export const create = mutation({
+export const create = internalMutation({
   args: {
     name: v.string(),
     type: portfolioTypeValidator,
@@ -416,7 +419,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = internalMutation({
   args: {
     portfolioId: v.id("portfolios"),
     name: v.optional(v.string()),
@@ -471,7 +474,7 @@ export const update = mutation({
   },
 });
 
-export const duplicate = mutation({
+export const duplicate = internalMutation({
   args: {
     portfolioId: v.id("portfolios"),
     name: v.string(),
@@ -532,7 +535,7 @@ export const duplicate = mutation({
   },
 });
 
-export const archive = mutation({
+export const archive = internalMutation({
   args: { portfolioId: v.id("portfolios") },
   handler: async (ctx, args) => {
     const portfolio = await ctx.db.get("portfolios", args.portfolioId);
@@ -554,7 +557,7 @@ export const archive = mutation({
   },
 });
 
-export const upsertHolding = mutation({
+export const upsertHolding = internalMutation({
   args: {
     portfolioId: v.id("portfolios"),
     ticker: v.string(),
@@ -630,7 +633,7 @@ export const upsertHolding = mutation({
   },
 });
 
-export const removeHolding = mutation({
+export const removeHolding = internalMutation({
   args: {
     portfolioId: v.id("portfolios"),
     ticker: v.string(),
@@ -660,7 +663,7 @@ export const removeHolding = mutation({
   },
 });
 
-export const initializeModel = mutation({
+export const initializeModel = internalMutation({
   args: { portfolioId: v.id("portfolios") },
   handler: async (ctx, args) => {
     const portfolio = await ctx.db.get("portfolios", args.portfolioId);
@@ -715,7 +718,7 @@ export const initializeModel = mutation({
   },
 });
 
-export const applyModelRebalance = mutation({
+export const applyModelRebalance = internalMutation({
   args: { portfolioId: v.id("portfolios") },
   handler: async (ctx, args) => {
     const portfolio = await ctx.db.get("portfolios", args.portfolioId);
@@ -979,7 +982,7 @@ export const captureSnapshot = internalMutation({
   },
 });
 
-export const refreshValue = action({
+export const refreshValue = internalAction({
   args: { portfolioId: v.id("portfolios") },
   handler: async (ctx, args): Promise<{
     marketDate: string;
@@ -1055,7 +1058,7 @@ export const refreshAllActive = internalAction({
           refreshedCount: number;
           staleTickerCount: number;
           totalValue: number;
-        } = await ctx.runAction(api.portfolios.refreshValue, { portfolioId });
+        } = await ctx.runAction(internal.portfolios.refreshValue, { portfolioId });
         results.push(result);
       } catch (error) {
         results.push({
@@ -1071,6 +1074,7 @@ export const refreshAllActive = internalAction({
 
 export const migrationStatus = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const legacy = await ctx.db.query("portfolioStocks").take(100);
     const positioned = legacy.filter(

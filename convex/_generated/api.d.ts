@@ -9,11 +9,14 @@
  */
 
 import type * as aiResearch from "../aiResearch.js";
-import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as dataSources from "../dataSources.js";
-import type * as http from "../http.js";
+import type * as lib_signalModel from "../lib/signalModel.js";
 import type * as marketData from "../marketData.js";
+import type * as migrations from "../migrations.js";
+import type * as portfolios from "../portfolios.js";
 import type * as seed from "../seed.js";
+import type * as signals from "../signals.js";
 import type * as stocks from "../stocks.js";
 
 import type {
@@ -24,11 +27,14 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   aiResearch: typeof aiResearch;
-  auth: typeof auth;
+  crons: typeof crons;
   dataSources: typeof dataSources;
-  http: typeof http;
+  "lib/signalModel": typeof lib_signalModel;
   marketData: typeof marketData;
+  migrations: typeof migrations;
+  portfolios: typeof portfolios;
   seed: typeof seed;
+  signals: typeof signals;
   stocks: typeof stocks;
 }>;
 
@@ -58,4 +64,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+};

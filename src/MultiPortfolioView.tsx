@@ -20,14 +20,29 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { useAction, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../convex/_generated/api";
+import { useQuery } from "convex/react";
+import type {
+  FunctionArgs,
+  FunctionReference,
+  FunctionReturnType,
+} from "convex/server";
+import { api, internal } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 
 type MultiPortfolioViewProps = {
   onOpenResearch: (ticker: string) => void;
+  readOnly?: boolean;
 };
+
+function privateOnly<
+  F extends FunctionReference<"mutation" | "action", "internal">,
+>(reference: F) {
+  void reference;
+  return async (_args: FunctionArgs<F>): Promise<FunctionReturnType<F>> => {
+    void _args;
+    throw new Error("This operation is available only through the private Convex CLI or dashboard.");
+  };
+}
 
 type PortfolioListItem = FunctionReturnType<typeof api.portfolios.list>[number];
 
@@ -89,18 +104,19 @@ const errorMessage = (error: unknown) =>
 
 export function MultiPortfolioView({
   onOpenResearch,
+  readOnly = false,
 }: MultiPortfolioViewProps) {
   const portfolios = useQuery(api.portfolios.list, { includeArchived: true });
-  const ensureMainPortfolio = useMutation(api.portfolios.ensureMainPortfolio);
-  const createPortfolio = useMutation(api.portfolios.create);
-  const updatePortfolio = useMutation(api.portfolios.update);
-  const duplicatePortfolio = useMutation(api.portfolios.duplicate);
-  const archivePortfolio = useMutation(api.portfolios.archive);
-  const upsertHolding = useMutation(api.portfolios.upsertHolding);
-  const removeHolding = useMutation(api.portfolios.removeHolding);
-  const initializeModel = useMutation(api.portfolios.initializeModel);
-  const applyModelRebalance = useMutation(api.portfolios.applyModelRebalance);
-  const refreshValue = useAction(api.portfolios.refreshValue);
+  const ensureMainPortfolio = privateOnly(internal.portfolios.ensureMainPortfolio);
+  const createPortfolio = privateOnly(internal.portfolios.create);
+  const updatePortfolio = privateOnly(internal.portfolios.update);
+  const duplicatePortfolio = privateOnly(internal.portfolios.duplicate);
+  const archivePortfolio = privateOnly(internal.portfolios.archive);
+  const upsertHolding = privateOnly(internal.portfolios.upsertHolding);
+  const removeHolding = privateOnly(internal.portfolios.removeHolding);
+  const initializeModel = privateOnly(internal.portfolios.initializeModel);
+  const applyModelRebalance = privateOnly(internal.portfolios.applyModelRebalance);
+  const refreshValue = privateOnly(internal.portfolios.refreshValue);
 
   const [selectedId, setSelectedId] = useState<string>(() =>
     window.localStorage.getItem("selectedPortfolioId") ?? "all"
@@ -158,10 +174,10 @@ export function MultiPortfolioView({
   );
 
   useEffect(() => {
-    if (portfolios?.length === 0) {
-      void ensureMainPortfolio();
+    if (!readOnly && portfolios?.length === 0) {
+      void ensureMainPortfolio({});
     }
-  }, [ensureMainPortfolio, portfolios]);
+  }, [ensureMainPortfolio, portfolios, readOnly]);
 
   useEffect(() => {
     if (
@@ -371,17 +387,19 @@ export function MultiPortfolioView({
               )}
             </select>
           </label>
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => {
-              setPortfolioForm(emptyPortfolioForm);
-              setShowCreate(true);
-            }}
-          >
-            <Plus size={16} />
-            New portfolio
-          </button>
+          {!readOnly && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => {
+                setPortfolioForm(emptyPortfolioForm);
+                setShowCreate(true);
+              }}
+            >
+              <Plus size={16} />
+              New portfolio
+            </button>
+          )}
         </div>
       </div>
 
@@ -395,14 +413,18 @@ export function MultiPortfolioView({
       )}
 
       {selectedId === "all" ? (
-        <PortfolioOverview
-          portfolios={activePortfolios}
-          archivedCount={archivedPortfolios.length}
-          onOpen={(id) => setSelectedId(id)}
-          onCreate={() => {
-            setPortfolioForm(emptyPortfolioForm);
-            setShowCreate(true);
-          }}
+          <PortfolioOverview
+            portfolios={activePortfolios}
+            archivedCount={archivedPortfolios.length}
+            onOpen={(id) => setSelectedId(id)}
+            onCreate={
+              readOnly
+                ? undefined
+                : () => {
+                    setPortfolioForm(emptyPortfolioForm);
+                    setShowCreate(true);
+                  }
+            }
         />
       ) : dashboard ? (
         <>
@@ -416,7 +438,7 @@ export function MultiPortfolioView({
             <span>
               Last refresh {formatDateTime(dashboard.portfolio.lastValuedAt)}
             </span>
-            <div>
+            {!readOnly && <div>
               <button
                 className="primary-button"
                 disabled={busy === "refresh"}
@@ -446,7 +468,7 @@ export function MultiPortfolioView({
               >
                 <Settings size={17} />
               </button>
-            </div>
+            </div>}
           </div>
 
           <div className="portfolio-kpi-grid">
@@ -657,14 +679,16 @@ export function MultiPortfolioView({
                   Actual allocation, target weight, and position performance
                 </span>
               </div>
-              <button
-                className="primary-button compact"
-                onClick={() => openHolding()}
-                type="button"
-              >
-                <Plus size={15} />
-                Add holding
-              </button>
+              {!readOnly && (
+                <button
+                  className="primary-button compact"
+                  onClick={() => openHolding()}
+                  type="button"
+                >
+                  <Plus size={15} />
+                  Add holding
+                </button>
+              )}
             </div>
             {dashboard.holdings.length ? (
               <div className="multi-portfolio-table">
@@ -737,7 +761,7 @@ export function MultiPortfolioView({
                         Drift {formatPercent(holding.allocationDrift)}
                       </small>
                     </div>
-                    <div className="portfolio-row-menu">
+                    {!readOnly && <div className="portfolio-row-menu">
                       <button
                         aria-label={`Edit ${holding.ticker}`}
                         onClick={() => openHolding(holding)}
@@ -764,7 +788,7 @@ export function MultiPortfolioView({
                       >
                         <X size={15} />
                       </button>
-                    </div>
+                    </div>}
                   </article>
                 ))}
               </div>
@@ -776,14 +800,16 @@ export function MultiPortfolioView({
                   Add 5–10 stocks, enter target allocations, then refresh the
                   portfolio to begin its history.
                 </p>
-                <button
-                  className="primary-button"
-                  onClick={() => openHolding()}
-                  type="button"
-                >
-                  <Plus size={16} />
-                  Add first holding
-                </button>
+                {!readOnly && (
+                  <button
+                    className="primary-button"
+                    onClick={() => openHolding()}
+                    type="button"
+                  >
+                    <Plus size={16} />
+                    Add first holding
+                  </button>
+                )}
               </div>
             )}
           </section>
@@ -818,7 +844,7 @@ export function MultiPortfolioView({
         <PortfolioLoading />
       )}
 
-      {showCreate && (
+      {!readOnly && showCreate && (
         <PortfolioDialog
           title="Create portfolio"
           subtitle="Choose how this portfolio should be valued."
@@ -834,7 +860,7 @@ export function MultiPortfolioView({
         </PortfolioDialog>
       )}
 
-      {showSettings && dashboard && (
+      {!readOnly && showSettings && dashboard && (
         <PortfolioDialog
           title="Portfolio settings"
           subtitle="Update the name, benchmark, cash, and description."
@@ -861,7 +887,7 @@ export function MultiPortfolioView({
         </PortfolioDialog>
       )}
 
-      {showHolding && portfolioId && (
+      {!readOnly && showHolding && portfolioId && (
         <PortfolioDialog
           title={dashboard?.holdings.some(
             (holding) => holding.ticker === holdingDraft.ticker
@@ -993,7 +1019,7 @@ export function MultiPortfolioView({
         </PortfolioDialog>
       )}
 
-      {showRebalance && rebalance && dashboard && portfolioId && (
+      {!readOnly && showRebalance && rebalance && dashboard && portfolioId && (
         <PortfolioDialog
           wide
           title="Rebalance proposal"
@@ -1099,7 +1125,7 @@ function PortfolioOverview({
   portfolios: PortfolioListItem[];
   archivedCount: number;
   onOpen: (id: string) => void;
-  onCreate: () => void;
+  onCreate?: () => void;
 }) {
   const totalValue = portfolios.reduce(
     (sum, portfolio) => sum + portfolio.totalValue,
@@ -1194,15 +1220,17 @@ function PortfolioOverview({
             </div>
           </button>
         ))}
-        <button
-          className="portfolio-overview-card create-card"
-          onClick={onCreate}
-          type="button"
-        >
-          <Plus size={24} />
-          <strong>Create another portfolio</strong>
-          <span>Actual holdings or a model strategy</span>
-        </button>
+        {onCreate && (
+          <button
+            className="portfolio-overview-card create-card"
+            onClick={onCreate}
+            type="button"
+          >
+            <Plus size={24} />
+            <strong>Create another portfolio</strong>
+            <span>Actual holdings or a model strategy</span>
+          </button>
+        )}
       </div>
     </>
   );

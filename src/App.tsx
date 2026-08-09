@@ -11,6 +11,7 @@ import {
   FileText,
   Filter,
   Globe2,
+  Info,
   LineChart,
   Moon,
   MoreHorizontal,
@@ -28,12 +29,18 @@ import {
   Fragment,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { useAction, useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { useQuery } from "convex/react";
+import type {
+  FunctionArgs,
+  FunctionReference,
+  FunctionReturnType,
+} from "convex/server";
+import { api, internal } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import {
   chartSeriesByTicker,
@@ -49,7 +56,12 @@ import {
   type AiNotesWorkflowStage,
 } from "./aiNotesWorkflow";
 import { MultiPortfolioView } from "./MultiPortfolioView";
-import { rankSignalItems } from "./signalRanking";
+import {
+  defaultSignalSort,
+  rankSignalItems,
+  type SignalSort,
+  type SignalSortKey,
+} from "./signalRanking";
 
 type AppProps = {
   convexEnabled: boolean;
@@ -64,6 +76,7 @@ type ConvexRuntimeGuardState = {
 };
 
 type ShellProps = {
+  readOnly?: boolean;
   multiPortfolioEnabled?: boolean;
   bundle: ResearchBundle;
   activeView: AppView;
@@ -80,7 +93,7 @@ type ShellProps = {
   onViewChange: (view: AppView) => void;
   onCompareTickersChange: (tickers: string[]) => void;
   onOpenCompare: (tickers?: string[]) => void;
-  onUpdatePortfolioPosition: (input: PortfolioPositionInput) => Promise<void>;
+  onUpdatePortfolioPosition?: (input: PortfolioPositionInput) => Promise<void>;
   onSelectedListChange: (listName: string) => void;
   onSelectedListNameChange: (listName: string) => void;
   onCreateList?: (name: string) => Promise<void>;
@@ -94,7 +107,7 @@ type ShellProps = {
   onSearchFinnhub?: (query: string) => Promise<void>;
   onImportFinnhubSymbol?: (symbol: string) => Promise<void>;
   onSelectTicker: (ticker: string) => void;
-  onSaveToggle: () => void;
+  onSaveToggle?: () => void;
   onSyncMarketData?: () => Promise<void>;
   onSyncFinancials?: () => Promise<void>;
   onGenerateAiReport?: () => Promise<void>;
@@ -209,19 +222,6 @@ type FinnhubSearchResult = {
 
 type DataSourceStatus = "success" | "error" | "fallback";
 
-type DataSourceEventInput = {
-  service: string;
-  operation: string;
-  status: DataSourceStatus;
-  provider: string;
-  fallbackProvider?: string;
-  ticker?: string;
-  message?: string;
-  requestUrl?: string;
-  requestedAt?: number;
-  calledAt?: number;
-};
-
 type DataSourceHealth = {
   dateKey: string;
   signalHealth?: {
@@ -291,22 +291,22 @@ const defaultListNames = [
   "Dividend Growth",
 ];
 
-const twelveDataClientKey = import.meta.env.VITE_TWELVE_DATA_API_KEY as
-  | string
-  | undefined;
-
-let clientDataSourceRecorder: (event: DataSourceEventInput) => void = () => undefined;
-let clientDataSourceEventQueue = Promise.resolve();
-
-function emitClientDataSourceEvent(event: DataSourceEventInput) {
-  clientDataSourceRecorder({
-    ...event,
-    calledAt: event.calledAt ?? Date.now(),
-  });
-}
-
 function getTodayDateKey() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function privateOnly<
+  F extends FunctionReference<"mutation" | "action", "internal">,
+>(reference: F) {
+  void reference;
+  return async (_args: FunctionArgs<F>): Promise<FunctionReturnType<F>> => {
+    void _args;
+    throw new Error("This operation is available only through the private Convex CLI or dashboard.");
+  };
+}
+
+function emitClientDataSourceEvent(event: unknown) {
+  void event;
 }
 
 
@@ -323,63 +323,6 @@ const researchTabs: ResearchTab[] = [
   "Filings",
   "Notes",
 ];
-
-async function fetchChartHistoryFromClientProviders(
-  symbol: string
-) {
-  if (twelveDataClientKey) {
-    try {
-      const url = new URL("https://api.twelvedata.com/time_series");
-      url.searchParams.set("symbol", symbol);
-      url.searchParams.set("interval", "1day");
-      url.searchParams.set("outputsize", "365");
-      url.searchParams.set("apikey", twelveDataClientKey);
-
-      const response = await fetch(url);
-      const data = (await response.json()) as {
-        values?: Array<{ close?: string }>;
-        status?: string;
-        code?: number;
-        message?: string;
-      };
-
-      if (!response.ok || data.status === "error" || data.code || data.message) {
-        throw new Error("Twelve Data unavailable");
-      }
-
-      emitClientDataSourceEvent({
-        service: "Twelve Data",
-        operation: "client_time_series",
-        status: "success",
-        provider: "Twelve Data",
-        ticker: symbol,
-      });
-
-      const points = (data.values ?? [])
-        .slice()
-        .reverse()
-        .map((item) => Number(item.close))
-        .filter((point) => Number.isFinite(point))
-        .slice(-365);
-
-      if (points.length >= 2) {
-        return points;
-      }
-    } catch (error) {
-      emitClientDataSourceEvent({
-        service: "Twelve Data",
-        operation: "client_time_series",
-        status: "error",
-        provider: "Twelve Data",
-        ticker: symbol,
-        message: error instanceof Error ? error.message : "Twelve Data chart fetch failed.",
-      });
-      return undefined;
-    }
-  }
-
-  return undefined;
-}
 
 /* Removed from the runtime: legacy browser-side Alpha Vantage request queue and
    financial statement cache. Financial data now refreshes through Convex.
@@ -1151,26 +1094,25 @@ function ConvexResearchApp() {
   const searchResults = normalizedSearchQuery
     ? (fetchedSearchResults ?? searchableStocks)
     : [];
-  const saveToPortfolio = useMutation(api.stocks.saveToPortfolio);
-  const removeFromPortfolio = useMutation(api.stocks.removeFromPortfolio);
-  const updatePortfolioList = useMutation(api.stocks.updatePortfolioList);
-  const updatePortfolioPosition = useMutation(api.stocks.updatePortfolioPosition);
-  const recordClientDataSourceEvent = useMutation(api.dataSources.recordClientEvent);
-  const initializeWatchlists = useMutation(api.stocks.initializeWatchlists);
-  const createWatchlist = useMutation(api.stocks.createWatchlist);
-  const renameWatchlist = useMutation(api.stocks.renameWatchlist);
-  const deleteWatchlist = useMutation(api.stocks.deleteWatchlist);
-  const syncTicker = useAction(api.marketData.syncTicker);
-  const syncFinancials = useAction(api.marketData.syncFinancials);
-  const saveAiReport = useMutation(api.stocks.saveAiReport);
-  const createNote = useMutation(api.stocks.createNote);
-  const deleteNote = useMutation(api.stocks.deleteNote);
-  const saveInvestmentThesis = useMutation(api.stocks.saveInvestmentThesis);
-  const searchFinnhubSymbols = useAction(api.marketData.searchSymbols);
+  const saveToPortfolio = privateOnly(internal.stocks.saveToPortfolio);
+  const removeFromPortfolio = privateOnly(internal.stocks.removeFromPortfolio);
+  const updatePortfolioList = privateOnly(internal.stocks.updatePortfolioList);
+  const updatePortfolioPosition = privateOnly(internal.stocks.updatePortfolioPosition);
+  const createWatchlist = privateOnly(internal.stocks.createWatchlist);
+  const renameWatchlist = privateOnly(internal.stocks.renameWatchlist);
+  const deleteWatchlist = privateOnly(internal.stocks.deleteWatchlist);
+  const syncTicker = privateOnly(internal.marketData.syncTicker);
+  const syncFinancials = privateOnly(internal.marketData.syncFinancials);
+  const saveAiReport = privateOnly(internal.stocks.saveAiReport);
+  const createNote = privateOnly(internal.stocks.createNote);
+  const deleteNote = privateOnly(internal.stocks.deleteNote);
+  const saveInvestmentThesis = privateOnly(internal.stocks.saveInvestmentThesis);
+  const searchFinnhubSymbols = privateOnly(internal.marketData.searchSymbols);
   const [syncStatus, setSyncStatus] = useState<
     "idle" | "syncing" | "success" | "error"
   >("idle");
   const [syncMessage, setSyncMessage] = useState("");
+  const syncTickerRef = useRef(ticker);
   const [aiReportStatus, setAiReportStatus] = useState<
     "idle" | "generating" | "success" | "error"
   >("idle");
@@ -1192,30 +1134,6 @@ function ConvexResearchApp() {
   }, [watchlists]);
 
   useEffect(() => {
-    clientDataSourceRecorder = (event) => {
-      clientDataSourceEventQueue = clientDataSourceEventQueue
-        .catch(() => undefined)
-        .then(() => recordClientDataSourceEvent(event))
-        .then(
-          () => undefined,
-          (error) => {
-            console.warn("Unable to record data source event", error);
-          }
-        );
-    };
-
-    return () => {
-      clientDataSourceRecorder = () => undefined;
-    };
-  }, [recordClientDataSourceEvent]);
-
-  useEffect(() => {
-    if (watchlists && watchlists.length === 0) {
-      void initializeWatchlists({ listNames: defaultListNames });
-    }
-  }, [initializeWatchlists, watchlists]);
-
-  useEffect(() => {
     if (!listNames.includes(selectedListName)) {
       setSelectedListName(listNames[0] ?? defaultListNames[0]);
     }
@@ -1233,6 +1151,12 @@ function ConvexResearchApp() {
       current.filter((item) => portfolioTickers.has(item)).slice(0, 4)
     );
   }, [portfolio]);
+
+  useEffect(() => {
+    syncTickerRef.current = ticker;
+    setSyncStatus("idle");
+    setSyncMessage("");
+  }, [ticker]);
 
   const fallbackBundle = useMemo<ResearchBundle>(() => {
     if (!bundle?.stock) {
@@ -1305,15 +1229,23 @@ function ConvexResearchApp() {
   };
 
   const onSyncMarketData = async () => {
+    const requestedTicker = ticker;
     setSyncStatus("syncing");
     setSyncMessage(`Syncing ${ticker} market data...`);
 
     try {
       const result = await syncTicker({ ticker });
+      if (syncTickerRef.current !== requestedTicker) {
+        return;
+      }
       setSyncStatus("success");
       const baseMessage = result.hasChartData
-        ? `${result.ticker} synced at $${result.price.toFixed(2)} with live chart data.`
-        : `${result.ticker} quote synced at $${result.price.toFixed(2)}. Historical chart data is temporarily unavailable.`;
+        ? `${result.ticker} synced at $${result.price.toFixed(2)} with live chart data. Last updated ${formatDate(
+            result.syncedAt
+          )}.`
+        : `${result.ticker} quote synced at $${result.price.toFixed(2)}. Last updated ${formatDate(
+            result.syncedAt
+          )}. Historical chart data is temporarily unavailable.`;
       const financialMessage = result.refreshedFinancials
         ? ` Financials were refreshed from ${result.financialSource ?? "the active provider"}${
             result.usedSecondaryAlphaKey ? " using a secondary Alpha Vantage key" : ""
@@ -1338,6 +1270,9 @@ function ConvexResearchApp() {
         `${baseMessage}${financialMessage}${newsMessage} A research snapshot was saved for history.`
       );
     } catch (error) {
+      if (syncTickerRef.current !== requestedTicker) {
+        return;
+      }
       setSyncStatus("error");
       setSyncMessage(
         error instanceof Error
@@ -1348,20 +1283,29 @@ function ConvexResearchApp() {
   };
 
   const onSyncFinancials = async () => {
+    const requestedTicker = ticker;
     setSyncStatus("syncing");
     setSyncMessage(`Refreshing ${ticker} financial statements in Convex...`);
 
     try {
       const result = await syncFinancials({ ticker });
+      if (syncTickerRef.current !== requestedTicker) {
+        return;
+      }
       setSyncStatus("success");
       setSyncMessage(
         result.persisted
-          ? `${result.ticker} financial statements refreshed from ${result.source}${
+          ? `${result.ticker} financial statements refreshed from ${result.source} on ${formatDate(
+              result.updatedAt
+            )}${
               result.usedSecondaryAlphaKey ? " using a secondary Alpha Vantage key" : ""
             }.`
           : `${result.ticker} returned lower-quality data from ${result.source}; the stronger stored report was preserved.`
       );
     } catch (error) {
+      if (syncTickerRef.current !== requestedTicker) {
+        return;
+      }
       setSyncStatus("error");
       setSyncMessage(
         error instanceof Error
@@ -1833,6 +1777,7 @@ function ConvexResearchApp() {
   return (
     <ResearchShell
       multiPortfolioEnabled
+      readOnly
       bundle={fallbackBundle}
       activeView={activeView}
       compareEntries={compareEntries}
@@ -1868,10 +1813,10 @@ function ConvexResearchApp() {
         }
         setActiveView("compare");
       }}
-      onUpdatePortfolioPosition={onUpdatePortfolioPosition}
       onSelectedListChange={(listName) => {
         setSelectedList(listName);
       }}
+      onUpdatePortfolioPosition={onUpdatePortfolioPosition}
       onSelectedListNameChange={onSelectedListNameChange}
       onCreateList={onCreateList}
       onRenameList={onRenameList}
@@ -2217,6 +2162,7 @@ function StaticResearchApp() {
 }
 
 function ResearchShell({
+  readOnly = false,
   multiPortfolioEnabled = false,
   bundle,
   activeView,
@@ -2265,6 +2211,24 @@ function ResearchShell({
   thesisStatus = "idle",
   thesisMessage,
 }: ShellProps) {
+  if (readOnly) {
+    onUpdatePortfolioPosition = undefined;
+    onCreateList = undefined;
+    onRenameList = undefined;
+    onDeleteList = undefined;
+    onSearchFinnhub = undefined;
+    onImportFinnhubSymbol = undefined;
+    onSaveToggle = undefined;
+    onSyncMarketData = undefined;
+    onSyncFinancials = undefined;
+    onGenerateAiReport = undefined;
+    onCreateNote = undefined;
+    onDeleteNote = undefined;
+    onGenerateAiNotes = undefined;
+    onProposeInvestmentThesis = undefined;
+    onSaveInvestmentThesis = undefined;
+  }
+
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     return window.localStorage.getItem("stock-app-theme") === "dark"
       ? "dark"
@@ -2345,6 +2309,15 @@ function ResearchShell({
               {item.label}
             </button>
           ))}
+          <a
+            className="nav-item"
+            href="https://tklim.github.io/StockInvesting/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <ExternalLink size={20} aria-hidden="true" />
+            Reports
+          </a>
         </nav>
 
         <div className="my-lists">
@@ -2478,8 +2451,7 @@ function ResearchShell({
           >
             {theme === "light" ? <Moon size={19} /> : <Sun size={19} />}
           </button>
-          <button className="avatar">A</button>
-          <ChevronDown size={17} />
+          {readOnly && <span className="read-only-badge">Public read-only</span>}
         </header>
 
         {activeView === "watchlist" ? (
@@ -2514,6 +2486,7 @@ function ResearchShell({
         ) : activeView === "portfolio" ? (
           multiPortfolioEnabled ? (
             <MultiPortfolioView
+              readOnly={readOnly}
               onOpenResearch={(ticker) => {
                 onSelectTicker(ticker);
                 onViewChange("research");
@@ -2605,18 +2578,20 @@ function ResearchShell({
           </div>
 
           <div className="hero-actions">
-            <button
-              className={bundle.isSaved ? "primary-button is-saved" : "primary-button"}
-              type="button"
-              onClick={onSaveToggle}
-            >
-              <Star
-                size={18}
-                fill={bundle.isSaved ? "currentColor" : "none"}
-                strokeWidth={bundle.isSaved ? 1.8 : 2}
-              />
-              {bundle.isSaved ? "Saved to watchlist" : "Save to Watchlist"}
-            </button>
+            {onSaveToggle && !readOnly && (
+              <button
+                className={bundle.isSaved ? "primary-button is-saved" : "primary-button"}
+                type="button"
+                onClick={onSaveToggle}
+              >
+                <Star
+                  size={18}
+                  fill={bundle.isSaved ? "currentColor" : "none"}
+                  strokeWidth={bundle.isSaved ? 1.8 : 2}
+                />
+                {bundle.isSaved ? "Saved to watchlist" : "Save to Watchlist"}
+              </button>
+            )}
             {onSyncMarketData ? (
               <button
                 className="secondary-button"
@@ -2628,11 +2603,7 @@ function ResearchShell({
                 <RefreshCw size={17} />
                 {syncStatus === "syncing" ? "Syncing..." : "Sync live data"}
               </button>
-            ) : (
-              <button className="secondary-button" type="button">
-                <MoreHorizontal size={20} />
-              </button>
-            )}
+            ) : null}
             {syncMessage && (
               <p className={`sync-message ${syncStatus}`}>{syncMessage}</p>
             )}
@@ -2643,19 +2614,21 @@ function ResearchShell({
           <StockSignalDetails signal={stockSignal} ticker={stock.ticker} />
         )}
 
-        <div className="save-list-row">
-          <span>Save destination</span>
-          <select
-            value={selectedListName}
-            onChange={(event) => onSelectedListNameChange(event.target.value)}
-          >
-            {listNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!readOnly && onSaveToggle && (
+          <div className="save-list-row">
+            <span>Save destination</span>
+            <select
+              value={selectedListName}
+              onChange={(event) => onSelectedListNameChange(event.target.value)}
+            >
+              {listNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="tabs">
           {researchTabs.map((tab) => (
@@ -2846,25 +2819,26 @@ function OverviewTab({
             title="Notes"
             actions={
               <>
-                <button
-                  disabled={
-                    !onGenerateAiNotes ||
-                    noteStatus === "generating" ||
-                    aiReportStatus === "generating" ||
-                    thesisStatus === "proposing" ||
-                    thesisStatus === "saving"
-                  }
-                  onClick={() => void onGenerateAiNotes?.()}
-                  type="button"
-                >
-                  {noteStatus === "generating"
-                    ? aiReportStatus === "generating"
-                      ? "Refreshing report..."
-                      : thesisStatus === "proposing"
-                        ? "Proposing thesis..."
-                        : "Generating notes..."
-                    : "Generate AI notes"}
-                </button>
+                {onGenerateAiNotes && (
+                  <button
+                    disabled={
+                      noteStatus === "generating" ||
+                      aiReportStatus === "generating" ||
+                      thesisStatus === "proposing" ||
+                      thesisStatus === "saving"
+                    }
+                    onClick={() => void onGenerateAiNotes()}
+                    type="button"
+                  >
+                    {noteStatus === "generating"
+                      ? aiReportStatus === "generating"
+                        ? "Refreshing report..."
+                        : thesisStatus === "proposing"
+                          ? "Proposing thesis..."
+                          : "Generating notes..."
+                      : "Generate AI notes"}
+                  </button>
+                )}
                 <button onClick={onOpenNotesTab} type="button">
                   View all
                 </button>
@@ -2907,17 +2881,19 @@ function OverviewTab({
           }
           actions={
             <>
-              <button
-                disabled={!onGenerateAiReport || aiReportStatus === "generating"}
-                onClick={() => void onGenerateAiReport?.()}
-                type="button"
-              >
-                {aiReportStatus === "generating"
-                  ? "Generating..."
-                  : aiReport
-                    ? "Refresh AI report"
-                    : "Generate AI report"}
-              </button>
+              {onGenerateAiReport && (
+                <button
+                  disabled={aiReportStatus === "generating"}
+                  onClick={() => void onGenerateAiReport()}
+                  type="button"
+                >
+                  {aiReportStatus === "generating"
+                    ? "Generating..."
+                    : aiReport
+                      ? "Refresh AI report"
+                      : "Generate AI report"}
+                </button>
+              )}
               <span>
                 {aiReport
                   ? `${aiReport.provider} • ${aiReport.model} • ${formatDayMonth(aiReport.generatedAt)}`
@@ -3081,14 +3057,16 @@ function FinancialsTab({
                       ? "Cached fundamentals"
                       : "Manual sync")}
               </span>
-              <button
-                className="secondary-button"
-                disabled={financialStatus === "loading" || !onSyncFinancials}
-                onClick={() => void onSyncFinancials?.()}
-                type="button"
-              >
-                {financialStatus === "loading" ? "Syncing..." : hasProviderData ? "Refresh financials" : "Sync financials"}
-              </button>
+              {onSyncFinancials && (
+                <button
+                  className="secondary-button"
+                  disabled={financialStatus === "loading"}
+                  onClick={() => void onSyncFinancials()}
+                  type="button"
+                >
+                  {financialStatus === "loading" ? "Syncing..." : hasProviderData ? "Refresh financials" : "Sync financials"}
+                </button>
+              )}
             </div>
           </div>
           <div className="financial-metric-grid">
@@ -3161,7 +3139,12 @@ function FinancialsTab({
             ))}
           </div>
           {report?.sourceUrl && (
-            <a href={report.sourceUrl} rel="noreferrer" target="_blank">
+            <a
+              className="financial-source-link"
+              href={report.sourceUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
               Open source filing <ExternalLink size={14} />
             </a>
           )}
@@ -3368,42 +3351,48 @@ function NotesTab({
     <div className="single-panel-layout">
       <Panel title="Research Notes" meta={`${stock.ticker} working notes`}>
         <div className="notes-toolbar">
-          <button
-            className="primary-button compact"
-            disabled={!onCreateNote || isBusy}
-            onClick={() => openNoteEditor()}
-            type="button"
-          >
-            Add Note
-          </button>
-          <button
-            className="secondary-button compact"
-            disabled={!onGenerateAiNotes || isBusy}
-            onClick={() => void onGenerateAiNotes?.()}
-            type="button"
-          >
-            {noteStatus === "generating"
-              ? aiReportStatus === "generating"
-                ? "Refreshing report..."
-                : thesisStatus === "proposing"
-                  ? "Proposing thesis..."
-                  : "Generating notes..."
-              : "Auto-generate AI Notes"}
-          </button>
-          <button
-            className="secondary-button compact"
-            disabled={!onCreateNote || isBusy}
-            onClick={() =>
-              openNoteEditor({
-                title: "Check next earnings call margin guidance",
-                body: `Follow up on whether ${stock.companyName} management guidance supports the current margin and revenue trajectory.`,
-                tag: "Follow-up",
-              })
-            }
-            type="button"
-          >
-            Add Follow-up
-          </button>
+          {onCreateNote && (
+            <button
+              className="primary-button compact"
+              disabled={isBusy}
+              onClick={() => openNoteEditor()}
+              type="button"
+            >
+              Add Note
+            </button>
+          )}
+          {onGenerateAiNotes && (
+            <button
+              className="secondary-button compact"
+              disabled={isBusy}
+              onClick={() => void onGenerateAiNotes()}
+              type="button"
+            >
+              {noteStatus === "generating"
+                ? aiReportStatus === "generating"
+                  ? "Refreshing report..."
+                  : thesisStatus === "proposing"
+                    ? "Proposing thesis..."
+                    : "Generating notes..."
+                : "Auto-generate AI Notes"}
+            </button>
+          )}
+          {onCreateNote && (
+            <button
+              className="secondary-button compact"
+              disabled={isBusy}
+              onClick={() =>
+                openNoteEditor({
+                  title: "Check next earnings call margin guidance",
+                  body: `Follow up on whether ${stock.companyName} management guidance supports the current margin and revenue trajectory.`,
+                  tag: "Follow-up",
+                })
+              }
+              type="button"
+            >
+              Add Follow-up
+            </button>
+          )}
         </div>
         {isEditorOpen && (
           <div className="note-editor">
@@ -4655,7 +4644,7 @@ function WatchlistView({
   onDeleteList?: (name: string, fallbackListName?: string) => Promise<void>;
   onCompareTickersChange: (tickers: string[]) => void;
   onOpenCompare: (tickers?: string[]) => void;
-  onUpdatePortfolioPosition: (input: PortfolioPositionInput) => Promise<void>;
+  onUpdatePortfolioPosition?: (input: PortfolioPositionInput) => Promise<void>;
   onOpenResearch: (ticker: string) => void;
   onSelectedListChange: (listName: string) => void;
 }) {
@@ -4690,6 +4679,9 @@ function WatchlistView({
   };
 
   const handleEditPosition = async (item: PortfolioItem) => {
+    if (!onUpdatePortfolioPosition) {
+      return;
+    }
     const sharesInput = window.prompt(
       `Shares for ${item.ticker}`,
       String(item.shares ?? "")
@@ -4867,6 +4859,7 @@ function WatchlistView({
         ))}
       </div>
 
+      {(onCreateList || onRenameList || onDeleteList) && (
       <section className="panel portfolio-list-manager-panel">
         <div className="panel-header">
           <h2>Manage Watchlists</h2>
@@ -4951,6 +4944,7 @@ function WatchlistView({
           <p className="list-manager-message">{listManagerMessage}</p>
         )}
       </section>
+      )}
 
       <section className="panel compare-selection-panel">
         <div className="panel-header">
@@ -5041,9 +5035,11 @@ function WatchlistView({
                 </em>
                 <span>{formatDate(item.savedAt)}</span>
                 <div className="portfolio-row-actions">
-                  <button type="button" onClick={() => void handleEditPosition(item)}>
-                    {getPositionShares(item) > 0 ? "Edit Position" : "Add Position"}
-                  </button>
+                  {onUpdatePortfolioPosition && (
+                    <button type="button" onClick={() => void handleEditPosition(item)}>
+                      {getPositionShares(item) > 0 ? "Edit Position" : "Add Position"}
+                    </button>
+                  )}
                   <button type="button" onClick={() => onOpenResearch(item.ticker)}>
                     Research
                   </button>
@@ -5070,7 +5066,8 @@ function SignalsView({
   onOpenResearch: (ticker: string) => void;
   onSelectedListChange: (listName: string) => void;
 }) {
-  const rankedItems = rankSignalItems(items, selectedList);
+  const [sort, setSort] = useState<SignalSort>(defaultSignalSort);
+  const rankedItems = rankSignalItems(items, selectedList, sort);
   const buyCount = rankedItems.filter(
     (item) => item.stockSignal?.rating === "BUY"
   ).length;
@@ -5096,6 +5093,65 @@ function SignalsView({
     ["Stale", staleCount, "stale"],
   ] as const;
 
+  const sortOptions: Array<{ key: SignalSortKey; label: string }> = [
+    { key: "company", label: "Company" },
+    { key: "price", label: "Price" },
+    { key: "score", label: "Score" },
+    { key: "coverage", label: "Coverage" },
+    { key: "winProbability", label: "Win probability" },
+    { key: "outperformProbability", label: "Beat SPY" },
+    { key: "dailyChange", label: "Day change" },
+    { key: "updatedAt", label: "Updated" },
+  ];
+
+  const setSortKey = (key: SignalSortKey) => {
+    setSort((current) =>
+      current.key === key
+        ? { key, direction: current.direction === "desc" ? "asc" : "desc" }
+        : { key, direction: key === "company" ? "asc" : "desc" }
+    );
+  };
+
+  const sortHeader = (key: SignalSortKey, label: string, className?: string) => (
+    <th
+      aria-sort={
+        sort.key === key
+          ? sort.direction === "desc"
+            ? "descending"
+            : "ascending"
+          : "none"
+      }
+      className={className}
+      scope="col"
+    >
+      <button
+        aria-label={`Sort by ${label}${
+          sort.key === key
+            ? `, currently ${sort.direction === "desc" ? "descending" : "ascending"}`
+            : ""
+        }`}
+        className={sort.key === key ? "active" : ""}
+        onClick={() => setSortKey(key)}
+        type="button"
+      >
+        {label}
+        <span aria-hidden="true">
+          {sort.key === key ? (sort.direction === "desc" ? "↓" : "↑") : "↕"}
+        </span>
+      </button>
+      {signalRankingHelp[key] && (
+        <span
+          aria-label={`Explain ${label}`}
+          className="signal-info-wrap signal-ranking-help"
+          data-tooltip={signalRankingHelp[key]}
+          tabIndex={0}
+        >
+          <Info className="signal-info" size={13} />
+        </span>
+      )}
+    </th>
+  );
+
   return (
     <section className="portfolio-page signal-ranking-page">
       <div className="portfolio-hero signal-ranking-hero">
@@ -5103,8 +5159,8 @@ function SignalsView({
           <span className="ticker-badge">Six-month horizon</span>
           <h1>Research Signal Rankings</h1>
           <p>
-            Saved companies are grouped BUY, HOLD, then SELL and ranked by their
-            explainable composite score. Pending signals remain separate from HOLD.
+            Compare saved companies by score, coverage, probability, market move,
+            or freshness. Provisional percentages show data coverage.
           </p>
         </div>
         <div className="signal-ranking-summary" aria-label="Signal summary counts">
@@ -5117,17 +5173,50 @@ function SignalsView({
         </div>
       </div>
 
-      <div className="portfolio-filters" aria-label="Filter signal rankings by watchlist">
-        {["All", ...listNames].map((name) => (
+      <div className="signal-ranking-controls">
+        <div className="portfolio-filters" aria-label="Filter signal rankings by watchlist">
+          {["All", ...listNames].map((name) => (
+            <button
+              className={selectedList === name ? "selected" : ""}
+              key={name}
+              onClick={() => onSelectedListChange(name)}
+              type="button"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+        <div className="signal-ranking-mobile-sort">
+          <label htmlFor="signal-ranking-sort">Sort by</label>
+          <select
+            id="signal-ranking-sort"
+            onChange={(event) =>
+              setSort({
+                key: event.target.value as SignalSortKey,
+                direction: event.target.value === "company" ? "asc" : "desc",
+              })
+            }
+            value={sort.key}
+          >
+            {sortOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <button
-            className={selectedList === name ? "selected" : ""}
-            key={name}
-            onClick={() => onSelectedListChange(name)}
+            aria-label={`Sort ${sort.direction === "desc" ? "ascending" : "descending"}`}
+            onClick={() =>
+              setSort((current) => ({
+                ...current,
+                direction: current.direction === "desc" ? "asc" : "desc",
+              }))
+            }
             type="button"
           >
-            {name}
+            {sort.direction === "desc" ? "↓" : "↑"}
           </button>
-        ))}
+        </div>
       </div>
 
       <section className="panel signal-ranking-panel">
@@ -5135,7 +5224,7 @@ function SignalsView({
           <div>
             <h2>{selectedList === "All" ? "All Saved Stocks" : selectedList}</h2>
             <p className="signal-ranking-sort-note">
-              Rating group → composite score → update date → ticker
+              Globally sorted by {sortOptions.find((option) => option.key === sort.key)?.label.toLowerCase()} {sort.direction === "desc" ? "high to low" : "low to high"}
             </p>
           </div>
           <span>
@@ -5153,55 +5242,162 @@ function SignalsView({
           </div>
         ) : (
           <div className="signal-ranking-list">
-            {rankedItems.map((item, index) => (
-              <article
-                className={`signal-ranking-row ${
-                  item.stockSignal?.rating.toLowerCase() ?? "pending"
-                }`}
-                key={item.ticker}
-              >
-                <div className="signal-rank" aria-label={`Rank ${index + 1}`}>
-                  <span>#</span>
-                  <strong>{index + 1}</strong>
-                </div>
+            <div className="signal-ranking-table-wrap">
+              <table className="signal-ranking-table">
+                <thead>
+                  <tr>
+                    <th className="signal-ranking-rank-head" scope="col">#</th>
+                    {sortHeader("company", "Company", "signal-ranking-company-head")}
+                    {sortHeader("price", "Price", "signal-ranking-numeric-head")}
+                    {sortHeader("dailyChange", "Day", "signal-ranking-numeric-head")}
+                    {sortHeader("score", "Signal", "signal-ranking-numeric-head")}
+                    {sortHeader("coverage", "Quality", "signal-ranking-numeric-head")}
+                    {sortHeader("winProbability", "Win", "signal-ranking-numeric-head")}
+                    {sortHeader("outperformProbability", "Beat SPY", "signal-ranking-numeric-head")}
+                    {sortHeader("updatedAt", "Updated", "signal-ranking-numeric-head")}
+                    <th className="signal-ranking-action-head" scope="col">
+                      <span>Action</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankedItems.map((item, index) => {
+                    const signal = item.stockSignal;
+                    const hasProbabilities =
+                      signal &&
+                      !signal.provisional &&
+                      signal.winProbability !== undefined &&
+                      signal.outperformProbability !== undefined;
+                    return (
+                      <tr
+                        className={`${signal?.rating.toLowerCase() ?? "pending"}${
+                          signal?.dataStatus === "stale" ? " stale" : ""
+                        }`}
+                        key={item.ticker}
+                      >
+                        <td className="signal-ranking-rank-cell">{index + 1}</td>
+                        <td className="signal-ranking-company-cell">
+                          <button
+                            className="signal-ranking-company"
+                            onClick={() => onOpenResearch(item.ticker)}
+                            type="button"
+                          >
+                            <span>{item.ticker}</span>
+                            <div>
+                              <strong>{item.stock?.companyName ?? item.ticker}</strong>
+                              <small>{item.ticker} • {item.stock?.sector ?? "Data pending"} • {item.listName}</small>
+                            </div>
+                          </button>
+                        </td>
+                        <td className="signal-ranking-number">
+                          {item.stock ? `$${item.stock.price.toFixed(2)}` : "—"}
+                        </td>
+                        <td className={`signal-ranking-number ${(item.stock?.changePercent ?? 0) >= 0 ? "up" : "down"}`}>
+                          {item.stock
+                            ? `${item.stock.changePercent >= 0 ? "+" : ""}${item.stock.changePercent.toFixed(2)}%`
+                            : "—"}
+                        </td>
+                        <td className="signal-ranking-signal-cell">
+                          {signal ? (
+                            <>
+                              <span className={`signal-rating-badge ${signal.rating.toLowerCase()}`}>
+                                {signal.rating}
+                              </span>
+                              <strong>{signal.compositeScore}/100</strong>
+                            </>
+                          ) : (
+                            <span className="signal-ranking-pending-label">Pending</span>
+                          )}
+                        </td>
+                        <td className="signal-ranking-quality-cell">
+                          {signal ? (
+                            <>
+                              <strong>{signal.dataCoverage}%</strong>
+                              <small>
+                                {signal.provisional ? "Provisional" : `${signal.confidence} confidence`}
+                                {signal.dataStatus === "stale" ? " • Stale" : ""}
+                              </small>
+                            </>
+                          ) : "—"}
+                        </td>
+                        <td className="signal-ranking-number">
+                          {hasProbabilities ? `${Math.round(signal.winProbability! * 100)}%` : "—"}
+                        </td>
+                        <td className="signal-ranking-number">
+                          {hasProbabilities ? `${Math.round(signal.outperformProbability! * 100)}%` : "—"}
+                        </td>
+                        <td className="signal-ranking-updated">
+                          {signal ? formatDayMonth(signal.computedAt) : "—"}
+                        </td>
+                        <td className="signal-ranking-action-cell">
+                          <button
+                            aria-label={`Research ${item.ticker}`}
+                            className="signal-ranking-research"
+                            onClick={() => onOpenResearch(item.ticker)}
+                            type="button"
+                          >
+                            Research
+                            <ChevronRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                <div className="signal-ranking-company-block">
-                  <button
-                    className="portfolio-company-cell company-cell-button"
-                    onClick={() => onOpenResearch(item.ticker)}
-                    type="button"
+            <div className="signal-ranking-mobile-list">
+              {rankedItems.map((item, index) => {
+                const signal = item.stockSignal;
+                return (
+                  <article
+                    className={`signal-ranking-mobile-row ${signal?.rating.toLowerCase() ?? "pending"}${
+                      signal?.dataStatus === "stale" ? " stale" : ""
+                    }`}
+                    key={item.ticker}
                   >
-                    <span>{item.ticker.slice(0, 1)}</span>
-                    <div>
-                      <strong>{item.stock?.companyName ?? item.ticker}</strong>
-                      <small>
-                        {item.ticker} • {item.stock?.sector ?? "Company data pending"}
-                      </small>
+                    <span className="signal-ranking-mobile-rank">#{index + 1}</span>
+                    <button
+                      className="signal-ranking-mobile-company"
+                      onClick={() => onOpenResearch(item.ticker)}
+                      type="button"
+                    >
+                      <strong>{item.ticker}</strong>
+                      <span>{item.stock?.companyName ?? item.ticker}</span>
+                    </button>
+                    <div className="signal-ranking-mobile-signal">
+                      {signal ? (
+                        <>
+                          <span className={`signal-rating-badge ${signal.rating.toLowerCase()}`}>{signal.rating}</span>
+                          <strong>{signal.compositeScore}/100</strong>
+                        </>
+                      ) : (
+                        <span className="signal-ranking-pending-label">Pending</span>
+                      )}
                     </div>
-                  </button>
-                  <div className="signal-ranking-market">
-                    <span className="portfolio-list-pill">{item.listName}</span>
-                    <strong>{item.stock ? `$${item.stock.price.toFixed(2)}` : "Price N/A"}</strong>
-                    <em className={(item.stock?.changePercent ?? 0) >= 0 ? "up" : "down"}>
-                      {item.stock
-                        ? `${item.stock.changePercent >= 0 ? "+" : ""}${item.stock.changePercent.toFixed(2)}% day`
-                        : "Day N/A"}
-                    </em>
-                  </div>
-                </div>
-
-                <SignalRankingSummary signal={item.stockSignal ?? undefined} />
-
-                <button
-                  className="signal-ranking-research"
-                  onClick={() => onOpenResearch(item.ticker)}
-                  type="button"
-                >
-                  Research
-                  <ChevronRight size={16} />
-                </button>
-              </article>
-            ))}
+                    <div className="signal-ranking-mobile-meta">
+                      <span>{item.stock ? `$${item.stock.price.toFixed(2)}` : "Price —"}</span>
+                      <span className={(item.stock?.changePercent ?? 0) >= 0 ? "up" : "down"}>
+                        {item.stock ? `${item.stock.changePercent >= 0 ? "+" : ""}${item.stock.changePercent.toFixed(2)}% day` : "Day —"}
+                      </span>
+                      <span>{signal ? `${signal.dataCoverage}% ${signal.provisional ? "provisional" : "coverage"}` : "Coverage —"}</span>
+                      {sort.key !== "score" && sort.key !== "coverage" && (
+                        <strong>{formatSignalSortValue(item, sort.key)}</strong>
+                      )}
+                    </div>
+                    <button
+                      aria-label={`Research ${item.ticker}`}
+                      className="signal-ranking-mobile-action"
+                      onClick={() => onOpenResearch(item.ticker)}
+                      type="button"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         )}
       </section>
@@ -5215,66 +5411,43 @@ function SignalsView({
   );
 }
 
-function SignalRankingSummary({
-  signal,
-}: {
-  signal?: NonNullable<ResearchBundle["stockSignal"]>;
-}) {
-  if (!signal) {
-    return (
-      <div className="signal-ranking-signal pending" aria-label="Signal pending">
-        <div className="signal-ranking-heading">
-          <span>6M research signal</span>
-          <strong>Pending</strong>
-        </div>
-        <p>Sync live data to calculate the first research signal.</p>
-      </div>
-    );
+const signalRankingHelp: Partial<Record<SignalSortKey, string>> = {
+  score:
+    "Signal is the explainable composite score from 0 to 100, combining market, growth, profitability, balance sheet, valuation, and fresh AI-research factors. The score is classified as BUY, HOLD, or SELL; ratings are provisional until historical analog probabilities are calibrated.",
+  coverage:
+    "Quality is data coverage: a weighted availability score for market (40%), growth (15%), profitability (12%), balance sheet (8%), valuation (15%), and fresh AI research (10%) inputs. Provisional means calibrated historical analog probabilities are not yet available.",
+  winProbability:
+    "Win is the calibrated probability that this stock will have a positive return over the six-month horizon. It is estimated from weighted historical analog periods. Provisional ratings show a dash until calibrated probabilities are available.",
+  outperformProbability:
+    "Beat SPY is the calibrated probability that this stock's return will exceed SPY's return over the six-month horizon. It is estimated from weighted historical analog periods. Provisional ratings show a dash until calibrated probabilities are available.",
+};
+
+function formatSignalSortValue(item: PortfolioItem, key: SignalSortKey) {
+  const signal = item.stockSignal;
+  switch (key) {
+    case "company":
+      return `Company ${item.stock?.companyName ?? item.ticker}`;
+    case "price":
+      return item.stock ? `Price $${item.stock.price.toFixed(2)}` : "Price —";
+    case "score":
+      return signal ? `${signal.compositeScore}/100 score` : "Score —";
+    case "coverage":
+      return signal ? `${signal.dataCoverage}% coverage` : "Coverage —";
+    case "winProbability":
+      return signal && !signal.provisional && signal.winProbability !== undefined
+        ? `${Math.round(signal.winProbability * 100)}% win`
+        : "Win —";
+    case "outperformProbability":
+      return signal && !signal.provisional && signal.outperformProbability !== undefined
+        ? `${Math.round(signal.outperformProbability * 100)}% beat SPY`
+        : "Beat SPY —";
+    case "dailyChange":
+      return item.stock
+        ? `${item.stock.changePercent >= 0 ? "+" : ""}${item.stock.changePercent.toFixed(2)}% day`
+        : "Day —";
+    case "updatedAt":
+      return signal ? `Updated ${formatDayMonth(signal.computedAt)}` : "Updated —";
   }
-
-  const showProbabilities =
-    !signal.provisional &&
-    signal.winProbability !== undefined &&
-    signal.lossProbability !== undefined &&
-    signal.outperformProbability !== undefined;
-
-  return (
-    <div
-      className={`signal-ranking-signal ${signal.rating.toLowerCase()}${
-        signal.dataStatus === "stale" ? " stale" : ""
-      }`}
-      aria-label={`${signal.rating} six-month signal, score ${signal.compositeScore} out of 100`}
-    >
-      <div className="signal-ranking-heading">
-        <span>6M research signal</span>
-        <strong>{signal.rating}</strong>
-        <em>{signal.compositeScore}/100</em>
-      </div>
-      <div className="signal-scale" aria-hidden="true">
-        <span className="signal-scale-marker" style={{ left: `${signal.compositeScore}%` }} />
-      </div>
-      <div className="signal-scale-labels" aria-hidden="true">
-        <span>SELL</span>
-        <span>HOLD</span>
-        <span>BUY</span>
-      </div>
-      {showProbabilities ? (
-        <div className="signal-ranking-probabilities">
-          <span><strong>{Math.round((signal.winProbability ?? 0) * 100)}%</strong> win</span>
-          <span><strong>{Math.round((signal.lossProbability ?? 0) * 100)}%</strong> loss</span>
-          <span><strong>{Math.round((signal.outperformProbability ?? 0) * 100)}%</strong> beat SPY</span>
-        </div>
-      ) : (
-        <p className="signal-ranking-unavailable">Historical probability unavailable</p>
-      )}
-      <div className="signal-ranking-meta">
-        <span>{signal.provisional ? "Provisional" : `${signal.confidence} confidence`}</span>
-        <span>{signal.dataCoverage}% coverage</span>
-        <span>Updated {formatDayMonth(signal.computedAt)}</span>
-        {signal.dataStatus === "stale" && <em>Stale</em>}
-      </div>
-    </div>
-  );
 }
 
 function PortfolioView({
@@ -5294,7 +5467,7 @@ function PortfolioView({
   compareTickers: string[];
   onCompareTickersChange: (tickers: string[]) => void;
   onOpenCompare: (tickers?: string[]) => void;
-  onUpdatePortfolioPosition: (input: PortfolioPositionInput) => Promise<void>;
+  onUpdatePortfolioPosition?: (input: PortfolioPositionInput) => Promise<void>;
   onOpenResearch: (ticker: string) => void;
   onSelectedListChange: (listName: string) => void;
 }) {
@@ -5378,6 +5551,9 @@ function PortfolioView({
   };
 
   const handleEditPosition = async (item: PortfolioItem) => {
+    if (!onUpdatePortfolioPosition) {
+      return;
+    }
     const sharesInput = window.prompt(
       `Shares owned for ${item.ticker}`,
       String(item.shares ?? "")
@@ -5723,9 +5899,11 @@ function PortfolioView({
                     : "N/A"}
                 </span>
                 <div className="portfolio-row-actions">
-                  <button type="button" onClick={() => void handleEditPosition(item)}>
-                    Edit Position
-                  </button>
+                  {onUpdatePortfolioPosition && (
+                    <button type="button" onClick={() => void handleEditPosition(item)}>
+                      Edit Position
+                    </button>
+                  )}
                   <button type="button" onClick={() => onOpenResearch(item.ticker)}>
                     Research
                   </button>
@@ -6104,14 +6282,20 @@ function InvestmentThesisPanel({
     <section className="panel thesis-panel">
       <div className="panel-header">
         <h2>Investment Thesis</h2>
-        <div className="panel-actions">
-          <button type="button" onClick={() => void onPropose?.()}>
-            {thesisStatus === "proposing" ? "Proposing..." : "Propose"}
-          </button>
-          <button type="button" onClick={() => setIsEditing((current) => !current)}>
-            {isEditing ? "Cancel" : "Edit"}
-          </button>
-        </div>
+        {(onPropose || onSave) && (
+          <div className="panel-actions">
+            {onPropose && (
+              <button type="button" onClick={() => void onPropose()}>
+                {thesisStatus === "proposing" ? "Proposing..." : "Propose"}
+              </button>
+            )}
+            {onSave && (
+              <button type="button" onClick={() => setIsEditing((current) => !current)}>
+                {isEditing ? "Cancel" : "Edit"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {isEditing ? (
@@ -6286,75 +6470,8 @@ function PriceChart({ stock }: {
   const [selectedRange, setSelectedRange] = useState<
     "1D" | "5D" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "5Y" | "MAX"
   >("3M");
-  const [clientChartPoints, setClientChartPoints] = useState<number[] | null>(null);
-  const [chartFetchStatus, setChartFetchStatus] = useState<
-    "idle" | "loading" | "ready" | "error"
-  >("idle");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (stock.chartPoints?.length) {
-      setClientChartPoints(null);
-      setChartFetchStatus("ready");
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (chartSeriesByTicker[ticker]) {
-      setClientChartPoints(null);
-      setChartFetchStatus("ready");
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (!twelveDataClientKey) {
-      setClientChartPoints(null);
-      setChartFetchStatus("error");
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const loadChartHistory = async () => {
-      setChartFetchStatus("loading");
-
-      try {
-        const points = await fetchChartHistoryFromClientProviders(ticker);
-
-        if (cancelled) {
-          return;
-        }
-
-        if (points && points.length >= 2) {
-          setClientChartPoints(points);
-          setChartFetchStatus("ready");
-          return;
-        }
-
-        setClientChartPoints(null);
-        setChartFetchStatus("error");
-      } catch {
-        if (cancelled) {
-          return;
-        }
-
-        setClientChartPoints(null);
-        setChartFetchStatus("error");
-      }
-    };
-
-    void loadChartHistory();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [stock.chartPoints, ticker]);
-
   const chartPoints = alignChartToLatestPrice(
-    stock.chartPoints ?? clientChartPoints ?? chartSeriesByTicker[ticker],
+    stock.chartPoints ?? chartSeriesByTicker[ticker],
     stock.price
   );
   const displayedChartPoints = chartPoints
@@ -6393,21 +6510,22 @@ function PriceChart({ stock }: {
               )
             )}
           </div>
-          <button className="select-button">Line</button>
-          <button className="select-button">Compare</button>
-          <button className="icon-button small">
-            <Settings size={16} />
+          <button
+            aria-label="Chart type: Line"
+            className="select-button chart-type-button"
+            title="Line chart"
+            type="button"
+          >
+            <LineChart size={16} />
           </button>
+          <button className="select-button" type="button">Compare</button>
         </div>
 
         <div className="chart-empty-state">
-          <strong>
-            {chartFetchStatus === "loading" ? "Loading live chart..." : "Live chart unavailable"}
-          </strong>
+          <strong>Historical chart unavailable</strong>
           <p>
-            {chartFetchStatus === "loading"
-              ? `Fetching recent price history for ${ticker} from Twelve Data.`
-              : `The latest quote for ${ticker} synced successfully, but historical chart data is currently unavailable.`}
+            The saved quote for {ticker} is available, but no stored historical
+            chart data was published for this company.
           </p>
         </div>
       </section>
@@ -6556,11 +6674,15 @@ function PriceChart({ stock }: {
             )
           )}
         </div>
-        <button className="select-button">Line</button>
-        <button className="select-button">Compare</button>
-        <button className="icon-button small">
-          <Settings size={16} />
+        <button
+          aria-label="Chart type: Line"
+          className="select-button chart-type-button"
+          title="Line chart"
+          type="button"
+        >
+          <LineChart size={16} />
         </button>
+        <button className="select-button" type="button">Compare</button>
       </div>
 
       <div className="chart-wrap">
@@ -6712,7 +6834,10 @@ function StockSignalCard({
     >
       <div className="signal-card-heading">
         <span>6M research signal</span>
-        <strong>{signal.rating}</strong>
+        <strong className="signal-card-rating">
+          {signal.rating}
+          <em>{signal.compositeScore}/100</em>
+        </strong>
       </div>
       <div className="signal-scale" aria-label={`Composite score ${signal.compositeScore} out of 100`}>
         <span className="signal-scale-marker" style={{ left: `${signal.compositeScore}%` }} />
@@ -6732,8 +6857,23 @@ function StockSignalCard({
         <p className="signal-unavailable">Historical probability unavailable</p>
       )}
       <div className="signal-card-meta">
-        <span>{signal.provisional ? "Provisional" : signal.confidence + " confidence"}</span>
-        <span>{signal.dataCoverage}% coverage</span>
+        <span className="signal-status-meta">
+          <strong className={signal.provisional ? "signal-provisional-label" : ""}>
+            {signal.provisional ? "Provisional" : signal.confidence + " confidence"}
+          </strong>
+          <span
+            aria-label="Explain signal status and coverage"
+            className="signal-info-wrap"
+            data-tooltip={signal.provisional
+              ? `Provisional means this BUY/HOLD/SELL rating uses factor scores because calibrated historical analog probabilities are not yet available. Coverage is ${signal.dataCoverage}%: a weighted availability score for market (40%), growth (15%), profitability (12%), balance sheet (8%), valuation (15%), and fresh AI research (10%) inputs.`
+              : `Coverage is ${signal.dataCoverage}%: a weighted availability score for market (40%), growth (15%), profitability (12%), balance sheet (8%), valuation (15%), and fresh AI research (10%) inputs. Historical probabilities are shown only after the analog model is calibrated.`}
+            onClick={(event) => event.stopPropagation()}
+            tabIndex={0}
+          >
+            <Info className="signal-info" size={14} />
+          </span>
+        </span>
+        <strong className="signal-coverage-meta">{signal.dataCoverage}% coverage</strong>
         <span>{formatDayMonth(signal.computedAt)}</span>
         {signal.dataStatus === "stale" && <em>Stale</em>}
         <ChevronDown className={expanded ? "expanded" : ""} size={15} />

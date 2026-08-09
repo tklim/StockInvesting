@@ -34,23 +34,23 @@ const insertStock = async (
 test("the same ticker can belong to portfolios with independent allocations", async () => {
   const t = convexTest(schema, modules);
   await insertStock(t, "AAA", 100);
-  const first = await t.mutation(api.portfolios.create, {
+  const first = await t.mutation(internal.portfolios.create, {
     name: "Growth",
     type: "actual",
   });
-  const second = await t.mutation(api.portfolios.create, {
+  const second = await t.mutation(internal.portfolios.create, {
     name: "Income",
     type: "actual",
   });
 
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId: first,
     ticker: "aaa",
     shares: 10,
     averageCost: 80,
     targetAllocation: 60,
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId: second,
     ticker: "AAA",
     shares: 2,
@@ -74,11 +74,11 @@ test("the same ticker can belong to portfolios with independent allocations", as
 
 test("target allocations above 100 percent are rejected", async () => {
   const t = convexTest(schema, modules);
-  const portfolioId = await t.mutation(api.portfolios.create, {
+  const portfolioId = await t.mutation(internal.portfolios.create, {
     name: "Allocation Guard",
     type: "actual",
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId,
     ticker: "AAA",
     shares: 1,
@@ -87,7 +87,7 @@ test("target allocations above 100 percent are rejected", async () => {
   });
 
   await expect(
-    t.mutation(api.portfolios.upsertHolding, {
+    t.mutation(internal.portfolios.upsertHolding, {
       portfolioId,
       ticker: "BBB",
       shares: 1,
@@ -101,19 +101,19 @@ test("model initialization converts targets into fractional units and cash", asy
   const t = convexTest(schema, modules);
   await insertStock(t, "AAA", 100);
   await insertStock(t, "BBB", 50);
-  const portfolioId = await t.mutation(api.portfolios.create, {
+  const portfolioId = await t.mutation(internal.portfolios.create, {
     name: "Model",
     type: "model",
     startingValue: 10000,
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId,
     ticker: "AAA",
     shares: 0,
     averageCost: 0,
     targetAllocation: 60,
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId,
     ticker: "BBB",
     shares: 0,
@@ -121,7 +121,7 @@ test("model initialization converts targets into fractional units and cash", asy
     targetAllocation: 30,
   });
 
-  await t.mutation(api.portfolios.initializeModel, { portfolioId });
+  await t.mutation(internal.portfolios.initializeModel, { portfolioId });
   const dashboard = await t.query(api.portfolios.getDashboard, {
     portfolioId,
   });
@@ -139,11 +139,11 @@ test("capturing a snapshot updates the same market date instead of duplicating i
   const t = convexTest(schema, modules);
   await insertStock(t, "AAA", 100);
   await insertStock(t, "SPY", 600, "ETF");
-  const portfolioId = await t.mutation(api.portfolios.create, {
+  const portfolioId = await t.mutation(internal.portfolios.create, {
     name: "Snapshot",
     type: "actual",
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId,
     ticker: "AAA",
     shares: 10,
@@ -202,22 +202,22 @@ test("capturing a snapshot updates the same market date instead of duplicating i
 
 test("duplicating and archiving preserve holdings and exclude archived portfolios", async () => {
   const t = convexTest(schema, modules);
-  const original = await t.mutation(api.portfolios.create, {
+  const original = await t.mutation(internal.portfolios.create, {
     name: "Original",
     type: "actual",
   });
-  await t.mutation(api.portfolios.upsertHolding, {
+  await t.mutation(internal.portfolios.upsertHolding, {
     portfolioId: original,
     ticker: "AAA",
     shares: 5,
     averageCost: 10,
     targetAllocation: 50,
   });
-  const copy = await t.mutation(api.portfolios.duplicate, {
+  const copy = await t.mutation(internal.portfolios.duplicate, {
     portfolioId: original,
     name: "Copy",
   });
-  await t.mutation(api.portfolios.archive, { portfolioId: original });
+  await t.mutation(internal.portfolios.archive, { portfolioId: original });
 
   const active = await t.query(api.portfolios.list, {});
   const all = await t.query(api.portfolios.list, { includeArchived: true });

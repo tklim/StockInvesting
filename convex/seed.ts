@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 
 const now = 1_747_716_000_000;
 
@@ -271,7 +271,7 @@ const researchByTicker: Record<
   ],
 };
 
-export const demoData = mutation({
+export const demoData = internalMutation({
   args: {},
   handler: async (ctx) => {
     const insertedIds = [];

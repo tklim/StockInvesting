@@ -62,7 +62,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   min-height: 100vh;
   transition: grid-template-columns 180ms ease;
   background:
@@ -536,7 +536,7 @@ button {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 22px 12px 24px;
+  padding: 22px 10px 24px;
   border-right: 1px solid #e5e7eb;
   background: rgba(255, 255, 255, 0.84);
   backdrop-filter: blur(16px);
@@ -548,7 +548,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 12px 28px;
+  padding: 0 8px 28px;
   font-size: 21px;
   font-weight: 760;
 }
@@ -584,8 +584,22 @@ button {
 }
 
 .nav-item {
-  padding: 13px 14px;
+  padding: 13px 10px;
   font-weight: 560;
+}
+
+.nav-list a.nav-item {
+  text-decoration: none;
+}
+
+.read-only-badge {
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--muted-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  white-space: nowrap;
 }
 
 .nav-item.active {
@@ -611,7 +625,7 @@ button {
 
 .list-row {
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 10px 10px;
   font-size: 14px;
 }
 
@@ -632,7 +646,7 @@ button {
 }
 
 .collapse-button {
-  padding: 12px 14px;
+  padding: 12px 10px;
   border-top: 1px solid #e5e7eb;
   border-radius: 0;
 }
@@ -991,6 +1005,21 @@ kbd {
   letter-spacing: 0.02em;
 }
 
+.signal-card-rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.signal-card-rating em {
+  color: #667085;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .stock-signal-card.buy .signal-card-heading strong {
   color: #059669;
 }
@@ -1056,6 +1085,75 @@ kbd {
   gap: 8px;
   color: #667085;
   font-size: 10px;
+}
+
+.signal-status-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.signal-provisional-label,
+.signal-coverage-meta {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.signal-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.signal-info {
+  color: #2563eb;
+  cursor: help;
+  outline: none;
+}
+
+.signal-info-wrap::before,
+.signal-info-wrap::after {
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.signal-info-wrap::before {
+  content: "";
+  right: 3px;
+  bottom: calc(100% + 5px);
+  border: 5px solid transparent;
+  border-top-color: #172033;
+  transform: translateY(3px);
+}
+
+.signal-info-wrap::after {
+  content: attr(data-tooltip);
+  right: -8px;
+  bottom: calc(100% + 14px);
+  width: 280px;
+  padding: 10px 11px;
+  border: 1px solid #344563;
+  border-radius: 8px;
+  background: #172033;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+  transform: translateY(3px);
+}
+
+.signal-info-wrap:hover::before,
+.signal-info-wrap:hover::after,
+.signal-info-wrap:focus-visible::before,
+.signal-info-wrap:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .signal-card-meta em {
@@ -1279,6 +1377,7 @@ kbd {
 }
 
 .app-shell[data-theme="dark"] .signal-card-heading strong,
+.app-shell[data-theme="dark"] .signal-card-rating em,
 .app-shell[data-theme="dark"] .signal-quick-metrics strong,
 .app-shell[data-theme="dark"] .signal-details-header h2,
 .app-shell[data-theme="dark"] .signal-factor-row strong,
@@ -1298,6 +1397,11 @@ kbd {
 .app-shell[data-theme="dark"] .signal-driver-panel ul,
 .app-shell[data-theme="dark"] .signal-disclaimer {
   color: #aebbd0;
+}
+
+.app-shell[data-theme="dark"] .signal-provisional-label,
+.app-shell[data-theme="dark"] .signal-coverage-meta {
+  color: #f8fafc;
 }
 
 .logo-tile {
@@ -1898,6 +2002,647 @@ h1 {
 .app-shell[data-theme="dark"] .signal-ranking-research:focus-visible {
   border-color: #3b82f6;
   background: #172554;
+}
+
+/* Compact sortable signal rankings */
+.signal-ranking-page {
+  gap: 12px;
+  padding-top: 18px;
+}
+
+.signal-ranking-hero {
+  grid-template-columns: minmax(420px, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.signal-ranking-hero h1 {
+  margin: 5px 0 4px;
+}
+
+.signal-ranking-hero p {
+  max-width: 720px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.signal-ranking-summary {
+  grid-template-columns: repeat(5, minmax(68px, 78px));
+  gap: 7px;
+}
+
+.signal-count-card {
+  gap: 2px;
+  padding: 7px 9px;
+  border-top-width: 2px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.signal-count-card span {
+  font-size: 9px;
+}
+
+.signal-count-card strong {
+  font-size: 18px;
+}
+
+.signal-ranking-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.signal-ranking-controls .portfolio-filters {
+  gap: 7px;
+}
+
+.signal-ranking-controls .portfolio-filters button {
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.signal-ranking-mobile-sort {
+  display: none;
+}
+
+.signal-ranking-panel .panel-header {
+  padding: 10px 14px;
+}
+
+.signal-ranking-panel .panel-header h2 {
+  font-size: 14px;
+}
+
+.signal-ranking-sort-note {
+  margin-top: 2px;
+}
+
+.signal-ranking-table-wrap {
+  overflow-x: auto;
+}
+
+.signal-ranking-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.signal-ranking-table th {
+  height: 32px;
+  padding: 0 8px;
+  border-top: 1px solid #edf0f5;
+  border-bottom: 1px solid #dfe4ec;
+  color: #667085;
+  background: #f8fafc;
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.035em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.signal-ranking-table th:nth-child(1) {
+  width: 38px;
+}
+
+.signal-ranking-table th:nth-child(2) {
+  width: 26%;
+}
+
+.signal-ranking-table th:nth-child(3) {
+  width: 78px;
+}
+
+.signal-ranking-table th:nth-child(4) {
+  width: 72px;
+}
+
+.signal-ranking-table th:nth-child(5) {
+  width: 108px;
+}
+
+.signal-ranking-table th:nth-child(6) {
+  width: 106px;
+}
+
+.signal-ranking-table th:nth-child(7),
+.signal-ranking-table th:nth-child(8) {
+  width: 72px;
+}
+
+.signal-ranking-table th:nth-child(9) {
+  width: 76px;
+}
+
+.signal-ranking-table th:nth-child(10) {
+  width: 92px;
+}
+
+.signal-ranking-table th button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 7px 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.signal-ranking-table th button:hover,
+.signal-ranking-table th button:focus-visible,
+.signal-ranking-table th button.active {
+  color: #0b55f4;
+}
+
+.signal-ranking-table th button span {
+  margin: 0;
+  color: inherit;
+  font-size: 12px;
+}
+
+.signal-ranking-help {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.signal-ranking-help::before {
+  top: calc(100% + 5px);
+  right: 3px;
+  bottom: auto;
+  border-top-color: transparent;
+  border-bottom-color: #172033;
+  transform: translateY(-3px);
+}
+
+.signal-ranking-help::after {
+  top: calc(100% + 14px);
+  right: -8px;
+  bottom: auto;
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  transform: translateY(-3px);
+}
+
+.signal-ranking-help:hover::before,
+.signal-ranking-help:hover::after,
+.signal-ranking-help:focus-visible::before,
+.signal-ranking-help:focus-visible::after {
+  transform: translateY(0);
+}
+
+.signal-ranking-numeric-head {
+  text-align: right !important;
+}
+
+.signal-ranking-rank-head {
+  text-align: center !important;
+}
+
+.signal-ranking-company-head {
+  text-align: left !important;
+}
+
+.signal-ranking-company-head button {
+  justify-content: flex-start !important;
+}
+
+.signal-ranking-action-head,
+.signal-ranking-action-head span {
+  text-align: center !important;
+}
+
+.signal-ranking-table td {
+  height: 54px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #edf0f5;
+  color: #344054;
+  font-size: 11px;
+  vertical-align: middle;
+}
+
+.signal-ranking-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.signal-ranking-table tbody tr:hover td {
+  background: #f8fbff;
+}
+
+.signal-ranking-table tr.buy td:first-child {
+  box-shadow: inset 3px 0 #10b981;
+}
+
+.signal-ranking-table tr.hold td:first-child {
+  box-shadow: inset 3px 0 #f59e0b;
+}
+
+.signal-ranking-table tr.sell td:first-child {
+  box-shadow: inset 3px 0 #ef4444;
+}
+
+.signal-ranking-table tr.pending td:first-child {
+  box-shadow: inset 3px 0 #94a3b8;
+}
+
+.signal-ranking-table tr.stale td {
+  background-image: linear-gradient(90deg, rgba(239, 68, 68, 0.035), transparent 40%);
+}
+
+.signal-ranking-rank-cell {
+  color: #98a2b3 !important;
+  font-weight: 780;
+  text-align: center;
+}
+
+.signal-ranking-company {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.signal-ranking-company > span {
+  display: grid;
+  width: 42px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  color: #0b55f4;
+  background: #eff6ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.signal-ranking-company div {
+  min-width: 0;
+}
+
+.signal-ranking-company strong,
+.signal-ranking-company small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signal-ranking-company strong {
+  color: #101828;
+  font-size: 12px;
+}
+
+.signal-ranking-company small {
+  margin-top: 2px;
+  color: #667085;
+  font-size: 9px;
+}
+
+.signal-ranking-number,
+.signal-ranking-updated {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.signal-ranking-number.up,
+.signal-ranking-mobile-meta .up {
+  color: #059669;
+}
+
+.signal-ranking-number.down,
+.signal-ranking-mobile-meta .down {
+  color: #dc2626;
+}
+
+.signal-ranking-signal-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.signal-ranking-signal-cell strong {
+  margin-left: 5px;
+  font-size: 11px;
+}
+
+.signal-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 20px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.signal-rating-badge.buy {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.signal-rating-badge.hold {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.signal-rating-badge.sell {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.signal-ranking-pending-label {
+  color: #667085;
+  font-weight: 750;
+}
+
+.signal-ranking-quality-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.signal-ranking-quality-cell strong,
+.signal-ranking-quality-cell small {
+  display: block;
+}
+
+.signal-ranking-quality-cell strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-ranking-quality-cell small {
+  margin-top: 1px;
+  overflow: hidden;
+  color: #667085;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.signal-ranking-research {
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 10px;
+}
+
+.signal-ranking-action-cell {
+  text-align: center;
+}
+
+.signal-ranking-mobile-list {
+  display: none;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-table th {
+  border-color: #2a3950;
+  color: #a7b0c2;
+  background: #101827;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-table td {
+  border-bottom-color: #253248;
+  color: #d8dee9;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-table tbody tr:hover td {
+  background-color: #111e31;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-company strong {
+  color: #f8fafc;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-company small,
+.app-shell[data-theme="dark"] .signal-ranking-quality-cell small,
+.app-shell[data-theme="dark"] .signal-ranking-pending-label {
+  color: #a7b0c2;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-company > span {
+  border-color: #334155;
+  color: #60a5fa;
+  background: #172554;
+}
+
+@media (max-width: 980px) {
+  .signal-ranking-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .signal-ranking-summary {
+    grid-template-columns: repeat(5, minmax(68px, 1fr));
+    width: 100%;
+  }
+
+  .signal-ranking-controls {
+    align-items: flex-end;
+  }
+
+  .signal-ranking-mobile-sort {
+    display: grid;
+    grid-template-columns: auto minmax(120px, 1fr) 32px;
+    gap: 6px;
+    align-items: center;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .signal-ranking-mobile-sort select,
+  .signal-ranking-mobile-sort button {
+    height: 30px;
+    border: 1px solid #d9dee8;
+    border-radius: 7px;
+    color: #344054;
+    background: #ffffff;
+    font: inherit;
+  }
+
+  .signal-ranking-mobile-sort select {
+    padding: 0 8px;
+  }
+
+  .signal-ranking-table-wrap {
+    display: none;
+  }
+
+  .signal-ranking-mobile-list {
+    display: grid;
+  }
+
+  .signal-ranking-mobile-row {
+    display: grid;
+    grid-template-columns: 34px minmax(130px, 1fr) auto 30px;
+    gap: 4px 8px;
+    align-items: center;
+    min-height: 62px;
+    padding: 7px 10px;
+    border-bottom: 1px solid #edf0f5;
+    border-left: 3px solid #94a3b8;
+  }
+
+  .signal-ranking-mobile-row.buy {
+    border-left-color: #10b981;
+  }
+
+  .signal-ranking-mobile-row.hold {
+    border-left-color: #f59e0b;
+  }
+
+  .signal-ranking-mobile-row.sell {
+    border-left-color: #ef4444;
+  }
+
+  .signal-ranking-mobile-row.stale {
+    background-image: linear-gradient(90deg, rgba(239, 68, 68, 0.045), transparent 45%);
+  }
+
+  .signal-ranking-mobile-rank {
+    grid-row: 1 / 3;
+    color: #98a2b3;
+    font-size: 11px;
+    font-weight: 780;
+  }
+
+  .signal-ranking-mobile-company {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    text-align: left;
+  }
+
+  .signal-ranking-mobile-company strong,
+  .signal-ranking-mobile-company span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .signal-ranking-mobile-company strong {
+    color: #101828;
+    font-size: 12px;
+  }
+
+  .signal-ranking-mobile-company span {
+    color: #667085;
+    font-size: 10px;
+  }
+
+  .signal-ranking-mobile-signal {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .signal-ranking-mobile-meta {
+    display: flex;
+    grid-column: 2 / 4;
+    gap: 5px 10px;
+    min-width: 0;
+    overflow: hidden;
+    color: #667085;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .signal-ranking-mobile-meta strong {
+    overflow: hidden;
+    color: #344054;
+    text-overflow: ellipsis;
+  }
+
+  .signal-ranking-mobile-action {
+    display: grid;
+    grid-column: 4;
+    grid-row: 1 / 3;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #d9dee8;
+    border-radius: 6px;
+    color: #0b55f4;
+    background: #ffffff;
+  }
+
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-sort select,
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-sort button,
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-action {
+    border-color: #334155;
+    color: #d8dee9;
+    background: #101827;
+  }
+
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-row {
+    border-bottom-color: #253248;
+  }
+
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-company strong {
+    color: #f8fafc;
+  }
+
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-company span,
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-meta {
+    color: #a7b0c2;
+  }
+
+  .app-shell[data-theme="dark"] .signal-ranking-mobile-meta strong {
+    color: #d8dee9;
+  }
+}
+
+@media (max-width: 700px) {
+  .signal-ranking-page {
+    padding-top: 14px;
+  }
+
+  .signal-ranking-summary {
+    grid-template-columns: repeat(5, minmax(56px, 1fr));
+  }
+
+  .signal-count-card {
+    padding-inline: 6px;
+  }
+
+  .signal-ranking-controls {
+    display: grid;
+  }
+
+  .signal-ranking-mobile-sort {
+    grid-template-columns: auto minmax(0, 1fr) 32px;
+    width: 100%;
+  }
 }
 
 .signal-health-panel {
@@ -2902,7 +3647,12 @@ h1 {
 
 .left-column {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
+  min-width: 0;
+}
+
+.financials-grid .panel {
   min-width: 0;
 }
 
@@ -3071,6 +3821,31 @@ h1 {
   font-size: 14px;
   font-weight: 760;
   text-align: right;
+}
+
+.financial-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 20px 20px;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.financial-source-link:hover,
+.financial-source-link:focus-visible {
+  color: #912018;
+}
+
+.app-shell[data-theme="dark"] .financial-source-link {
+  color: #fca5a5;
+}
+
+.app-shell[data-theme="dark"] .financial-source-link:hover,
+.app-shell[data-theme="dark"] .financial-source-link:focus-visible,
+.app-shell[data-theme="dark"] .sync-message.error {
+  color: #fecaca;
 }
 
 .financial-table {
@@ -3397,6 +4172,7 @@ h1 {
 
 .chart-panel {
   overflow: hidden;
+  container-type: inline-size;
 }
 
 .chart-header {
@@ -3430,12 +4206,57 @@ h1 {
   padding: 0 16px;
 }
 
+.chart-type-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+}
+
 .icon-button.small {
   width: 36px;
   height: 36px;
   border: 1px solid #d9dee8;
   border-radius: 8px;
   background: #ffffff;
+}
+
+@container (max-width: 700px) {
+  .chart-header {
+    gap: 8px;
+    padding: 14px 14px 8px;
+  }
+
+  .chart-header h2 {
+    font-size: 15px;
+  }
+
+  .chart-header .range-tabs {
+    flex: 1 1 auto;
+    gap: 2px;
+    min-width: 0;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .chart-header .range-tabs button {
+    min-width: 0;
+    padding: 5px 4px;
+    font-size: 10px;
+  }
+
+  .chart-header > .select-button {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .chart-header > .chart-type-button {
+    width: 30px;
+    min-width: 30px;
+    padding: 0;
+  }
 }
 
 .chart-wrap {
@@ -5575,4 +6396,95 @@ h1 {
     align-items: stretch;
     flex-direction: column;
   }
+}
+
+/* Keep the compact Signals workspace usable on narrow phones. */
+@media (max-width: 700px) {
+  .app-shell {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: 14px 4px 18px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0 0 18px;
+  }
+
+  .nav-item,
+  .collapse-button {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    min-height: 58px;
+    padding: 0 10px;
+  }
+
+  .topbar .avatar,
+  .topbar > svg {
+    display: none;
+  }
+
+  .search-field {
+    padding: 8px 9px;
+  }
+
+  .search-field kbd {
+    display: none;
+  }
+
+  .signal-ranking-page {
+    padding-inline: 10px;
+  }
+
+  .signal-ranking-summary {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .signal-count-card {
+    padding-inline: 5px;
+  }
+
+  .signal-ranking-mobile-row {
+    grid-template-columns: 28px minmax(84px, 1fr) auto 28px;
+    gap-inline: 6px;
+    padding-inline: 7px;
+  }
+}
+
+/* Keep positive and successful states legible on dark surfaces. */
+.app-shell[data-theme="dark"] .search-result em,
+.app-shell[data-theme="dark"] .search-message.success,
+.app-shell[data-theme="dark"] .sync-message.success,
+.app-shell[data-theme="dark"] .up,
+.app-shell[data-theme="dark"] .price-row span,
+.app-shell[data-theme="dark"] .performance-row strong,
+.app-shell[data-theme="dark"] .stock-signal-card.buy .signal-card-heading strong,
+.app-shell[data-theme="dark"] .signal-ranking-signal.buy .signal-ranking-heading strong,
+.app-shell[data-theme="dark"] .signal-ranking-number.up,
+.app-shell[data-theme="dark"] .signal-ranking-mobile-meta .up,
+.app-shell[data-theme="dark"] .portfolio-insight-card.up p,
+.app-shell[data-theme="dark"] .snapshot-history-top span.up,
+.app-shell[data-theme="dark"] .brief-point-section.strength h3 svg,
+.app-shell[data-theme="dark"] .research-highlight svg,
+.app-shell[data-theme="dark"] .check-row svg,
+.app-shell[data-theme="dark"] .signal-driver-panel.positive li::marker {
+  color: #86efac;
+}
+
+.app-shell[data-theme="dark"] .data-source-card-header span.success,
+.app-shell[data-theme="dark"] .data-event-row.success > span,
+.app-shell[data-theme="dark"] .signal-rating-badge.buy,
+.app-shell[data-theme="dark"] .portfolio-status-pill.fresh,
+.app-shell[data-theme="dark"] .portfolio-card-heading em.fresh {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.16);
 }

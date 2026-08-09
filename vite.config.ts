@@ -1,6 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { localAdminPlugin } from "./local-admin/plugin";
 
 type LocalAiBridgeRequest = {
   ticker: string;
@@ -178,6 +179,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      localAdminPlugin(),
       {
         name: "local-ai-bridge",
         configureServer(server) {

@@ -1,9 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
-  ...authTables,
   stocks: defineTable({
     ticker: v.string(),
     companyName: v.string(),
@@ -133,9 +131,11 @@ export default defineSchema({
     title: v.string(),
     body: v.string(),
     tag: v.string(),
+    generatedBy: v.optional(v.literal("admin-ai-workflow")),
     createdAt: v.number(),
   })
     .index("by_ticker", ["ticker"])
+    .index("by_ticker_and_generatedBy", ["ticker", "generatedBy"])
     .index("by_ticker_createdAt", ["ticker", "createdAt"]),
 
   researchItems: defineTable({

@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import {
   internalMutation,
   internalQuery,
-  mutation,
   query,
   type MutationCtx,
 } from "./_generated/server";
@@ -105,13 +104,6 @@ const recordEvent = async (
   return true;
 };
 
-export const recordClientEvent = mutation({
-  args: dataSourceEventArgs,
-  handler: async (ctx, args) => {
-    return await recordEvent(ctx, args);
-  },
-});
-
 export const recordInternalEvent = internalMutation({
   args: dataSourceEventArgs,
   handler: async (ctx, args) => {
@@ -120,9 +112,10 @@ export const recordInternalEvent = internalMutation({
 });
 
 export const healthDashboard = query({
-  args: { dateKey: v.optional(v.string()) },
+  args: { dateKey: v.string() },
+  returns: v.any(),
   handler: async (ctx, args) => {
-    const dateKey = args.dateKey ?? dateKeyFor(Date.now());
+    const dateKey = args.dateKey;
     const [usage, events, stocks, signals] = await Promise.all([
       ctx.db
         .query("dailyApiUsage")
@@ -141,8 +134,16 @@ export const healthDashboard = query({
 
     return {
       dateKey,
-      usage,
-      events,
+      usage: usage.map((item) => ({
+        ...item,
+        lastMessage: redactSensitiveText(item.lastMessage),
+        lastRequestUrl: redactSensitiveText(item.lastRequestUrl),
+      })),
+      events: events.map((item) => ({
+        ...item,
+        message: redactSensitiveText(item.message),
+        requestUrl: redactSensitiveText(item.requestUrl),
+      })),
       signalHealth: {
         trackedStocks: stocks.length,
         signalCount: signals.length,

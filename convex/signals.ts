@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import {
-  action,
   internalAction,
   internalMutation,
   internalQuery,
@@ -816,13 +815,13 @@ export const recalculateTickerInternal = internalAction({
     await runSignalRefresh(ctx, args.ticker, false),
 });
 
-export const refreshTicker = action({
+export const refreshTicker = internalAction({
   args: { ticker: v.string() },
   handler: async (ctx, args): Promise<SignalRefreshResult> =>
     await runSignalRefresh(ctx, args.ticker, true),
 });
 
-export const refreshUniverse = action({
+export const refreshUniverse = internalAction({
   args: {},
   handler: async (ctx) => {
     const tickers = (await ctx.runQuery(
@@ -846,7 +845,7 @@ export const refreshUniverse = action({
   },
 });
 
-export const recalculateUniverse = action({
+export const recalculateUniverse = internalAction({
   args: {},
   handler: async (ctx) => {
     const tickers = (await ctx.runQuery(
