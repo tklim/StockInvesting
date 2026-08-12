@@ -20,7 +20,7 @@
   dialog{width:calc(100vw - 24px);height:calc(100vh - 24px);max-width:none;max-height:none;padding:0;border:0;border-radius:16px;background:#111827;overflow:hidden}dialog::backdrop{background:rgba(3,8,18,.82)}.viewer-bar{position:absolute;inset:0 0 auto 0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(17,24,39,.9);color:#fff}.viewer-bar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.controls{display:flex;gap:7px}.controls button{border:1px solid #667085;background:#263246;color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer}.viewport{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}#viewerImage{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}
   @media(min-width:1500px){.ranking-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rank-card{padding:12px}.chips{margin:8px 0;gap:5px}.chips span{padding:5px 7px;font-size:.72rem}}@media(min-width:2100px){.ranking-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.ranking-grid{grid-template-columns:1fr}}
 </style></head><body>
-<header><a class="master-link" href="dashboard.html">← Master dashboard</a><h1>Excess Annualized Ranking</h1><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated 2026-08-11 19:20:55</p><p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-11 16:11:01 — ranking computed from 2645 run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years"><button class="tab" type="button" role="tab" id="source-tab-mixed" data-source="mixed" aria-controls="source-panel-mixed" aria-selected="true">Mixed (13)</button><button class="tab" type="button" role="tab" id="source-tab-20y" data-source="20y" aria-controls="source-panel-20y" aria-selected="false">20 years (10)</button><button class="tab" type="button" role="tab" id="source-tab-10y" data-source="10y" aria-controls="source-panel-10y" aria-selected="false">10 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-5y" data-source="5y" aria-controls="source-panel-5y" aria-selected="false">5 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-4y" data-source="4y" aria-controls="source-panel-4y" aria-selected="false">4 years (4)</button><button class="tab" type="button" role="tab" id="source-tab-3y" data-source="3y" aria-controls="source-panel-3y" aria-selected="false">3 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-other" data-source="other" aria-controls="source-panel-other" aria-selected="false">Other (3)</button></nav></header><main><section role="tabpanel" class="source-panel" id="source-panel-mixed" data-source-panel="mixed" aria-labelledby="source-tab-mixed" ><p class="group-note">Best non-zero excess-annualized run per ticker regardless of source or scored duration. 1770 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for Mixed"><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="all" aria-controls="run-panel-mixed-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="1y" aria-controls="run-panel-mixed-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="2y" aria-controls="run-panel-mixed-2y" aria-selected="false">2Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="3y" aria-controls="run-panel-mixed-3y" aria-selected="false">3Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="4y" aria-controls="run-panel-mixed-4y" aria-selected="false">4Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="7y" aria-controls="run-panel-mixed-7y" aria-selected="false">7Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="8y" aria-controls="run-panel-mixed-8y" aria-selected="false">8Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="9y" aria-controls="run-panel-mixed-9y" aria-selected="false">9Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="11y" aria-controls="run-panel-mixed-11y" aria-selected="false">11Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="12y" aria-controls="run-panel-mixed-12y" aria-selected="false">12Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="13y" aria-controls="run-panel-mixed-13y" aria-selected="false">13Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="14y" aria-controls="run-panel-mixed-14y" aria-selected="false">14Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="15y" aria-controls="run-panel-mixed-15y" aria-selected="false">15Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="16y" aria-controls="run-panel-mixed-16y" aria-selected="false">16Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="17y" aria-controls="run-panel-mixed-17y" aria-selected="false">17Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="18y" aria-controls="run-panel-mixed-18y" aria-selected="false">18Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="19y" aria-controls="run-panel-mixed-19y" aria-selected="false">19Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-all" data-run-panel="all" ><div class="ranking-grid"><article class="rank-card">
+<header><a class="master-link" href="dashboard.html">← Master dashboard</a><h1>Excess Annualized Ranking</h1><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated 2026-08-12 21:21:27</p><p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-12 17:12:17 — ranking computed from 2825 run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years"><button class="tab" type="button" role="tab" id="source-tab-mixed" data-source="mixed" aria-controls="source-panel-mixed" aria-selected="true">Mixed (13)</button><button class="tab" type="button" role="tab" id="source-tab-20y" data-source="20y" aria-controls="source-panel-20y" aria-selected="false">20 years (10)</button><button class="tab" type="button" role="tab" id="source-tab-10y" data-source="10y" aria-controls="source-panel-10y" aria-selected="false">10 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-5y" data-source="5y" aria-controls="source-panel-5y" aria-selected="false">5 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-4y" data-source="4y" aria-controls="source-panel-4y" aria-selected="false">4 years (4)</button><button class="tab" type="button" role="tab" id="source-tab-3y" data-source="3y" aria-controls="source-panel-3y" aria-selected="false">3 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-other" data-source="other" aria-controls="source-panel-other" aria-selected="false">Other (3)</button></nav></header><main><section role="tabpanel" class="source-panel" id="source-panel-mixed" data-source-panel="mixed" aria-labelledby="source-tab-mixed" ><p class="group-note">Best non-zero excess-annualized run per ticker regardless of source or scored duration. 1890 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for Mixed"><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="all" aria-controls="run-panel-mixed-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="1y" aria-controls="run-panel-mixed-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="2y" aria-controls="run-panel-mixed-2y" aria-selected="false">2Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="3y" aria-controls="run-panel-mixed-3y" aria-selected="false">3Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="4y" aria-controls="run-panel-mixed-4y" aria-selected="false">4Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="7y" aria-controls="run-panel-mixed-7y" aria-selected="false">7Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="8y" aria-controls="run-panel-mixed-8y" aria-selected="false">8Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="9y" aria-controls="run-panel-mixed-9y" aria-selected="false">9Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="11y" aria-controls="run-panel-mixed-11y" aria-selected="false">11Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="12y" aria-controls="run-panel-mixed-12y" aria-selected="false">12Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="13y" aria-controls="run-panel-mixed-13y" aria-selected="false">13Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="14y" aria-controls="run-panel-mixed-14y" aria-selected="false">14Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="15y" aria-controls="run-panel-mixed-15y" aria-selected="false">15Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="16y" aria-controls="run-panel-mixed-16y" aria-selected="false">16Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="17y" aria-controls="run-panel-mixed-17y" aria-selected="false">17Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="18y" aria-controls="run-panel-mixed-18y" aria-selected="false">18Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="19y" aria-controls="run-panel-mixed-19y" aria-selected="false">19Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-all" data-run-panel="all" ><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>MSFT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+20.89%</strong></div>
               </div>
@@ -37,21 +37,36 @@
               </button>
             </article><article class="rank-card">
               <div class="card-head"><span class="rank">#2</span><h2>META</h2>
-                <div class="headline pos"><small>Excess annualized</small><strong>+15.63%</strong></div>
+                <div class="headline pos"><small>Excess annualized</small><strong>+18.43%</strong></div>
               </div>
               <div class="chips">
-                <span>Source years <b>5.0Y</b></span>
-                <span>Run years <b>4.0Y</b></span>
-                <span>Strategy ann. <b>+55.00%</b></span>
-                <span>Buy &amp; hold ann. <b>+39.36%</b></span>
-                <span>Through <b>2026-07-27</b></span>
-                <span>Winning run <b>1Y/9M generic</b></span>
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>-4.24%</b></span>
+                <span>Buy &amp; hold ann. <b>-22.67%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
               </div>
-              <button class="chart-button" type="button" data-src="../charts/META-1.0Y-9M-generic-ga10-tuned-20260729-235713.png" data-title="META" aria-label="Open zoomable chart for META">
-                <img src="../charts/META-1.0Y-9M-generic-ga10-tuned-20260729-235713.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              <button class="chart-button" type="button" data-src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#3</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#3</span><h2>GOOGL</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+13.14%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+91.11%</b></span>
+                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
+                <img src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#4</span><h2>TSLA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+11.84%</strong></div>
               </div>
               <div class="chips">
@@ -66,7 +81,7 @@
                 <img src="../charts/TSLA-1.0Y-9M-generic-ga10-tuned-20260729-235428.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#4</span><h2>AMZN</h2>
+              <div class="card-head"><span class="rank">#5</span><h2>AMZN</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+10.99%</strong></div>
               </div>
               <div class="chips">
@@ -81,22 +96,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#5</span><h2>GOOGL</h2>
-                <div class="headline pos"><small>Excess annualized</small><strong>+7.53%</strong></div>
+              <div class="card-head"><span class="rank">#6</span><h2>JNJ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
               </div>
               <div class="chips">
-                <span>Source years <b>5.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+48.79%</b></span>
-                <span>Buy &amp; hold ann. <b>+41.26%</b></span>
-                <span>Through <b>2026-07-30</b></span>
-                <span>Winning run <b>3Y/3M generic</b></span>
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+60.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+53.64%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
               </div>
-              <button class="chart-button" type="button" data-src="../charts/GOOGL-5Y-3.0Y-3M-generic-ga10-tuned-20260801-002041.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
-                <img src="../charts/GOOGL-5Y-3.0Y-3M-generic-ga10-tuned-20260801-002041.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#6</span><h2>AAPL</h2>
+              <div class="card-head"><span class="rank">#7</span><h2>AAPL</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+6.26%</strong></div>
               </div>
               <div class="chips">
@@ -111,7 +126,7 @@
                 <img src="../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png" alt="Strategy chart for AAPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#7</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#8</span><h2>NVDA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.21%</strong></div>
               </div>
               <div class="chips">
@@ -126,7 +141,7 @@
                 <img src="../charts/NVDA-1.0Y-6M-generic-bh-reachable-ga10-tuned-20260726-220520.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#8</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#9</span><h2>JPM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.12%</strong></div>
               </div>
               <div class="chips">
@@ -139,21 +154,6 @@
               </div>
               <button class="chart-button" type="button" data-src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" data-title="JPM" aria-label="Open zoomable chart for JPM">
                 <img src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#9</span><h2>JNJ</h2>
-                <div class="headline pos"><small>Excess annualized</small><strong>+4.96%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>5.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+37.03%</b></span>
-                <span>Buy &amp; hold ann. <b>+32.07%</b></span>
-                <span>Through <b>2026-07-21</b></span>
-                <span>Winning run <b>3Y/3M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/JNJ-3.0Y-3M-generic-ga10-tuned-20260728-201608.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
-                <img src="../charts/JNJ-3.0Y-3M-generic-ga10-tuned-20260728-201608.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
               <div class="card-head"><span class="rank">#10</span><h2>TSM</h2>
@@ -186,7 +186,22 @@
                 <img src="../charts/V-4Y-3.0Y-3M-generic-ga10-tuned-20260726-191339.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>QQQ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+28.14%</b></span>
+                <span>Buy &amp; hold ann. <b>+27.46%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
+                <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#13</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-0.47%</strong></div>
               </div>
               <div class="chips">
@@ -199,21 +214,6 @@
               </div>
               <button class="chart-button" type="button" data-src="../charts/SPY-5Y-1.0Y-12M-generic-ga10-tuned-20260803-113636.png" data-title="SPY" aria-label="Open zoomable chart for SPY">
                 <img src="../charts/SPY-5Y-1.0Y-12M-generic-ga10-tuned-20260803-113636.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#13</span><h2>QQQ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-0.97%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>5.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+23.59%</b></span>
-                <span>Buy &amp; hold ann. <b>+24.56%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>3Y/9M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/QQQ-5Y-3.0Y-9M-generic-ga10-tuned-20260803-153449.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
-                <img src="../charts/QQQ-5Y-3.0Y-9M-generic-ga10-tuned-20260803-153449.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article></div></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-1y" data-run-panel="1y" hidden><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>MSFT</h2>
@@ -231,7 +231,37 @@
                 <img src="../charts/MSFT-3Y-2.0Y-9M-generic-ga10-tuned-20260803-192021.png" alt="Strategy chart for MSFT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#2</span><h2>AMZN</h2>
+              <div class="card-head"><span class="rank">#2</span><h2>META</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+18.43%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>-4.24%</b></span>
+                <span>Buy &amp; hold ann. <b>-22.67%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#3</span><h2>GOOGL</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+13.14%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+91.11%</b></span>
+                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
+                <img src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#4</span><h2>AMZN</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+10.99%</strong></div>
               </div>
               <div class="chips">
@@ -246,7 +276,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#3</span><h2>AAPL</h2>
+              <div class="card-head"><span class="rank">#5</span><h2>JNJ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+60.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+53.64%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#6</span><h2>AAPL</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+6.26%</strong></div>
               </div>
               <div class="chips">
@@ -261,7 +306,7 @@
                 <img src="../charts/AAPL-4Y-3.0Y-12M-generic-ga10-tuned-20260724-215113.png" alt="Strategy chart for AAPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#4</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#7</span><h2>V</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.05%</strong></div>
               </div>
               <div class="chips">
@@ -276,7 +321,7 @@
                 <img src="../charts/V-4Y-3.0Y-3M-generic-ga10-tuned-20260726-191339.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#5</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#8</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-2.40%</strong></div>
               </div>
               <div class="chips">
@@ -291,22 +336,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-9M-generic-ga10-tuned-20260811-153736.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#6</span><h2>META</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-3.16%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>-33.33%</b></span>
-                <span>Buy &amp; hold ann. <b>-30.16%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>2Y/6M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" data-title="META" aria-label="Open zoomable chart for META">
-                <img src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#7</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#9</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.20%</strong></div>
               </div>
               <div class="chips">
@@ -321,7 +351,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-12M-generic-ga10-tuned-20260726-222007.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#8</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.89%</strong></div>
               </div>
               <div class="chips">
@@ -336,7 +366,7 @@
                 <img src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#9</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#11</span><h2>QQQ</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.22%</strong></div>
               </div>
               <div class="chips">
@@ -351,7 +381,7 @@
                 <img src="../charts/QQQ-3Y-2.0Y-12M-generic-ga10-tuned-20260811-154837.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>TSLA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.39%</strong></div>
               </div>
               <div class="chips">
@@ -366,7 +396,7 @@
                 <img src="../charts/TSLA-3Y-2.0Y-6M-generic-ga10-tuned-20260803-151418.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#13</span><h2>JPM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-13.01%</strong></div>
               </div>
               <div class="chips">
@@ -379,36 +409,6 @@
               </div>
               <button class="chart-button" type="button" data-src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" data-title="JPM" aria-label="Open zoomable chart for JPM">
                 <img src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>GOOGL</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-16.63%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>+61.33%</b></span>
-                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
-                <span>Through <b>2026-08-10</b></span>
-                <span>Winning run <b>2Y/12M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-12M-generic-ga10-tuned-20260811-155147.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
-                <img src="../charts/GOOGL-3Y-2.0Y-12M-generic-ga10-tuned-20260811-155147.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#13</span><h2>JNJ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-24.95%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>+34.47%</b></span>
-                <span>Buy &amp; hold ann. <b>+59.42%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>2Y/12M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-12M-generic-ga10-tuned-20260802-223405.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
-                <img src="../charts/JNJ-3Y-2.0Y-12M-generic-ga10-tuned-20260802-223405.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article></div></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-2y" data-run-panel="2y" hidden><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>META</h2>
@@ -502,18 +502,18 @@
               </button>
             </article><article class="rank-card">
               <div class="card-head"><span class="rank">#7</span><h2>QQQ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-0.97%</strong></div>
+                <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
               </div>
               <div class="chips">
-                <span>Source years <b>5.0Y</b></span>
+                <span>Source years <b>3.0Y</b></span>
                 <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+23.59%</b></span>
-                <span>Buy &amp; hold ann. <b>+24.56%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>3Y/9M generic</b></span>
+                <span>Strategy ann. <b>+28.14%</b></span>
+                <span>Buy &amp; hold ann. <b>+27.46%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/6M generic</b></span>
               </div>
-              <button class="chart-button" type="button" data-src="../charts/QQQ-5Y-3.0Y-9M-generic-ga10-tuned-20260803-153449.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
-                <img src="../charts/QQQ-5Y-3.0Y-9M-generic-ga10-tuned-20260803-153449.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
+                <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
               <div class="card-head"><span class="rank">#8</span><h2>AMZN</h2>
@@ -4265,7 +4265,7 @@
               <button class="chart-button" type="button" data-src="../charts/NVDA-4Y-1.0Y-12M-generic-ga10-tuned-20260726-222117.png" data-title="NVDA" aria-label="Open zoomable chart for NVDA">
                 <img src="../charts/NVDA-4Y-1.0Y-12M-generic-ga10-tuned-20260726-222117.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
-            </article></div></div></section><section role="tabpanel" class="source-panel" id="source-panel-3y" data-source-panel="3y" aria-labelledby="source-tab-3y" hidden><p class="group-note">Best non-zero excess-annualized run per ticker from approximately 3 years source data. 399 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for 3 years"><button class="run-tab" type="button" role="tab" data-source="3y" data-run="all" aria-controls="run-panel-3y-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="1y" aria-controls="run-panel-3y-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="2y" aria-controls="run-panel-3y-2y" aria-selected="false">2Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-3y-all" data-run-panel="all" ><div class="ranking-grid"><article class="rank-card">
+            </article></div></div></section><section role="tabpanel" class="source-panel" id="source-panel-3y" data-source-panel="3y" aria-labelledby="source-tab-3y" hidden><p class="group-note">Best non-zero excess-annualized run per ticker from approximately 3 years source data. 519 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for 3 years"><button class="run-tab" type="button" role="tab" data-source="3y" data-run="all" aria-controls="run-panel-3y-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="1y" aria-controls="run-panel-3y-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="2y" aria-controls="run-panel-3y-2y" aria-selected="false">2Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-3y-all" data-run-panel="all" ><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>MSFT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+20.89%</strong></div>
               </div>
@@ -4281,7 +4281,37 @@
                 <img src="../charts/MSFT-3Y-2.0Y-9M-generic-ga10-tuned-20260803-192021.png" alt="Strategy chart for MSFT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#2</span><h2>AMZN</h2>
+              <div class="card-head"><span class="rank">#2</span><h2>META</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+18.43%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>-4.24%</b></span>
+                <span>Buy &amp; hold ann. <b>-22.67%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#3</span><h2>GOOGL</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+13.14%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+91.11%</b></span>
+                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
+                <img src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#4</span><h2>AMZN</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+10.99%</strong></div>
               </div>
               <div class="chips">
@@ -4296,7 +4326,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#3</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#5</span><h2>JNJ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+60.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+53.64%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#6</span><h2>JPM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.12%</strong></div>
               </div>
               <div class="chips">
@@ -4311,7 +4356,22 @@
                 <img src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#4</span><h2>AAPL</h2>
+              <div class="card-head"><span class="rank">#7</span><h2>QQQ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+28.14%</b></span>
+                <span>Buy &amp; hold ann. <b>+27.46%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
+                <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#8</span><h2>AAPL</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.03%</strong></div>
               </div>
               <div class="chips">
@@ -4326,7 +4386,7 @@
                 <img src="../charts/AAPL-3Y-2.0Y-12M-generic-ga10-tuned-20260725-153920.png" alt="Strategy chart for AAPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#5</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#9</span><h2>V</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-0.18%</strong></div>
               </div>
               <div class="chips">
@@ -4341,7 +4401,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260726-155536.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#6</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-2.40%</strong></div>
               </div>
               <div class="chips">
@@ -4356,22 +4416,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-9M-generic-ga10-tuned-20260811-153736.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#7</span><h2>META</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-3.16%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>-33.33%</b></span>
-                <span>Buy &amp; hold ann. <b>-30.16%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>2Y/6M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" data-title="META" aria-label="Open zoomable chart for META">
-                <img src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#8</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#11</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.20%</strong></div>
               </div>
               <div class="chips">
@@ -4386,7 +4431,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-12M-generic-ga10-tuned-20260726-222007.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#9</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.89%</strong></div>
               </div>
               <div class="chips">
@@ -4399,51 +4444,6 @@
               </div>
               <button class="chart-button" type="button" data-src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" data-title="SPY" aria-label="Open zoomable chart for SPY">
                 <img src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>GOOGL</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-6.56%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+33.54%</b></span>
-                <span>Buy &amp; hold ann. <b>+40.10%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/6M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-1.0Y-6M-generic-ga10-tuned-20260803-144754.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
-                <img src="../charts/GOOGL-3Y-1.0Y-6M-generic-ga10-tuned-20260803-144754.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>QQQ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-7.07%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+14.43%</b></span>
-                <span>Buy &amp; hold ann. <b>+21.50%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/9M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-9M-generic-ga10-tuned-20260803-144928.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
-                <img src="../charts/QQQ-3Y-1.0Y-9M-generic-ga10-tuned-20260803-144928.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>JNJ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-12.27%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+18.77%</b></span>
-                <span>Buy &amp; hold ann. <b>+31.04%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/6M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-1.0Y-6M-generic-ga10-tuned-20260802-220015.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
-                <img src="../charts/JNJ-3Y-1.0Y-6M-generic-ga10-tuned-20260802-220015.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
               <div class="card-head"><span class="rank">#13</span><h2>TSLA</h2>
@@ -4476,7 +4476,37 @@
                 <img src="../charts/MSFT-3Y-2.0Y-9M-generic-ga10-tuned-20260803-192021.png" alt="Strategy chart for MSFT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#2</span><h2>AMZN</h2>
+              <div class="card-head"><span class="rank">#2</span><h2>META</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+18.43%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>-4.24%</b></span>
+                <span>Buy &amp; hold ann. <b>-22.67%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-3Y-2.0Y-6M-generic-ga10-tuned-20260811-221525.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#3</span><h2>GOOGL</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+13.14%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+91.11%</b></span>
+                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
+                <img src="../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#4</span><h2>AMZN</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+10.99%</strong></div>
               </div>
               <div class="chips">
@@ -4491,7 +4521,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#3</span><h2>AAPL</h2>
+              <div class="card-head"><span class="rank">#5</span><h2>JNJ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+60.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+53.64%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#6</span><h2>AAPL</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.03%</strong></div>
               </div>
               <div class="chips">
@@ -4506,7 +4551,7 @@
                 <img src="../charts/AAPL-3Y-2.0Y-12M-generic-ga10-tuned-20260725-153920.png" alt="Strategy chart for AAPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#4</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#7</span><h2>V</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-0.18%</strong></div>
               </div>
               <div class="chips">
@@ -4521,7 +4566,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260726-155536.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#5</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#8</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-2.40%</strong></div>
               </div>
               <div class="chips">
@@ -4536,22 +4581,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-9M-generic-ga10-tuned-20260811-153736.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#6</span><h2>META</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-3.16%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>-33.33%</b></span>
-                <span>Buy &amp; hold ann. <b>-30.16%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>2Y/6M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" data-title="META" aria-label="Open zoomable chart for META">
-                <img src="../charts/META-3Y-2Y-6M-generic-ga10-tuned-20260801-171929.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#7</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#9</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.20%</strong></div>
               </div>
               <div class="chips">
@@ -4566,7 +4596,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-12M-generic-ga10-tuned-20260726-222007.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#8</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.89%</strong></div>
               </div>
               <div class="chips">
@@ -4581,7 +4611,7 @@
                 <img src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#9</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#11</span><h2>QQQ</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.22%</strong></div>
               </div>
               <div class="chips">
@@ -4596,7 +4626,7 @@
                 <img src="../charts/QQQ-3Y-2.0Y-12M-generic-ga10-tuned-20260811-154837.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>TSLA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.39%</strong></div>
               </div>
               <div class="chips">
@@ -4611,7 +4641,7 @@
                 <img src="../charts/TSLA-3Y-2.0Y-6M-generic-ga10-tuned-20260803-151418.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#13</span><h2>JPM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-13.01%</strong></div>
               </div>
               <div class="chips">
@@ -4625,38 +4655,23 @@
               <button class="chart-button" type="button" data-src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" data-title="JPM" aria-label="Open zoomable chart for JPM">
                 <img src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>GOOGL</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-16.63%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>+61.33%</b></span>
-                <span>Buy &amp; hold ann. <b>+77.96%</b></span>
-                <span>Through <b>2026-08-10</b></span>
-                <span>Winning run <b>2Y/12M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/GOOGL-3Y-2.0Y-12M-generic-ga10-tuned-20260811-155147.png" data-title="GOOGL" aria-label="Open zoomable chart for GOOGL">
-                <img src="../charts/GOOGL-3Y-2.0Y-12M-generic-ga10-tuned-20260811-155147.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#13</span><h2>JNJ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-24.95%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>1.0Y</b></span>
-                <span>Strategy ann. <b>+34.47%</b></span>
-                <span>Buy &amp; hold ann. <b>+59.42%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>2Y/12M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-2.0Y-12M-generic-ga10-tuned-20260802-223405.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
-                <img src="../charts/JNJ-3Y-2.0Y-12M-generic-ga10-tuned-20260802-223405.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
             </article></div></div><div role="tabpanel" class="run-panel" id="run-panel-3y-2y" data-run-panel="2y" hidden><div class="ranking-grid"><article class="rank-card">
-              <div class="card-head"><span class="rank">#1</span><h2>MSFT</h2>
+              <div class="card-head"><span class="rank">#1</span><h2>META</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+12.45%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+19.99%</b></span>
+                <span>Buy &amp; hold ann. <b>+7.54%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/META-3Y-1.0Y-6M-generic-ga10-tuned-20260811-214222.png" data-title="META" aria-label="Open zoomable chart for META">
+                <img src="../charts/META-3Y-1.0Y-6M-generic-ga10-tuned-20260811-214222.png" alt="Strategy chart for META" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#2</span><h2>MSFT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+6.16%</strong></div>
               </div>
               <div class="chips">
@@ -4671,7 +4686,7 @@
                 <img src="../charts/MSFT-3Y-1.0Y-3M-generic-ga10-tuned-20260807-020924.png" alt="Strategy chart for MSFT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#2</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#3</span><h2>JPM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.12%</strong></div>
               </div>
               <div class="chips">
@@ -4686,7 +4701,22 @@
                 <img src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#3</span><h2>AAPL</h2>
+              <div class="card-head"><span class="rank">#4</span><h2>QQQ</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+28.14%</b></span>
+                <span>Buy &amp; hold ann. <b>+27.46%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
+                <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#5</span><h2>AAPL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-0.65%</strong></div>
               </div>
               <div class="chips">
@@ -4701,7 +4731,22 @@
                 <img src="../charts/AAPL-3Y-1.0Y-6M-generic-ga10-tuned-20260725-184813.png" alt="Strategy chart for AAPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#4</span><h2>GOOGL</h2>
+              <div class="card-head"><span class="rank">#6</span><h2>JNJ</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-5.50%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+25.77%</b></span>
+                <span>Buy &amp; hold ann. <b>+31.27%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/3M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-1.0Y-3M-generic-ga10-tuned-20260811-211138.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
+                <img src="../charts/JNJ-3Y-1.0Y-3M-generic-ga10-tuned-20260811-211138.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#7</span><h2>GOOGL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.56%</strong></div>
               </div>
               <div class="chips">
@@ -4716,22 +4761,22 @@
                 <img src="../charts/GOOGL-3Y-1.0Y-6M-generic-ga10-tuned-20260803-144754.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#5</span><h2>QQQ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-7.07%</strong></div>
+              <div class="card-head"><span class="rank">#8</span><h2>SPY</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-6.68%</strong></div>
               </div>
               <div class="chips">
                 <span>Source years <b>3.0Y</b></span>
                 <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+14.43%</b></span>
-                <span>Buy &amp; hold ann. <b>+21.50%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/9M generic</b></span>
+                <span>Strategy ann. <b>+15.34%</b></span>
+                <span>Buy &amp; hold ann. <b>+22.02%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/12M generic</b></span>
               </div>
-              <button class="chart-button" type="button" data-src="../charts/QQQ-3Y-1.0Y-9M-generic-ga10-tuned-20260803-144928.png" data-title="QQQ" aria-label="Open zoomable chart for QQQ">
-                <img src="../charts/QQQ-3Y-1.0Y-9M-generic-ga10-tuned-20260803-144928.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              <button class="chart-button" type="button" data-src="../charts/SPY-3Y-1.0Y-12M-generic-ga10-tuned-20260811-215104.png" data-title="SPY" aria-label="Open zoomable chart for SPY">
+                <img src="../charts/SPY-3Y-1.0Y-12M-generic-ga10-tuned-20260811-215104.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#6</span><h2>AMZN</h2>
+              <div class="card-head"><span class="rank">#9</span><h2>AMZN</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-10.10%</strong></div>
               </div>
               <div class="chips">
@@ -4746,22 +4791,7 @@
                 <img src="../charts/AMZN-3Y-1.0Y-3M-generic-ga10-tuned-20260802-205339.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#7</span><h2>SPY</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-10.98%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+6.86%</b></span>
-                <span>Buy &amp; hold ann. <b>+17.84%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/3M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/SPY-3Y-1.0Y-3M-generic-ga10-tuned-20260803-153638.png" data-title="SPY" aria-label="Open zoomable chart for SPY">
-                <img src="../charts/SPY-3Y-1.0Y-3M-generic-ga10-tuned-20260803-153638.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#8</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-11.46%</strong></div>
               </div>
               <div class="chips">
@@ -4776,7 +4806,7 @@
                 <img src="../charts/TSM-3Y-1.0Y-9M-generic-ga10-tuned-20260811-145359.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#9</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#11</span><h2>V</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.07%</strong></div>
               </div>
               <div class="chips">
@@ -4791,37 +4821,22 @@
                 <img src="../charts/V-3Y-1.0Y-3M-generic-ga10-tuned-20260726-153537.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>JNJ</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-12.27%</strong></div>
+              <div class="card-head"><span class="rank">#12</span><h2>TSLA</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-12.96%</strong></div>
               </div>
               <div class="chips">
                 <span>Source years <b>3.0Y</b></span>
                 <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+18.77%</b></span>
-                <span>Buy &amp; hold ann. <b>+31.04%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/6M generic</b></span>
+                <span>Strategy ann. <b>+16.28%</b></span>
+                <span>Buy &amp; hold ann. <b>+29.24%</b></span>
+                <span>Through <b>2026-08-10</b></span>
+                <span>Winning run <b>1Y/3M generic</b></span>
               </div>
-              <button class="chart-button" type="button" data-src="../charts/JNJ-3Y-1.0Y-6M-generic-ga10-tuned-20260802-220015.png" data-title="JNJ" aria-label="Open zoomable chart for JNJ">
-                <img src="../charts/JNJ-3Y-1.0Y-6M-generic-ga10-tuned-20260802-220015.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              <button class="chart-button" type="button" data-src="../charts/TSLA-3Y-1.0Y-3M-generic-ga10-tuned-20260811-231643.png" data-title="TSLA" aria-label="Open zoomable chart for TSLA">
+                <img src="../charts/TSLA-3Y-1.0Y-3M-generic-ga10-tuned-20260811-231643.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>TSLA</h2>
-                <div class="headline neg"><small>Excess annualized</small><strong>-14.74%</strong></div>
-              </div>
-              <div class="chips">
-                <span>Source years <b>3.0Y</b></span>
-                <span>Run years <b>2.0Y</b></span>
-                <span>Strategy ann. <b>+1.07%</b></span>
-                <span>Buy &amp; hold ann. <b>+15.81%</b></span>
-                <span>Through <b>2026-07-31</b></span>
-                <span>Winning run <b>1Y/9M generic</b></span>
-              </div>
-              <button class="chart-button" type="button" data-src="../charts/TSLA-3Y-1.0Y-9M-generic-ga10-tuned-20260803-145152.png" data-title="TSLA" aria-label="Open zoomable chart for TSLA">
-                <img src="../charts/TSLA-3Y-1.0Y-9M-generic-ga10-tuned-20260803-145152.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
-              </button>
-            </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#13</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-20.09%</strong></div>
               </div>
               <div class="chips">

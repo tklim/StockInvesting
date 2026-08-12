@@ -8,6 +8,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $reportsDir = Join-Path $repoRoot "backtest\outputs\reports"
 $chartsDir = Join-Path $repoRoot "backtest\outputs\charts"
+$historicalReport = Join-Path $reportsDir "dashboard_top_buyhold_historical.html"
 $siteDir = Join-Path $env:TEMP "stockinvesting-pages-site"
 $publisher = Join-Path $repoRoot "backtest\publish_reports_site.py"
 $launcher = Join-Path $PSScriptRoot "g.bat"
@@ -32,6 +33,10 @@ function Get-RepositoryRelativePath {
 
 Set-Location $repoRoot
 
+if (-not (Test-Path -LiteralPath $historicalReport -PathType Leaf)) {
+    throw "Historical buy-and-hold dashboard is missing: $historicalReport. Run backtest\\g.bat to refresh it before synchronizing."
+}
+
 Invoke-Git -Arguments @("status", "--short", "--branch")
 if (-not $WhatIf) {
     Invoke-Git -Arguments @("fetch", "--all", "--prune")
@@ -54,6 +59,10 @@ if ($LASTEXITCODE -ne 0) {
 $manifest = Get-Content (Join-Path $siteDir "chart-manifest.json") -Raw | ConvertFrom-Json
 $reportPaths = Get-ChildItem $reportsDir -File -Recurse -Filter "*.html" |
     ForEach-Object { Get-RepositoryRelativePath $_.FullName }
+$historicalReportPath = Get-RepositoryRelativePath $historicalReport
+if ($reportPaths -notcontains $historicalReportPath) {
+    throw "Historical buy-and-hold dashboard was not selected for publication: $historicalReportPath"
+}
 $chartPaths = $manifest.charts |
     ForEach-Object { "backtest/outputs/charts/$_" }
 $helperPaths = @(
@@ -67,6 +76,7 @@ if ($publishPaths.Count -eq 0) {
 }
 
 Write-Host "Validated $($reportPaths.Count) HTML reports and $($chartPaths.Count) referenced PNGs."
+Write-Host "Included historical buy-and-hold dashboard (its price charts are inline SVG)."
 if ($WhatIf) {
     Write-Host "WhatIf: would stage only the validated report HTML, referenced PNGs, and sync helper."
     return
