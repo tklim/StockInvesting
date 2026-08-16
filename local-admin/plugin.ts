@@ -1,10 +1,11 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
-import { promisify } from "node:util";
+import { promisify, stripVTControlCharacters } from "node:util";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin, ViteDevServer } from "vite";
 import {
+  type AdminTarget,
   convexRunArguments,
   validateAdminRequest,
 } from "../src/admin/operations";
@@ -16,6 +17,14 @@ import {
   readLlmSettingsStatus,
   saveLlmSettings,
 } from "./convexEnv";
+import {
+  normalizeWatchlistTickers,
+  validateWatchlistRequest,
+} from "../src/admin/watchlist";
+import {
+  managementFunctionName,
+  validateManagementRequest,
+} from "../src/admin/management";
 
 const execFileAsync = promisify(execFile);
 const maxRequestBytes = 16 * 1024;
@@ -133,6 +142,137 @@ const workflowResultFromOutput = (value: string) => {
   }
 };
 
+type JsonRecord = Record<string, unknown>;
+
+const asRecord = (value: unknown): JsonRecord | undefined =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as JsonRecord)
+    : undefined;
+
+const asTimestamp = (value: unknown) =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+const deploymentForTarget = (target: AdminTarget) =>
+  target === "production" ? "prod" : "dev";
+
+const isMissingConvexFunction = (error: unknown) => {
+  const candidate = error as Error & { stdout?: string; stderr?: string };
+  return (candidate.stderr || candidate.stdout || candidate.message || "").includes(
+    "Could not find function",
+  );
+};
+
+const runWatchlistQuery = async (
+  convexCliPath: string,
+  target: AdminTarget,
+  functionName: string,
+  args: Record<string, unknown>,
+) => {
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [
+      convexCliPath,
+      "run",
+      functionName,
+      JSON.stringify(args),
+      "--deployment",
+      deploymentForTarget(target),
+      "--typecheck",
+      "disable",
+      "--codegen",
+      "disable",
+    ],
+    {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024,
+      timeout: 60_000,
+      windowsHide: true,
+    },
+  );
+  return JSON.parse(stripVTControlCharacters(stdout).trim()) as unknown;
+};
+
+const readManagementData = async (convexCliPath: string, target: AdminTarget, portfolioId?: string) => {
+  const [watchlists, tickers, portfolios] = await Promise.all([
+    runWatchlistQuery(convexCliPath, target, "stocks:watchlists", {}),
+    runWatchlistQuery(convexCliPath, target, "stocks:portfolio", {}),
+    runWatchlistQuery(convexCliPath, target, "portfolios:list", { includeArchived: true } as never),
+  ]);
+  const dashboard = portfolioId
+    ? await runWatchlistQuery(convexCliPath, target, "portfolios:getDashboard", { portfolioId } as never)
+    : null;
+  return { watchlists, tickers, portfolios, dashboard };
+};
+
+const mapWithConcurrency = async <T, R>(
+  values: readonly T[],
+  limit: number,
+  mapper: (value: T) => Promise<R>,
+) => {
+  const results: R[] = new Array(values.length);
+  let nextIndex = 0;
+  const worker = async () => {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(values[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, values.length) }, worker));
+  return results;
+};
+
+const fallbackWatchlistStatuses = async (convexCliPath: string, target: AdminTarget) => {
+  const portfolio = await runWatchlistQuery(convexCliPath, target, "stocks:portfolio", {});
+  if (!Array.isArray(portfolio)) {
+    throw new Error("Convex returned an invalid watchlist response.");
+  }
+
+  const statuses = await mapWithConcurrency(portfolio, 4, async (entry) => {
+    const saved = asRecord(entry);
+    const ticker = typeof saved?.ticker === "string" ? saved.ticker.trim().toUpperCase() : "";
+    if (!ticker) return undefined;
+
+    const savedStock = asRecord(saved?.stock);
+    const savedSignal = asRecord(saved?.stockSignal);
+    let research: JsonRecord | undefined;
+    try {
+      research = asRecord(
+        await runWatchlistQuery(convexCliPath, target, "stocks:researchBundle", { ticker }),
+      );
+    } catch {
+      // Keep the saved-stock timestamps visible if a single research bundle cannot be read.
+    }
+
+    const stock = asRecord(research?.stock) ?? savedStock;
+    const snapshots = Array.isArray(research?.snapshots) ? research.snapshots : [];
+    const latestSnapshot = asRecord(snapshots[0]);
+    const financialReport = asRecord(research?.financialReport);
+    const aiReport = asRecord(research?.aiReport);
+    const investmentThesis = asRecord(research?.investmentThesis);
+    const signal = asRecord(research?.stockSignal) ?? savedSignal;
+    const notes = Array.isArray(research?.notes) ? research.notes : [];
+    const latestAdminNote = notes
+      .map(asRecord)
+      .find((note) => note?.generatedBy === "admin-ai-workflow");
+
+    return {
+      ticker,
+      listName: typeof saved?.listName === "string" ? saved.listName : "Watchlist",
+      companyName: typeof stock?.companyName === "string" ? stock.companyName : undefined,
+      marketDataAt: asTimestamp(latestSnapshot?.syncedAt) ?? asTimestamp(stock?.updatedAt),
+      financialsAt: asTimestamp(financialReport?.updatedAt),
+      aiReportAt: asTimestamp(aiReport?.generatedAt),
+      thesisAt: asTimestamp(investmentThesis?.updatedAt),
+      aiNotesAt: asTimestamp(latestAdminNote?.createdAt),
+      signalsAt: asTimestamp(signal?.computedAt),
+    };
+  });
+
+  return statuses.filter((status): status is NonNullable<typeof status> => Boolean(status));
+};
+
 const handleAdminPage = async (
   server: ViteDevServer,
   req: IncomingMessage,
@@ -231,6 +371,187 @@ export function localAdminPlugin(): Plugin {
           });
         } finally {
           operationRunning = false;
+        }
+      });
+
+      server.middlewares.use("/__local_admin/watchlist", async (req, res) => {
+        const host = req.headers.host;
+        if (
+          !isLoopbackAddress(req.socket.remoteAddress) ||
+          !isLocalHost(host) ||
+          !isAllowedOrigin(req.headers.origin, host)
+        ) {
+          sendJson(res, 404, { error: "Not found" });
+          return;
+        }
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+        if (req.headers["x-local-admin-token"] !== token) {
+          sendJson(res, 403, { error: "Invalid local admin session." });
+          return;
+        }
+
+        try {
+          const { target } = validateWatchlistRequest(await readJsonBody(req));
+          const rows = await runWatchlistQuery(convexCliPath, target, "stocks:portfolio", {});
+          sendJson(res, 200, {
+            ok: true,
+            target,
+            tickers: normalizeWatchlistTickers(rows),
+          });
+        } catch (error) {
+          const candidate = error as Error & { stdout?: string; stderr?: string };
+          sendJson(res, 400, {
+            error: redactOutput(
+              candidate.stderr || candidate.stdout || candidate.message || "Unable to load watchlist.",
+            ),
+          });
+        }
+      });
+
+      server.middlewares.use("/__local_admin/watchlist-status", async (req, res) => {
+        const host = req.headers.host;
+        if (
+          !isLoopbackAddress(req.socket.remoteAddress) ||
+          !isLocalHost(host) ||
+          !isAllowedOrigin(req.headers.origin, host)
+        ) {
+          sendJson(res, 404, { error: "Not found" });
+          return;
+        }
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+        if (req.headers["x-local-admin-token"] !== token) {
+          sendJson(res, 403, { error: "Invalid local admin session." });
+          return;
+        }
+
+        try {
+          const { target } = validateWatchlistRequest(await readJsonBody(req));
+          let rows: unknown;
+          try {
+            rows = await runWatchlistQuery(
+              convexCliPath,
+              target,
+              "stocks:adminWatchlistStatus",
+              {},
+            );
+          } catch (error) {
+            if (!isMissingConvexFunction(error)) throw error;
+            rows = await fallbackWatchlistStatuses(convexCliPath, target);
+          }
+          sendJson(res, 200, {
+            ok: true,
+            target,
+            tickers: normalizeWatchlistTickers(rows),
+            statuses: rows,
+          });
+        } catch (error) {
+          const candidate = error as Error & { stdout?: string; stderr?: string };
+          sendJson(res, 400, {
+            error: redactOutput(
+              candidate.stderr || candidate.stdout || candidate.message || "Unable to load watchlist status.",
+            ),
+          });
+        }
+      });
+
+      server.middlewares.use("/__local_admin/manage/read", async (req, res) => {
+        const host = req.headers.host;
+        if (!isLoopbackAddress(req.socket.remoteAddress) || !isLocalHost(host) || !isAllowedOrigin(req.headers.origin, host)) {
+          sendJson(res, 404, { error: "Not found" });
+          return;
+        }
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+        if (req.headers["x-local-admin-token"] !== token) {
+          sendJson(res, 403, { error: "Invalid local admin session." });
+          return;
+        }
+        try {
+          const body = await readJsonBody(req);
+          const { target } = validateWatchlistRequest(body);
+          const record = asRecord(body);
+          const portfolioId = typeof record?.portfolioId === "string" ? record.portfolioId : undefined;
+          sendJson(res, 200, { ok: true, ...(await readManagementData(convexCliPath, target, portfolioId)) });
+        } catch (error) {
+          const candidate = error as Error & { stdout?: string; stderr?: string };
+          sendJson(res, 400, { error: redactOutput(candidate.stderr || candidate.stdout || candidate.message || "Unable to load management data.") });
+        }
+      });
+
+      server.middlewares.use("/__local_admin/manage/write", async (req, res) => {
+        const host = req.headers.host;
+        if (!isLoopbackAddress(req.socket.remoteAddress) || !isLocalHost(host) || !isAllowedOrigin(req.headers.origin, host)) {
+          sendJson(res, 404, { error: "Not found" });
+          return;
+        }
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+        if (req.headers["x-local-admin-token"] !== token) {
+          sendJson(res, 403, { error: "Invalid local admin session." });
+          return;
+        }
+        if (operationRunning) {
+          sendJson(res, 409, { error: "Another admin operation is already running." });
+          return;
+        }
+        try {
+          const request = validateManagementRequest(await readJsonBody(req));
+          operationRunning = true;
+          const { stdout, stderr } = await execFileAsync(
+            process.execPath,
+            [convexCliPath, "run", managementFunctionName[request.action], JSON.stringify(request.args), "--deployment", deploymentForTarget(request.target), "--typecheck", "disable", "--codegen", "disable"],
+            { cwd: process.cwd(), encoding: "utf8", maxBuffer: 1024 * 1024, timeout: 60_000, windowsHide: true },
+          );
+          sendJson(res, 200, { ok: true, output: redactOutput(stdout || stderr || "Saved.") });
+        } catch (error) {
+          const candidate = error as Error & { stdout?: string; stderr?: string };
+          sendJson(res, 400, { error: redactOutput(candidate.stderr || candidate.stdout || candidate.message || "Unable to save changes.") });
+        } finally {
+          operationRunning = false;
+        }
+      });
+
+      server.middlewares.use("/__local_admin/manage/search-symbols", async (req, res) => {
+        const host = req.headers.host;
+        if (!isLoopbackAddress(req.socket.remoteAddress) || !isLocalHost(host) || !isAllowedOrigin(req.headers.origin, host)) {
+          sendJson(res, 404, { error: "Not found" });
+          return;
+        }
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+        if (req.headers["x-local-admin-token"] !== token) {
+          sendJson(res, 403, { error: "Invalid local admin session." });
+          return;
+        }
+        try {
+          const body = asRecord(await readJsonBody(req));
+          const { target } = validateWatchlistRequest(body);
+          const query = typeof body?.query === "string" ? body.query.trim() : "";
+          if (query.length < 2 || query.length > 80) {
+            throw new Error("Enter at least two characters to search symbols.");
+          }
+          const results = await runWatchlistQuery(
+            convexCliPath,
+            target,
+            "marketData:searchSymbols",
+            { query },
+          );
+          sendJson(res, 200, { ok: true, results });
+        } catch (error) {
+          const candidate = error as Error & { stdout?: string; stderr?: string };
+          sendJson(res, 400, { error: redactOutput(candidate.stderr || candidate.stdout || candidate.message || "Unable to search symbols.") });
         }
       });
 

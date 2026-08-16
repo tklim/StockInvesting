@@ -491,6 +491,74 @@ export const portfolio = query({
   },
 });
 
+export const adminWatchlistStatus = query({
+  args: {},
+  returns: v.any(),
+  handler: async (ctx) => {
+    const saved = await ctx.db
+      .query("portfolioStocks")
+      .withIndex("by_savedAt")
+      .order("desc")
+      .take(100);
+
+    return await Promise.all(
+      saved.map(async (item) => {
+        const ticker = normalizeTicker(item.ticker);
+        const [stock, snapshot, financialReport, aiReport, investmentThesis, aiNote, stockSignal] =
+          await Promise.all([
+            ctx.db
+              .query("stocks")
+              .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+              .unique(),
+            ctx.db
+              .query("companySnapshots")
+              .withIndex("by_ticker_and_syncedAt", (q) => q.eq("ticker", ticker))
+              .order("desc")
+              .take(1),
+            ctx.db
+              .query("financialReports")
+              .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+              .unique(),
+            ctx.db
+              .query("aiReports")
+              .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+              .unique(),
+            ctx.db
+              .query("investmentTheses")
+              .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+              .unique(),
+            ctx.db
+              .query("notes")
+              .withIndex("by_ticker_and_generatedBy", (q) =>
+                q.eq("ticker", ticker).eq("generatedBy", "admin-ai-workflow")
+              )
+              .order("desc")
+              .take(1),
+            ctx.db
+              .query("stockSignals")
+              .withIndex("by_ticker", (q) => q.eq("ticker", ticker))
+              .unique(),
+          ]);
+
+        return {
+          ticker,
+          listName: item.listName,
+          companyName: stock?.companyName ?? ticker,
+          // Use the persisted snapshot time, not the quote's market timestamp.
+          // The latter may be the previous market close and would make a
+          // 24-hour refresh guard re-run over a weekend or holiday.
+          marketDataAt: snapshot[0]?._creationTime ?? stock?._creationTime ?? stock?.updatedAt ?? null,
+          financialsAt: financialReport?.updatedAt ?? null,
+          aiReportAt: aiReport?.generatedAt ?? null,
+          thesisAt: investmentThesis?.updatedAt ?? null,
+          aiNotesAt: aiNote[0]?.createdAt ?? null,
+          signalsAt: stockSignal?.computedAt ?? null,
+        };
+      })
+    );
+  },
+});
+
 export const updatePortfolioList = internalMutation({
   args: {
     ticker: v.string(),

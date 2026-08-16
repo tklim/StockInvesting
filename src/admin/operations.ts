@@ -127,13 +127,6 @@ export function validateAdminRequest(value: unknown): ValidatedAdminRequest {
     throw new Error("Choose a valid Convex deployment target.");
   }
 
-  if (
-    request.target === "production" &&
-    request.confirmation !== productionConfirmation
-  ) {
-    throw new Error(`Type ${productionConfirmation} to run against the public production data.`);
-  }
-
   return {
     operation,
     target: request.target,

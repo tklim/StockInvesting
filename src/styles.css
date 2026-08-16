@@ -893,6 +893,14 @@ kbd {
   color: #08a35a;
 }
 
+.performance-row strong.negative {
+  color: #dc2626;
+}
+
+.app-shell[data-theme="dark"] .performance-row strong.negative {
+  color: #fca5a5;
+}
+
 .down {
   color: #dc2626;
 }
@@ -3208,10 +3216,10 @@ h1 {
 .watchlist-table-header,
 .watchlist-row {
   display: grid;
-  grid-template-columns: 100px minmax(300px, 1.5fr) 150px 110px 90px 120px 210px;
+  grid-template-columns: 100px 100px minmax(260px, 1.5fr) 150px 110px 90px 120px 210px;
   gap: 16px;
   align-items: center;
-  min-width: 1040px;
+  min-width: 1160px;
 }
 
 .portfolio-table-header {
@@ -3232,6 +3240,47 @@ h1 {
   font-weight: 750;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.watchlist-sort-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.watchlist-sort-button:hover,
+.watchlist-sort-button:focus-visible,
+.watchlist-sort-button.active {
+  color: #0b55f4;
+}
+
+.watchlist-sort-button span {
+  color: #98a2b3;
+  font-size: 13px;
+}
+
+.watchlist-sort-button.active span {
+  color: currentColor;
+}
+
+.watchlist-ticker {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+}
+
+.app-shell[data-theme="dark"] .watchlist-ticker {
+  color: #dbeafe;
 }
 
 .portfolio-row {
@@ -4349,6 +4398,19 @@ h1 {
 
 .performance-row strong {
   font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .performance-range-5d,
+  .performance-range-6m {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .performance-range-1d {
+    display: none;
+  }
 }
 
 .timeline {

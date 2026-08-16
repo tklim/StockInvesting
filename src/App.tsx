@@ -4648,22 +4648,88 @@ function WatchlistView({
   onOpenResearch: (ticker: string) => void;
   onSelectedListChange: (listName: string) => void;
 }) {
+  type WatchlistSortKey = "ticker" | "company" | "list" | "price" | "day" | "saved";
+  type WatchlistSortDirection = "asc" | "desc";
+
   const [newListName, setNewListName] = useState("");
   const [editingListName, setEditingListName] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [listManagerMessage, setListManagerMessage] = useState("");
+  const [watchlistSort, setWatchlistSort] = useState<{
+    key: WatchlistSortKey;
+    direction: WatchlistSortDirection;
+  }>({ key: "saved", direction: "desc" });
   const visibleItems =
     selectedList === "All"
       ? items
       : items.filter((item) => item.listName === selectedList);
-  const sortedItems = visibleItems
-    .slice()
-    .sort((left, right) => (right.savedAt ?? 0) - (left.savedAt ?? 0));
+  const sortedItems = visibleItems.slice().sort((left, right) => {
+    const leftValue =
+      watchlistSort.key === "ticker"
+        ? left.ticker
+        : watchlistSort.key === "company"
+          ? left.stock?.companyName ?? left.ticker
+          : watchlistSort.key === "list"
+            ? left.listName
+            : watchlistSort.key === "price"
+              ? left.stock?.price ?? null
+              : watchlistSort.key === "day"
+                ? left.stock?.changePercent ?? null
+                : left.savedAt ?? null;
+    const rightValue =
+      watchlistSort.key === "ticker"
+        ? right.ticker
+        : watchlistSort.key === "company"
+          ? right.stock?.companyName ?? right.ticker
+          : watchlistSort.key === "list"
+            ? right.listName
+            : watchlistSort.key === "price"
+              ? right.stock?.price ?? null
+              : watchlistSort.key === "day"
+                ? right.stock?.changePercent ?? null
+                : right.savedAt ?? null;
+
+    if (leftValue === null || rightValue === null) {
+      if (leftValue === rightValue) return left.ticker.localeCompare(right.ticker);
+      return leftValue === null ? 1 : -1;
+    }
+
+    const comparison =
+      typeof leftValue === "string" && typeof rightValue === "string"
+        ? leftValue.localeCompare(rightValue, undefined, { sensitivity: "base" })
+        : Number(leftValue) - Number(rightValue);
+    if (comparison === 0) return left.ticker.localeCompare(right.ticker);
+    return watchlistSort.direction === "asc" ? comparison : -comparison;
+  });
   const positionedCount = items.filter((item) => getPositionShares(item) > 0).length;
   const recentAdd = sortedItems[0] ?? null;
   const selectedVisibleCount = visibleItems.filter((item) =>
     compareTickers.includes(item.ticker)
   ).length;
+
+  const changeWatchlistSort = (key: WatchlistSortKey) => {
+    setWatchlistSort((current) => ({
+      key,
+      direction:
+        current.key === key ? (current.direction === "asc" ? "desc" : "asc") : key === "saved" ? "desc" : "asc",
+    }));
+  };
+
+  const sortHeader = (key: WatchlistSortKey, label: string) => {
+    const active = watchlistSort.key === key;
+    const direction = active ? watchlistSort.direction : null;
+    return (
+      <button
+        aria-label={`Sort by ${label}${direction ? `, currently ${direction === "asc" ? "ascending" : "descending"}` : ""}`}
+        className={`watchlist-sort-button${active ? " active" : ""}`}
+        onClick={() => changeWatchlistSort(key)}
+        type="button"
+      >
+        {label}
+        <span aria-hidden="true">{direction ? (direction === "asc" ? "↑" : "↓") : "↕"}</span>
+      </button>
+    );
+  };
 
   const toggleCompareTicker = (ticker: string) => {
     if (compareTickers.includes(ticker)) {
@@ -4986,11 +5052,12 @@ function WatchlistView({
         <div className="watchlist-table">
           <div className="watchlist-table-header">
             <span>Select</span>
-            <span>Company</span>
-            <span>List</span>
-            <span>Price</span>
-            <span>Day</span>
-            <span>Saved</span>
+            {sortHeader("ticker", "Ticker")}
+            {sortHeader("company", "Company")}
+            {sortHeader("list", "List")}
+            {sortHeader("price", "Price")}
+            {sortHeader("day", "Day")}
+            {sortHeader("saved", "Saved")}
             <span />
           </div>
 
@@ -5013,6 +5080,7 @@ function WatchlistView({
                   />
                   <span>Compare</span>
                 </label>
+                <span className="watchlist-ticker">{item.ticker}</span>
                 <button
                   className="portfolio-company-cell company-cell-button"
                   type="button"
@@ -5021,9 +5089,7 @@ function WatchlistView({
                   <span>{item.ticker.slice(0, 1)}</span>
                   <div>
                     <strong>{item.stock?.companyName ?? item.ticker}</strong>
-                    <small>
-                      {item.ticker} • {item.stock?.sector ?? "Unknown sector"}
-                    </small>
+                    <small>{item.stock?.sector ?? "Unknown sector"}</small>
                   </div>
                 </button>
                 <span className="portfolio-list-pill">{item.listName}</span>
@@ -6640,6 +6706,8 @@ function PriceChart({ stock }: {
     ["5D", 5],
     ["1M", 21],
     ["3M", 63],
+    ["6M", 126],
+    ["1Y", 252],
     ["MAX", displayedChartPoints.length - 1],
   ] as const;
 
@@ -6761,12 +6829,18 @@ function PriceChart({ stock }: {
       </div>
 
       <div className="performance-row">
-        {performanceRanges.map(([range, lookback]) => (
-          <div className={range === selectedRange ? "selected" : ""} key={range}>
-            <span>{range}</span>
-            <strong>{formatReturn(displayedChartPoints, lookback)}</strong>
-          </div>
-        ))}
+        {performanceRanges.map(([range, lookback]) => {
+          const value = formatReturn(displayedChartPoints, lookback);
+          return (
+            <div
+              className={`performance-range performance-range-${range.toLowerCase()}${range === selectedRange ? " selected" : ""}`}
+              key={range}
+            >
+              <span>{range}</span>
+              <strong className={value.startsWith("-") ? "negative" : undefined}>{value}</strong>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

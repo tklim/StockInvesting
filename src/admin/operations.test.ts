@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
   convexRunArguments,
-  productionConfirmation,
   validateAdminRequest,
 } from "./operations";
 
@@ -27,21 +26,11 @@ describe("local admin operation validation", () => {
     ]);
   });
 
-  test("requires an exact confirmation for production", () => {
-    expect(() =>
-      validateAdminRequest({
-        operation: "generateAiReport",
-        target: "production",
-        ticker: "NVDA",
-        confirmation: "yes",
-      }),
-    ).toThrow(`Type ${productionConfirmation}`);
-
+  test("allows production jobs without a typed confirmation", () => {
     const request = validateAdminRequest({
       operation: "generateAiReport",
       target: "production",
       ticker: "NVDA",
-      confirmation: productionConfirmation,
     });
     expect(convexRunArguments(request)).toContain("prod");
   });
