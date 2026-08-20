@@ -23,7 +23,7 @@
   dialog{width:calc(100vw - 24px);height:calc(100vh - 24px);max-width:none;max-height:none;padding:0;border:0;border-radius:16px;background:#111827;overflow:hidden}dialog::backdrop{background:rgba(3,8,18,.82)}.viewer-bar{position:absolute;inset:0 0 auto 0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(17,24,39,.9);color:#fff}.viewer-bar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.controls{display:flex;gap:7px}.controls button{border:1px solid #667085;background:#263246;color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer}.viewport{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}#viewerImage{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}
   @media(min-width:1500px){.ranking-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rank-card{padding:12px}.chips{margin:8px 0;gap:5px}.chips span{padding:5px 7px;font-size:.72rem}}@media(min-width:2100px){.ranking-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.ranking-grid{grid-template-columns:1fr}}
 </style></head><body>
-<header><div class="report-links"><a class="master-link" href="dashboard.html">← Master dashboard</a><a class="buyhold-link" href="dashboard_top_annualized_buyhold.html">Buy &amp; hold annualized ranking</a></div><h1>Excess Annualized Ranking</h1><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated 2026-08-20 22:15:29</p><p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-20 20:42:39 — ranking computed from 3495 run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years"><button class="tab" type="button" role="tab" id="source-tab-mixed" data-source="mixed" aria-controls="source-panel-mixed" aria-selected="true">Mixed (27)</button><button class="tab" type="button" role="tab" id="source-tab-20y" data-source="20y" aria-controls="source-panel-20y" aria-selected="false">20 years (10)</button><button class="tab" type="button" role="tab" id="source-tab-10y" data-source="10y" aria-controls="source-panel-10y" aria-selected="false">10 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-5y" data-source="5y" aria-controls="source-panel-5y" aria-selected="false">5 years (15)</button><button class="tab" type="button" role="tab" id="source-tab-4y" data-source="4y" aria-controls="source-panel-4y" aria-selected="false">4 years (4)</button><button class="tab" type="button" role="tab" id="source-tab-3y" data-source="3y" aria-controls="source-panel-3y" aria-selected="false">3 years (27)</button><button class="tab" type="button" role="tab" id="source-tab-other" data-source="other" aria-controls="source-panel-other" aria-selected="false">Other (3)</button></nav></header><main><section role="tabpanel" class="source-panel" id="source-panel-mixed" data-source-panel="mixed" aria-labelledby="source-tab-mixed" ><p class="group-note">Best non-zero excess-annualized run per ticker regardless of source or scored duration. 2560 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for Mixed"><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="all" aria-controls="run-panel-mixed-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="1y" aria-controls="run-panel-mixed-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="2y" aria-controls="run-panel-mixed-2y" aria-selected="false">2Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="3y" aria-controls="run-panel-mixed-3y" aria-selected="false">3Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="4y" aria-controls="run-panel-mixed-4y" aria-selected="false">4Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="7y" aria-controls="run-panel-mixed-7y" aria-selected="false">7Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="8y" aria-controls="run-panel-mixed-8y" aria-selected="false">8Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="9y" aria-controls="run-panel-mixed-9y" aria-selected="false">9Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="11y" aria-controls="run-panel-mixed-11y" aria-selected="false">11Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="12y" aria-controls="run-panel-mixed-12y" aria-selected="false">12Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="13y" aria-controls="run-panel-mixed-13y" aria-selected="false">13Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="14y" aria-controls="run-panel-mixed-14y" aria-selected="false">14Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="15y" aria-controls="run-panel-mixed-15y" aria-selected="false">15Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="16y" aria-controls="run-panel-mixed-16y" aria-selected="false">16Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="17y" aria-controls="run-panel-mixed-17y" aria-selected="false">17Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="18y" aria-controls="run-panel-mixed-18y" aria-selected="false">18Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="19y" aria-controls="run-panel-mixed-19y" aria-selected="false">19Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-all" data-run-panel="all" ><div class="view-switch" role="group" aria-label="Display mode for All run years"><button class="view-toggle" type="button" data-view="chart" aria-pressed="true">Chart cards</button><button class="view-toggle" type="button" data-view="table" aria-pressed="false">Compact table</button></div><div data-view-content="chart"><div class="ranking-grid"><article class="rank-card">
+<header><div class="report-links"><a class="master-link" href="dashboard.html">← Master dashboard</a><a class="buyhold-link" href="dashboard_top_annualized_buyhold.html">Buy &amp; hold annualized ranking</a></div><h1>Excess Annualized Ranking</h1><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated 2026-08-20 22:52:34</p><p class="source">Source <code title="C:\Users\tklim\Documents\StockInvesting\backtest\outputs\tunings\backtest_run_history.csv">backtest_run_history.csv</code> last written 2026-08-20 22:50:46 — ranking computed from 3505 run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years"><button class="tab" type="button" role="tab" id="source-tab-mixed" data-source="mixed" aria-controls="source-panel-mixed" aria-selected="true">Mixed (28)</button><button class="tab" type="button" role="tab" id="source-tab-20y" data-source="20y" aria-controls="source-panel-20y" aria-selected="false">20 years (10)</button><button class="tab" type="button" role="tab" id="source-tab-10y" data-source="10y" aria-controls="source-panel-10y" aria-selected="false">10 years (13)</button><button class="tab" type="button" role="tab" id="source-tab-5y" data-source="5y" aria-controls="source-panel-5y" aria-selected="false">5 years (15)</button><button class="tab" type="button" role="tab" id="source-tab-4y" data-source="4y" aria-controls="source-panel-4y" aria-selected="false">4 years (4)</button><button class="tab" type="button" role="tab" id="source-tab-3y" data-source="3y" aria-controls="source-panel-3y" aria-selected="false">3 years (28)</button><button class="tab" type="button" role="tab" id="source-tab-other" data-source="other" aria-controls="source-panel-other" aria-selected="false">Other (3)</button></nav></header><main><section role="tabpanel" class="source-panel" id="source-panel-mixed" data-source-panel="mixed" aria-labelledby="source-tab-mixed" ><p class="group-note">Best non-zero excess-annualized run per ticker regardless of source or scored duration. 2570 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for Mixed"><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="all" aria-controls="run-panel-mixed-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="1y" aria-controls="run-panel-mixed-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="2y" aria-controls="run-panel-mixed-2y" aria-selected="false">2Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="3y" aria-controls="run-panel-mixed-3y" aria-selected="false">3Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="4y" aria-controls="run-panel-mixed-4y" aria-selected="false">4Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="7y" aria-controls="run-panel-mixed-7y" aria-selected="false">7Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="8y" aria-controls="run-panel-mixed-8y" aria-selected="false">8Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="9y" aria-controls="run-panel-mixed-9y" aria-selected="false">9Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="11y" aria-controls="run-panel-mixed-11y" aria-selected="false">11Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="12y" aria-controls="run-panel-mixed-12y" aria-selected="false">12Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="13y" aria-controls="run-panel-mixed-13y" aria-selected="false">13Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="14y" aria-controls="run-panel-mixed-14y" aria-selected="false">14Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="15y" aria-controls="run-panel-mixed-15y" aria-selected="false">15Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="16y" aria-controls="run-panel-mixed-16y" aria-selected="false">16Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="17y" aria-controls="run-panel-mixed-17y" aria-selected="false">17Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="18y" aria-controls="run-panel-mixed-18y" aria-selected="false">18Y</button><button class="run-tab" type="button" role="tab" data-source="mixed" data-run="19y" aria-controls="run-panel-mixed-19y" aria-selected="false">19Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-mixed-all" data-run-panel="all" ><div class="view-switch" role="group" aria-label="Display mode for All run years"><button class="view-toggle" type="button" data-view="chart" aria-pressed="true">Chart cards</button><button class="view-toggle" type="button" data-view="table" aria-pressed="false">Compact table</button></div><div data-view-content="chart"><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>AXON</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+67.96%</strong></div>
               </div>
@@ -234,7 +234,22 @@
                 <img src="../charts/DRS-3Y-1.0Y-6M-generic-ga10-tuned-20260814-213007.png" alt="Strategy chart for DRS" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#15</span><h2>AVGO</h2>
+              <div class="card-head"><span class="rank">#15</span><h2>GLD</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.50%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+41.51%</b></span>
+                <span>Buy &amp; hold ann. <b>+34.01%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>2Y/3M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#16</span><h2>AVGO</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -249,7 +264,7 @@
                 <img src="../charts/AVGO-3Y-1.0Y-6M-generic-ga10-tuned-20260816-180523.png" alt="Strategy chart for AVGO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#16</span><h2>FTNT</h2>
+              <div class="card-head"><span class="rank">#17</span><h2>FTNT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -264,7 +279,7 @@
                 <img src="../charts/FTNT-3Y-2.0Y-9M-generic-ga10-tuned-20260815-134847.png" alt="Strategy chart for FTNT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#17</span><h2>JNJ</h2>
+              <div class="card-head"><span class="rank">#18</span><h2>JNJ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
               </div>
               <div class="chips">
@@ -279,7 +294,7 @@
                 <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#18</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>NVDA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.21%</strong></div>
               </div>
               <div class="chips">
@@ -294,7 +309,7 @@
                 <img src="../charts/NVDA-1.0Y-6M-generic-bh-reachable-ga10-tuned-20260726-220520.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#20</span><h2>PWR</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.14%</strong></div>
               </div>
               <div class="chips">
@@ -309,7 +324,7 @@
                 <img src="../charts/PWR-3Y-2.0Y-12M-generic-ga10-tuned-20260814-201320.png" alt="Strategy chart for PWR" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>JPM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.12%</strong></div>
               </div>
               <div class="chips">
@@ -324,7 +339,7 @@
                 <img src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>TSM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+4.12%</strong></div>
               </div>
               <div class="chips">
@@ -339,7 +354,7 @@
                 <img src="../charts/TSM-5Y-2.0Y-6M-generic-ga10-tuned-20260802-015812.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>V</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.32%</strong></div>
               </div>
               <div class="chips">
@@ -354,7 +369,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>QQQ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
               </div>
               <div class="chips">
@@ -369,7 +384,7 @@
                 <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>AMD</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>AMD</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.56%</strong></div>
               </div>
               <div class="chips">
@@ -384,7 +399,7 @@
                 <img src="../charts/AMD-3Y-1.0Y-12M-generic-ga10-tuned-20260813-205036.png" alt="Strategy chart for AMD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>SPY</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.34%</strong></div>
               </div>
               <div class="chips">
@@ -399,7 +414,7 @@
                 <img src="../charts/SPY-3Y-1.0Y-9M-generic-ga10-tuned-20260815-174010.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-7.11%</strong></div>
               </div>
               <div class="chips">
@@ -414,7 +429,7 @@
                 <img src="../charts/FIX-3Y-2.0Y-3M-generic-ga10-tuned-20260815-183638.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
+              <div class="card-head"><span class="rank">#28</span><h2>LLY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-15.85%</strong></div>
               </div>
               <div class="chips">
@@ -533,90 +548,97 @@
               <td data-sort-value="38.2673161014006">+38.27%</td>
               <td data-sort-value="28.492174156103832">+28.49%</td>
               <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="pos" data-sort-value="7.502223124262052">+7.50%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="0.9965776865160849">1.0Y</td>
+              <td data-sort-value="41.511578880761554">+41.51%</td>
+              <td data-sort-value="34.0093557564995">+34.01%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
               <td data-sort-value="AVGO"><b>AVGO</b></td>
               <td class="pos" data-sort-value="7.111274764976969">+7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="71.57955842622323">+71.58%</td>
               <td data-sort-value="64.46828366124626">+64.47%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
               <td data-sort-value="FTNT"><b>FTNT</b></td>
               <td class="pos" data-sort-value="7.108161553803072">+7.11%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="116.26386534063782">+116.26%</td>
               <td data-sort-value="109.15570378683476">+109.16%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
               <td data-sort-value="JNJ"><b>JNJ</b></td>
               <td class="pos" data-sort-value="7.061670395750895">+7.06%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="60.696677344937086">+60.70%</td>
               <td data-sort-value="53.63500694918619">+53.64%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="pos" data-sort-value="5.208882960484402">+5.21%</td>
               <td data-sort-value="4.993839835728953">5.0Y</td>
               <td data-sort-value="3.994524298425736">4.0Y</td>
               <td data-sort-value="93.57300312270596">+93.57%</td>
               <td data-sort-value="88.36412016222155">+88.36%</td>
-              <td data-sort-value="2026-07-24">2026-07-24</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="2026-07-24">2026-07-24</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="pos" data-sort-value="5.13795571878012">+5.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="85.54867274971404">+85.55%</td>
               <td data-sort-value="80.41071703093392">+80.41%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="JPM"><b>JPM</b></td>
               <td class="pos" data-sort-value="5.119517662286199">+5.12%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="42.57749429821169">+42.58%</td>
               <td data-sort-value="37.45797663592549">+37.46%</td>
-              <td data-sort-value="2026-08-04">2026-08-04</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-08-04">2026-08-04</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="pos" data-sort-value="4.1238680616717005">+4.12%</td>
               <td data-sort-value="4.993839835728953">5.0Y</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="68.20980995605343">+68.21%</td>
               <td data-sort-value="64.08594189438173">+64.09%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="pos" data-sort-value="2.3216842925111845">+2.32%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="11.20086156722544">+11.20%</td>
               <td data-sort-value="8.879177274714255">+8.88%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="QQQ"><b>QQQ</b></td>
               <td class="pos" data-sort-value="0.682503565363902">+0.68%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="28.14011144631692">+28.14%</td>
               <td data-sort-value="27.457607880953017">+27.46%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="AMD"><b>AMD</b></td>
               <td class="pos" data-sort-value="0.5563185574240634">+0.56%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="86.18165264478093">+86.18%</td>
               <td data-sort-value="85.62533408735686">+85.63%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="SPY"><b>SPY</b></td>
               <td class="pos" data-sort-value="0.3368935700041469">+0.34%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="21.247249402239387">+21.25%</td>
               <td data-sort-value="20.91035583223524">+20.91%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-7.111003913103929">-7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="144.49863028811092">+144.50%</td>
               <td data-sort-value="151.60963420121485">+151.61%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="LLY"><b>LLY</b></td>
               <td class="neg" data-sort-value="-15.851430568296433">-15.85%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
@@ -759,7 +781,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>FTNT</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>GLD</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.50%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+41.51%</b></span>
+                <span>Buy &amp; hold ann. <b>+34.01%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>2Y/3M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#11</span><h2>FTNT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -774,7 +811,7 @@
                 <img src="../charts/FTNT-3Y-2.0Y-9M-generic-ga10-tuned-20260815-134847.png" alt="Strategy chart for FTNT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>JNJ</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>JNJ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
               </div>
               <div class="chips">
@@ -789,7 +826,7 @@
                 <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#13</span><h2>PWR</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.14%</strong></div>
               </div>
               <div class="chips">
@@ -804,7 +841,7 @@
                 <img src="../charts/PWR-3Y-2.0Y-12M-generic-ga10-tuned-20260814-201320.png" alt="Strategy chart for PWR" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#13</span><h2>FICO</h2>
+              <div class="card-head"><span class="rank">#14</span><h2>FICO</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+4.40%</strong></div>
               </div>
               <div class="chips">
@@ -819,7 +856,7 @@
                 <img src="../charts/FICO-3Y-2.0Y-12M-generic-ga10-tuned-20260814-173008.png" alt="Strategy chart for FICO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#14</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#15</span><h2>TSM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+3.55%</strong></div>
               </div>
               <div class="chips">
@@ -834,7 +871,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-6M-generic-ga10-tuned-20260815-150725.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#15</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#16</span><h2>V</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.32%</strong></div>
               </div>
               <div class="chips">
@@ -849,7 +886,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#16</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#17</span><h2>TSLA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.28%</strong></div>
               </div>
               <div class="chips">
@@ -864,7 +901,7 @@
                 <img src="../charts/TSLA-3Y-2.0Y-9M-generic-ga10-tuned-20260815-112635.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#17</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#18</span><h2>NVDA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.41%</strong></div>
               </div>
               <div class="chips">
@@ -879,7 +916,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-3M-generic-ga10-tuned-20260812-224924.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#18</span><h2>ANET</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>ANET</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-1.14%</strong></div>
               </div>
               <div class="chips">
@@ -894,7 +931,7 @@
                 <img src="../charts/ANET-3Y-2.0Y-3M-generic-ga10-tuned-20260814-201126.png" alt="Strategy chart for ANET" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#20</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.89%</strong></div>
               </div>
               <div class="chips">
@@ -909,7 +946,7 @@
                 <img src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-7.11%</strong></div>
               </div>
               <div class="chips">
@@ -924,7 +961,7 @@
                 <img src="../charts/FIX-3Y-2.0Y-3M-generic-ga10-tuned-20260815-183638.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>QQQ</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.22%</strong></div>
               </div>
               <div class="chips">
@@ -939,7 +976,7 @@
                 <img src="../charts/QQQ-3Y-2.0Y-12M-generic-ga10-tuned-20260811-154837.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>JPM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-13.01%</strong></div>
               </div>
               <div class="chips">
@@ -954,7 +991,7 @@
                 <img src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>DRS</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>DRS</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-18.72%</strong></div>
               </div>
               <div class="chips">
@@ -969,7 +1006,7 @@
                 <img src="../charts/DRS-3Y-2.0Y-12M-generic-ga10-tuned-20260814-224928.png" alt="Strategy chart for DRS" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>AVGO</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>AVGO</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-29.71%</strong></div>
               </div>
               <div class="chips">
@@ -984,7 +1021,7 @@
                 <img src="../charts/AVGO-3Y-2.0Y-9M-generic-ga10-tuned-20260816-182841.png" alt="Strategy chart for AVGO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>AMD</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>AMD</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-40.78%</strong></div>
               </div>
               <div class="chips">
@@ -999,7 +1036,22 @@
                 <img src="../charts/AMD-3Y-2.0Y-12M-generic-ga10-tuned-20260813-211008.png" alt="Strategy chart for AMD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>DELL</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-41.48%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+40.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+82.18%</b></span>
+                <span>Through <b>2026-08-19</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/LLY-3Y-2.0Y-6M-generic-ga10-tuned-20260820-222154.png" data-title="LLY" aria-label="Open zoomable chart for LLY">
+                <img src="../charts/LLY-3Y-2.0Y-6M-generic-ga10-tuned-20260820-222154.png" alt="Strategy chart for LLY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#28</span><h2>DELL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-44.47%</strong></div>
               </div>
               <div class="chips">
@@ -1083,118 +1135,132 @@
               <td data-sort-value="11.589181123503668">+11.59%</td>
               <td data-sort-value="0.595782720453375">+0.60%</td>
               <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="10">10</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="pos" data-sort-value="7.502223124262052">+7.50%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="0.9965776865160849">1.0Y</td>
+              <td data-sort-value="41.511578880761554">+41.51%</td>
+              <td data-sort-value="34.0093557564995">+34.01%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="11">11</td>
               <td data-sort-value="FTNT"><b>FTNT</b></td>
               <td class="pos" data-sort-value="7.108161553803072">+7.11%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="116.26386534063782">+116.26%</td>
               <td data-sort-value="109.15570378683476">+109.16%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="11">11</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="12">12</td>
               <td data-sort-value="JNJ"><b>JNJ</b></td>
               <td class="pos" data-sort-value="7.061670395750895">+7.06%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="60.696677344937086">+60.70%</td>
               <td data-sort-value="53.63500694918619">+53.64%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="12">12</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="13">13</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="pos" data-sort-value="5.13795571878012">+5.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="85.54867274971404">+85.55%</td>
               <td data-sort-value="80.41071703093392">+80.41%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="13">13</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="14">14</td>
               <td data-sort-value="FICO"><b>FICO</b></td>
               <td class="pos" data-sort-value="4.396903586987545">+4.40%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-16.50138051937794">-16.50%</td>
               <td data-sort-value="-20.898284106365484">-20.90%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="14">14</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="pos" data-sort-value="3.547534437380804">+3.55%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="84.24481592440785">+84.24%</td>
               <td data-sort-value="80.69728148702704">+80.70%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="pos" data-sort-value="2.3216842925111845">+2.32%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="11.20086156722544">+11.20%</td>
               <td data-sort-value="8.879177274714255">+8.88%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
               <td data-sort-value="TSLA"><b>TSLA</b></td>
               <td class="pos" data-sort-value="2.2842462794277707">+2.28%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-0.1352625108651306">-0.14%</td>
               <td data-sort-value="-2.4195087902929013">-2.42%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="pos" data-sort-value="0.4060316518576847">+0.41%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="23.88694115891894">+23.89%</td>
               <td data-sort-value="23.480909507061256">+23.48%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
               <td data-sort-value="ANET"><b>ANET</b></td>
               <td class="neg" data-sort-value="-1.1375335614242132">-1.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="53.51232392156435">+53.51%</td>
               <td data-sort-value="54.649857482988565">+54.65%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="SPY"><b>SPY</b></td>
               <td class="neg" data-sort-value="-4.88636268349325">-4.89%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="13.8246196739227">+13.82%</td>
               <td data-sort-value="18.71098235741595">+18.71%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-7.111003913103929">-7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="144.49863028811092">+144.50%</td>
               <td data-sort-value="151.60963420121485">+151.61%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="QQQ"><b>QQQ</b></td>
               <td class="neg" data-sort-value="-12.215003914945475">-12.22%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="14.964474816669004">+14.96%</td>
               <td data-sort-value="27.17947873161448">+27.18%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="JPM"><b>JPM</b></td>
               <td class="neg" data-sort-value="-13.009955075254064">-13.01%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="8.029368488082378">+8.03%</td>
               <td data-sort-value="21.03932356333644">+21.04%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="DRS"><b>DRS</b></td>
               <td class="neg" data-sort-value="-18.718575545127013">-18.72%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-9.48286052764402">-9.48%</td>
               <td data-sort-value="9.235715017482992">+9.24%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="AVGO"><b>AVGO</b></td>
               <td class="neg" data-sort-value="-29.710518495356776">-29.71%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="-2.4944144456212625">-2.49%</td>
               <td data-sort-value="27.216104049735517">+27.22%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="AMD"><b>AMD</b></td>
               <td class="neg" data-sort-value="-40.78021985723129">-40.78%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="127.73450851691472">+127.73%</td>
               <td data-sort-value="168.51472837414602">+168.51%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="LLY"><b>LLY</b></td>
+              <td class="neg" data-sort-value="-41.48280596776271">-41.48%</td>
+              <td data-sort-value="2.9952087611225187">3.0Y</td>
+              <td data-sort-value="0.9938398357289527">1.0Y</td>
+              <td data-sort-value="40.70205779268255">+40.70%</td>
+              <td data-sort-value="82.18486376044525">+82.18%</td>
+              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="DELL"><b>DELL</b></td>
               <td class="neg" data-sort-value="-44.47175110162374">-44.47%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
@@ -1472,7 +1538,22 @@
                 <img src="../charts/SPY-3Y-1.0Y-9M-generic-ga10-tuned-20260815-174010.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>GLD</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-1.80%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+31.40%</b></span>
+                <span>Buy &amp; hold ann. <b>+33.20%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>1Y/9M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-1.0Y-9M-generic-ga10-tuned-20260820-223142.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-1.0Y-9M-generic-ga10-tuned-20260820-223142.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#20</span><h2>V</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-2.98%</strong></div>
               </div>
               <div class="chips">
@@ -1487,7 +1568,7 @@
                 <img src="../charts/V-3Y-1.0Y-3M-generic-ga10-tuned-20260812-221700.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-3.59%</strong></div>
               </div>
               <div class="chips">
@@ -1502,7 +1583,7 @@
                 <img src="../charts/TSM-5Y-3.0Y-3M-generic-ga10-tuned-20260802-013631.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>AXON</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>AXON</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.78%</strong></div>
               </div>
               <div class="chips">
@@ -1517,7 +1598,7 @@
                 <img src="../charts/AXON-3Y-1.0Y-3M-generic-ga10-tuned-20260814-165943.png" alt="Strategy chart for AXON" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>TPL</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>TPL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.24%</strong></div>
               </div>
               <div class="chips">
@@ -1532,7 +1613,7 @@
                 <img src="../charts/TPL-3Y-1.0Y-9M-generic-ga10-tuned-20260814-213714.png" alt="Strategy chart for TPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.75%</strong></div>
               </div>
               <div class="chips">
@@ -1547,7 +1628,7 @@
                 <img src="../charts/NVDA-3Y-1.0Y-3M-generic-ga10-tuned-20260813-002047.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>KLAC</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>KLAC</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-8.80%</strong></div>
               </div>
               <div class="chips">
@@ -1562,7 +1643,7 @@
                 <img src="../charts/KLAC-3Y-1.0Y-3M-generic-ga10-tuned-20260815-094447.png" alt="Strategy chart for KLAC" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-11.69%</strong></div>
               </div>
               <div class="chips">
@@ -1577,7 +1658,7 @@
                 <img src="../charts/FIX-3Y-1.0Y-9M-generic-ga10-tuned-20260815-173811.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>LLY</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-15.85%</strong></div>
               </div>
               <div class="chips">
@@ -1592,7 +1673,7 @@
                 <img src="../charts/LLY-3Y-1.0Y-3M-generic-ga10-tuned-20260820-202607.png" alt="Strategy chart for LLY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#27</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#28</span><h2>PWR</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-16.30%</strong></div>
               </div>
               <div class="chips">
@@ -1739,62 +1820,69 @@
               <td data-sort-value="21.247249402239387">+21.25%</td>
               <td data-sort-value="20.91035583223524">+20.91%</td>
               <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="neg" data-sort-value="-1.7970751002093444">-1.80%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="1.995893223819302">2.0Y</td>
+              <td data-sort-value="31.40025838596532">+31.40%</td>
+              <td data-sort-value="33.197333486174664">+33.20%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="neg" data-sort-value="-2.977690486736972">-2.98%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="16.057468222236437">+16.06%</td>
               <td data-sort-value="19.03515870897341">+19.04%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="neg" data-sort-value="-3.591487354526272">-3.59%</td>
               <td data-sort-value="4.993839835728953">5.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="63.03914523102261">+63.04%</td>
               <td data-sort-value="66.63063258554888">+66.63%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="AXON"><b>AXON</b></td>
               <td class="neg" data-sort-value="-4.7826311451420125">-4.78%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="22.54420168066462">+22.54%</td>
               <td data-sort-value="27.326832825806637">+27.33%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="TPL"><b>TPL</b></td>
               <td class="neg" data-sort-value="-6.2405309356196925">-6.24%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="6.463378543209486">+6.46%</td>
               <td data-sort-value="12.703909478829178">+12.70%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="neg" data-sort-value="-6.753884728327229">-6.75%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="37.08570132226827">+37.09%</td>
               <td data-sort-value="43.8395860505955">+43.84%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="KLAC"><b>KLAC</b></td>
               <td class="neg" data-sort-value="-8.804733884481976">-8.80%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="54.7069745544164">+54.71%</td>
               <td data-sort-value="63.51170843889837">+63.51%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-11.689238731028553">-11.69%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="121.04365256131156">+121.04%</td>
               <td data-sort-value="132.73289129234013">+132.73%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
               <td data-sort-value="LLY"><b>LLY</b></td>
               <td class="neg" data-sort-value="-15.851430568296433">-15.85%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="0.9913636903521316">+0.99%</td>
               <td data-sort-value="16.842794258648563">+16.84%</td>
-              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="neg" data-sort-value="-16.295633665579004">-16.30%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
@@ -7657,7 +7745,7 @@
               <td data-sort-value="2.9979466119096507">3.0Y</td>
               <td data-sort-value="45.23577350403136">+45.24%</td>
               <td data-sort-value="65.6040657558113">+65.60%</td>
-              <td data-sort-value="2026-07-24">2026-07-24</td></tr></tbody></table></div></div></div></section><section role="tabpanel" class="source-panel" id="source-panel-3y" data-source-panel="3y" aria-labelledby="source-tab-3y" hidden><p class="group-note">Best non-zero excess-annualized run per ticker from approximately 3 years source data. 1057 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for 3 years"><button class="run-tab" type="button" role="tab" data-source="3y" data-run="all" aria-controls="run-panel-3y-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="1y" aria-controls="run-panel-3y-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="2y" aria-controls="run-panel-3y-2y" aria-selected="false">2Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-3y-all" data-run-panel="all" ><div class="view-switch" role="group" aria-label="Display mode for All run years"><button class="view-toggle" type="button" data-view="chart" aria-pressed="true">Chart cards</button><button class="view-toggle" type="button" data-view="table" aria-pressed="false">Compact table</button></div><div data-view-content="chart"><div class="ranking-grid"><article class="rank-card">
+              <td data-sort-value="2026-07-24">2026-07-24</td></tr></tbody></table></div></div></div></section><section role="tabpanel" class="source-panel" id="source-panel-3y" data-source-panel="3y" aria-labelledby="source-tab-3y" hidden><p class="group-note">Best non-zero excess-annualized run per ticker from approximately 3 years source data. 1067 eligible run(s); choose a scored duration to narrow the comparison.</p><div class="run-tabs" role="tablist" aria-label="Run years for 3 years"><button class="run-tab" type="button" role="tab" data-source="3y" data-run="all" aria-controls="run-panel-3y-all" aria-selected="true">All run years</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="1y" aria-controls="run-panel-3y-1y" aria-selected="false">1Y</button><button class="run-tab" type="button" role="tab" data-source="3y" data-run="2y" aria-controls="run-panel-3y-2y" aria-selected="false">2Y</button></div><div role="tabpanel" class="run-panel" id="run-panel-3y-all" data-run-panel="all" ><div class="view-switch" role="group" aria-label="Display mode for All run years"><button class="view-toggle" type="button" data-view="chart" aria-pressed="true">Chart cards</button><button class="view-toggle" type="button" data-view="table" aria-pressed="false">Compact table</button></div><div data-view-content="chart"><div class="ranking-grid"><article class="rank-card">
               <div class="card-head"><span class="rank">#1</span><h2>AXON</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+67.96%</strong></div>
               </div>
@@ -7853,7 +7941,22 @@
                 <img src="../charts/DRS-3Y-1.0Y-6M-generic-ga10-tuned-20260814-213007.png" alt="Strategy chart for DRS" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#14</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#14</span><h2>GLD</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.50%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+41.51%</b></span>
+                <span>Buy &amp; hold ann. <b>+34.01%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>2Y/3M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#15</span><h2>TSLA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.41%</strong></div>
               </div>
               <div class="chips">
@@ -7868,7 +7971,7 @@
                 <img src="../charts/TSLA-3Y-1.0Y-3M-generic-ga10-tuned-20260815-101608.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#15</span><h2>AVGO</h2>
+              <div class="card-head"><span class="rank">#16</span><h2>AVGO</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -7883,7 +7986,7 @@
                 <img src="../charts/AVGO-3Y-1.0Y-6M-generic-ga10-tuned-20260816-180523.png" alt="Strategy chart for AVGO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#16</span><h2>FTNT</h2>
+              <div class="card-head"><span class="rank">#17</span><h2>FTNT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -7898,7 +8001,7 @@
                 <img src="../charts/FTNT-3Y-2.0Y-9M-generic-ga10-tuned-20260815-134847.png" alt="Strategy chart for FTNT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#17</span><h2>JNJ</h2>
+              <div class="card-head"><span class="rank">#18</span><h2>JNJ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
               </div>
               <div class="chips">
@@ -7913,7 +8016,7 @@
                 <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#18</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>PWR</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.14%</strong></div>
               </div>
               <div class="chips">
@@ -7928,7 +8031,7 @@
                 <img src="../charts/PWR-3Y-2.0Y-12M-generic-ga10-tuned-20260814-201320.png" alt="Strategy chart for PWR" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#20</span><h2>JPM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.12%</strong></div>
               </div>
               <div class="chips">
@@ -7943,7 +8046,7 @@
                 <img src="../charts/JPM-3Y-1.0Y-3M-generic-ga10-tuned-20260805-210144.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>TSM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+3.55%</strong></div>
               </div>
               <div class="chips">
@@ -7958,7 +8061,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-6M-generic-ga10-tuned-20260815-150725.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>V</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.32%</strong></div>
               </div>
               <div class="chips">
@@ -7973,7 +8076,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>QQQ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.68%</strong></div>
               </div>
               <div class="chips">
@@ -7988,7 +8091,7 @@
                 <img src="../charts/QQQ-3Y-1.0Y-6M-generic-ga10-tuned-20260811-212110.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>AMD</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>AMD</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.56%</strong></div>
               </div>
               <div class="chips">
@@ -8003,7 +8106,7 @@
                 <img src="../charts/AMD-3Y-1.0Y-12M-generic-ga10-tuned-20260813-205036.png" alt="Strategy chart for AMD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>NVDA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.41%</strong></div>
               </div>
               <div class="chips">
@@ -8018,7 +8121,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-3M-generic-ga10-tuned-20260812-224924.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>SPY</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.34%</strong></div>
               </div>
               <div class="chips">
@@ -8033,7 +8136,7 @@
                 <img src="../charts/SPY-3Y-1.0Y-9M-generic-ga10-tuned-20260815-174010.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-7.11%</strong></div>
               </div>
               <div class="chips">
@@ -8048,7 +8151,7 @@
                 <img src="../charts/FIX-3Y-2.0Y-3M-generic-ga10-tuned-20260815-183638.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
+              <div class="card-head"><span class="rank">#28</span><h2>LLY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-15.85%</strong></div>
               </div>
               <div class="chips">
@@ -8160,97 +8263,104 @@
               <td data-sort-value="38.2673161014006">+38.27%</td>
               <td data-sort-value="28.492174156103832">+28.49%</td>
               <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="14">14</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="pos" data-sort-value="7.502223124262052">+7.50%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="0.9965776865160849">1.0Y</td>
+              <td data-sort-value="41.511578880761554">+41.51%</td>
+              <td data-sort-value="34.0093557564995">+34.01%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
               <td data-sort-value="TSLA"><b>TSLA</b></td>
               <td class="pos" data-sort-value="7.409486802736012">+7.41%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="35.04360050424549">+35.04%</td>
               <td data-sort-value="27.63411370150948">+27.63%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
               <td data-sort-value="AVGO"><b>AVGO</b></td>
               <td class="pos" data-sort-value="7.111274764976969">+7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="71.57955842622323">+71.58%</td>
               <td data-sort-value="64.46828366124626">+64.47%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
               <td data-sort-value="FTNT"><b>FTNT</b></td>
               <td class="pos" data-sort-value="7.108161553803072">+7.11%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="116.26386534063782">+116.26%</td>
               <td data-sort-value="109.15570378683476">+109.16%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
               <td data-sort-value="JNJ"><b>JNJ</b></td>
               <td class="pos" data-sort-value="7.061670395750895">+7.06%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="60.696677344937086">+60.70%</td>
               <td data-sort-value="53.63500694918619">+53.64%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="pos" data-sort-value="5.13795571878012">+5.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="85.54867274971404">+85.55%</td>
               <td data-sort-value="80.41071703093392">+80.41%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="JPM"><b>JPM</b></td>
               <td class="pos" data-sort-value="5.119517662286199">+5.12%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="42.57749429821169">+42.58%</td>
               <td data-sort-value="37.45797663592549">+37.46%</td>
-              <td data-sort-value="2026-08-04">2026-08-04</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-08-04">2026-08-04</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="pos" data-sort-value="3.547534437380804">+3.55%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="84.24481592440785">+84.24%</td>
               <td data-sort-value="80.69728148702704">+80.70%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="pos" data-sort-value="2.3216842925111845">+2.32%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="11.20086156722544">+11.20%</td>
               <td data-sort-value="8.879177274714255">+8.88%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="QQQ"><b>QQQ</b></td>
               <td class="pos" data-sort-value="0.682503565363902">+0.68%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="28.14011144631692">+28.14%</td>
               <td data-sort-value="27.457607880953017">+27.46%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="AMD"><b>AMD</b></td>
               <td class="pos" data-sort-value="0.5563185574240634">+0.56%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="86.18165264478093">+86.18%</td>
               <td data-sort-value="85.62533408735686">+85.63%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="pos" data-sort-value="0.4060316518576847">+0.41%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="23.88694115891894">+23.89%</td>
               <td data-sort-value="23.480909507061256">+23.48%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="SPY"><b>SPY</b></td>
               <td class="pos" data-sort-value="0.3368935700041469">+0.34%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="21.247249402239387">+21.25%</td>
               <td data-sort-value="20.91035583223524">+20.91%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-7.111003913103929">-7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="144.49863028811092">+144.50%</td>
               <td data-sort-value="151.60963420121485">+151.61%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="LLY"><b>LLY</b></td>
               <td class="neg" data-sort-value="-15.851430568296433">-15.85%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
@@ -8393,7 +8503,22 @@
                 <img src="../charts/AMZN-3Y-2.0Y-12M-generic-ga10-tuned-20260802-212616.png" alt="Strategy chart for AMZN" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#10</span><h2>FTNT</h2>
+              <div class="card-head"><span class="rank">#10</span><h2>GLD</h2>
+                <div class="headline pos"><small>Excess annualized</small><strong>+7.50%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+41.51%</b></span>
+                <span>Buy &amp; hold ann. <b>+34.01%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>2Y/3M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-2.0Y-3M-generic-ga10-tuned-20260820-224603.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#11</span><h2>FTNT</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.11%</strong></div>
               </div>
               <div class="chips">
@@ -8408,7 +8533,7 @@
                 <img src="../charts/FTNT-3Y-2.0Y-9M-generic-ga10-tuned-20260815-134847.png" alt="Strategy chart for FTNT" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#11</span><h2>JNJ</h2>
+              <div class="card-head"><span class="rank">#12</span><h2>JNJ</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+7.06%</strong></div>
               </div>
               <div class="chips">
@@ -8423,7 +8548,7 @@
                 <img src="../charts/JNJ-3Y-2.0Y-6M-generic-ga10-tuned-20260811-235158.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#12</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#13</span><h2>PWR</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+5.14%</strong></div>
               </div>
               <div class="chips">
@@ -8438,7 +8563,7 @@
                 <img src="../charts/PWR-3Y-2.0Y-12M-generic-ga10-tuned-20260814-201320.png" alt="Strategy chart for PWR" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#13</span><h2>FICO</h2>
+              <div class="card-head"><span class="rank">#14</span><h2>FICO</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+4.40%</strong></div>
               </div>
               <div class="chips">
@@ -8453,7 +8578,7 @@
                 <img src="../charts/FICO-3Y-2.0Y-12M-generic-ga10-tuned-20260814-173008.png" alt="Strategy chart for FICO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#14</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#15</span><h2>TSM</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+3.55%</strong></div>
               </div>
               <div class="chips">
@@ -8468,7 +8593,7 @@
                 <img src="../charts/TSM-3Y-2.0Y-6M-generic-ga10-tuned-20260815-150725.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#15</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#16</span><h2>V</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.32%</strong></div>
               </div>
               <div class="chips">
@@ -8483,7 +8608,7 @@
                 <img src="../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#16</span><h2>TSLA</h2>
+              <div class="card-head"><span class="rank">#17</span><h2>TSLA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+2.28%</strong></div>
               </div>
               <div class="chips">
@@ -8498,7 +8623,7 @@
                 <img src="../charts/TSLA-3Y-2.0Y-9M-generic-ga10-tuned-20260815-112635.png" alt="Strategy chart for TSLA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#17</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#18</span><h2>NVDA</h2>
                 <div class="headline pos"><small>Excess annualized</small><strong>+0.41%</strong></div>
               </div>
               <div class="chips">
@@ -8513,7 +8638,7 @@
                 <img src="../charts/NVDA-3Y-2.0Y-3M-generic-ga10-tuned-20260812-224924.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#18</span><h2>ANET</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>ANET</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-1.14%</strong></div>
               </div>
               <div class="chips">
@@ -8528,7 +8653,7 @@
                 <img src="../charts/ANET-3Y-2.0Y-3M-generic-ga10-tuned-20260814-201126.png" alt="Strategy chart for ANET" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>SPY</h2>
+              <div class="card-head"><span class="rank">#20</span><h2>SPY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.89%</strong></div>
               </div>
               <div class="chips">
@@ -8543,7 +8668,7 @@
                 <img src="../charts/SPY-3Y-2.0Y-6M-generic-ga10-tuned-20260802-212046.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-7.11%</strong></div>
               </div>
               <div class="chips">
@@ -8558,7 +8683,7 @@
                 <img src="../charts/FIX-3Y-2.0Y-3M-generic-ga10-tuned-20260815-183638.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>QQQ</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>QQQ</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-12.22%</strong></div>
               </div>
               <div class="chips">
@@ -8573,7 +8698,7 @@
                 <img src="../charts/QQQ-3Y-2.0Y-12M-generic-ga10-tuned-20260811-154837.png" alt="Strategy chart for QQQ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>JPM</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>JPM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-13.01%</strong></div>
               </div>
               <div class="chips">
@@ -8588,7 +8713,7 @@
                 <img src="../charts/JPM-3Y-2.0Y-3M-generic-ga10-tuned-20260802-222106.png" alt="Strategy chart for JPM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>DRS</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>DRS</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-18.72%</strong></div>
               </div>
               <div class="chips">
@@ -8603,7 +8728,7 @@
                 <img src="../charts/DRS-3Y-2.0Y-12M-generic-ga10-tuned-20260814-224928.png" alt="Strategy chart for DRS" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>AVGO</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>AVGO</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-29.71%</strong></div>
               </div>
               <div class="chips">
@@ -8618,7 +8743,7 @@
                 <img src="../charts/AVGO-3Y-2.0Y-9M-generic-ga10-tuned-20260816-182841.png" alt="Strategy chart for AVGO" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>AMD</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>AMD</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-40.78%</strong></div>
               </div>
               <div class="chips">
@@ -8633,7 +8758,22 @@
                 <img src="../charts/AMD-3Y-2.0Y-12M-generic-ga10-tuned-20260813-211008.png" alt="Strategy chart for AMD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>DELL</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-41.48%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>1.0Y</b></span>
+                <span>Strategy ann. <b>+40.70%</b></span>
+                <span>Buy &amp; hold ann. <b>+82.18%</b></span>
+                <span>Through <b>2026-08-19</b></span>
+                <span>Winning run <b>2Y/6M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/LLY-3Y-2.0Y-6M-generic-ga10-tuned-20260820-222154.png" data-title="LLY" aria-label="Open zoomable chart for LLY">
+                <img src="../charts/LLY-3Y-2.0Y-6M-generic-ga10-tuned-20260820-222154.png" alt="Strategy chart for LLY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#28</span><h2>DELL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-44.47%</strong></div>
               </div>
               <div class="chips">
@@ -8717,118 +8857,132 @@
               <td data-sort-value="11.589181123503668">+11.59%</td>
               <td data-sort-value="0.595782720453375">+0.60%</td>
               <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="10">10</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="pos" data-sort-value="7.502223124262052">+7.50%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="0.9965776865160849">1.0Y</td>
+              <td data-sort-value="41.511578880761554">+41.51%</td>
+              <td data-sort-value="34.0093557564995">+34.01%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="11">11</td>
               <td data-sort-value="FTNT"><b>FTNT</b></td>
               <td class="pos" data-sort-value="7.108161553803072">+7.11%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="116.26386534063782">+116.26%</td>
               <td data-sort-value="109.15570378683476">+109.16%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="11">11</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="12">12</td>
               <td data-sort-value="JNJ"><b>JNJ</b></td>
               <td class="pos" data-sort-value="7.061670395750895">+7.06%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="60.696677344937086">+60.70%</td>
               <td data-sort-value="53.63500694918619">+53.64%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="12">12</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="13">13</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="pos" data-sort-value="5.13795571878012">+5.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="85.54867274971404">+85.55%</td>
               <td data-sort-value="80.41071703093392">+80.41%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="13">13</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="14">14</td>
               <td data-sort-value="FICO"><b>FICO</b></td>
               <td class="pos" data-sort-value="4.396903586987545">+4.40%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-16.50138051937794">-16.50%</td>
               <td data-sort-value="-20.898284106365484">-20.90%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="14">14</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="pos" data-sort-value="3.547534437380804">+3.55%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="84.24481592440785">+84.24%</td>
               <td data-sort-value="80.69728148702704">+80.70%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="15">15</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="pos" data-sort-value="2.3216842925111845">+2.32%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="11.20086156722544">+11.20%</td>
               <td data-sort-value="8.879177274714255">+8.88%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="16">16</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
               <td data-sort-value="TSLA"><b>TSLA</b></td>
               <td class="pos" data-sort-value="2.2842462794277707">+2.28%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-0.1352625108651306">-0.14%</td>
               <td data-sort-value="-2.4195087902929013">-2.42%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="pos" data-sort-value="0.4060316518576847">+0.41%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="23.88694115891894">+23.89%</td>
               <td data-sort-value="23.480909507061256">+23.48%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
               <td data-sort-value="ANET"><b>ANET</b></td>
               <td class="neg" data-sort-value="-1.1375335614242132">-1.14%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="53.51232392156435">+53.51%</td>
               <td data-sort-value="54.649857482988565">+54.65%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="SPY"><b>SPY</b></td>
               <td class="neg" data-sort-value="-4.88636268349325">-4.89%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="13.8246196739227">+13.82%</td>
               <td data-sort-value="18.71098235741595">+18.71%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-7.111003913103929">-7.11%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="144.49863028811092">+144.50%</td>
               <td data-sort-value="151.60963420121485">+151.61%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="QQQ"><b>QQQ</b></td>
               <td class="neg" data-sort-value="-12.215003914945475">-12.22%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="14.964474816669004">+14.96%</td>
               <td data-sort-value="27.17947873161448">+27.18%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="JPM"><b>JPM</b></td>
               <td class="neg" data-sort-value="-13.009955075254064">-13.01%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="8.029368488082378">+8.03%</td>
               <td data-sort-value="21.03932356333644">+21.04%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="DRS"><b>DRS</b></td>
               <td class="neg" data-sort-value="-18.718575545127013">-18.72%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="-9.48286052764402">-9.48%</td>
               <td data-sort-value="9.235715017482992">+9.24%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="AVGO"><b>AVGO</b></td>
               <td class="neg" data-sort-value="-29.710518495356776">-29.71%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="0.999315537303217">1.0Y</td>
               <td data-sort-value="-2.4944144456212625">-2.49%</td>
               <td data-sort-value="27.216104049735517">+27.22%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="AMD"><b>AMD</b></td>
               <td class="neg" data-sort-value="-40.78021985723129">-40.78%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="0.9938398357289527">1.0Y</td>
               <td data-sort-value="127.73450851691472">+127.73%</td>
               <td data-sort-value="168.51472837414602">+168.51%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="LLY"><b>LLY</b></td>
+              <td class="neg" data-sort-value="-41.48280596776271">-41.48%</td>
+              <td data-sort-value="2.9952087611225187">3.0Y</td>
+              <td data-sort-value="0.9938398357289527">1.0Y</td>
+              <td data-sort-value="40.70205779268255">+40.70%</td>
+              <td data-sort-value="82.18486376044525">+82.18%</td>
+              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="DELL"><b>DELL</b></td>
               <td class="neg" data-sort-value="-44.47175110162374">-44.47%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
@@ -9076,7 +9230,22 @@
                 <img src="../charts/SPY-3Y-1.0Y-9M-generic-ga10-tuned-20260815-174010.png" alt="Strategy chart for SPY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#17</span><h2>V</h2>
+              <div class="card-head"><span class="rank">#17</span><h2>GLD</h2>
+                <div class="headline neg"><small>Excess annualized</small><strong>-1.80%</strong></div>
+              </div>
+              <div class="chips">
+                <span>Source years <b>3.0Y</b></span>
+                <span>Run years <b>2.0Y</b></span>
+                <span>Strategy ann. <b>+31.40%</b></span>
+                <span>Buy &amp; hold ann. <b>+33.20%</b></span>
+                <span>Through <b>2026-08-20</b></span>
+                <span>Winning run <b>1Y/9M generic</b></span>
+              </div>
+              <button class="chart-button" type="button" data-src="../charts/GLD-3Y-1.0Y-9M-generic-ga10-tuned-20260820-223142.png" data-title="GLD" aria-label="Open zoomable chart for GLD">
+                <img src="../charts/GLD-3Y-1.0Y-9M-generic-ga10-tuned-20260820-223142.png" alt="Strategy chart for GLD" loading="lazy"><span class="zoom-hint">Click to zoom</span>
+              </button>
+            </article><article class="rank-card">
+              <div class="card-head"><span class="rank">#18</span><h2>V</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-2.98%</strong></div>
               </div>
               <div class="chips">
@@ -9091,7 +9260,7 @@
                 <img src="../charts/V-3Y-1.0Y-3M-generic-ga10-tuned-20260812-221700.png" alt="Strategy chart for V" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#18</span><h2>AXON</h2>
+              <div class="card-head"><span class="rank">#19</span><h2>AXON</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-4.78%</strong></div>
               </div>
               <div class="chips">
@@ -9106,7 +9275,7 @@
                 <img src="../charts/AXON-3Y-1.0Y-3M-generic-ga10-tuned-20260814-165943.png" alt="Strategy chart for AXON" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#19</span><h2>JNJ</h2>
+              <div class="card-head"><span class="rank">#20</span><h2>JNJ</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-5.50%</strong></div>
               </div>
               <div class="chips">
@@ -9121,7 +9290,7 @@
                 <img src="../charts/JNJ-3Y-1.0Y-3M-generic-ga10-tuned-20260811-211138.png" alt="Strategy chart for JNJ" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#20</span><h2>TPL</h2>
+              <div class="card-head"><span class="rank">#21</span><h2>TPL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.24%</strong></div>
               </div>
               <div class="chips">
@@ -9136,7 +9305,7 @@
                 <img src="../charts/TPL-3Y-1.0Y-9M-generic-ga10-tuned-20260814-213714.png" alt="Strategy chart for TPL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#21</span><h2>GOOGL</h2>
+              <div class="card-head"><span class="rank">#22</span><h2>GOOGL</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.56%</strong></div>
               </div>
               <div class="chips">
@@ -9151,7 +9320,7 @@
                 <img src="../charts/GOOGL-3Y-1.0Y-6M-generic-ga10-tuned-20260803-144754.png" alt="Strategy chart for GOOGL" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#22</span><h2>NVDA</h2>
+              <div class="card-head"><span class="rank">#23</span><h2>NVDA</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-6.75%</strong></div>
               </div>
               <div class="chips">
@@ -9166,7 +9335,7 @@
                 <img src="../charts/NVDA-3Y-1.0Y-3M-generic-ga10-tuned-20260813-002047.png" alt="Strategy chart for NVDA" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#23</span><h2>KLAC</h2>
+              <div class="card-head"><span class="rank">#24</span><h2>KLAC</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-8.80%</strong></div>
               </div>
               <div class="chips">
@@ -9181,7 +9350,7 @@
                 <img src="../charts/KLAC-3Y-1.0Y-3M-generic-ga10-tuned-20260815-094447.png" alt="Strategy chart for KLAC" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#24</span><h2>TSM</h2>
+              <div class="card-head"><span class="rank">#25</span><h2>TSM</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-11.46%</strong></div>
               </div>
               <div class="chips">
@@ -9196,7 +9365,7 @@
                 <img src="../charts/TSM-3Y-1.0Y-9M-generic-ga10-tuned-20260811-145359.png" alt="Strategy chart for TSM" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#25</span><h2>FIX</h2>
+              <div class="card-head"><span class="rank">#26</span><h2>FIX</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-11.69%</strong></div>
               </div>
               <div class="chips">
@@ -9211,7 +9380,7 @@
                 <img src="../charts/FIX-3Y-1.0Y-9M-generic-ga10-tuned-20260815-173811.png" alt="Strategy chart for FIX" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#26</span><h2>LLY</h2>
+              <div class="card-head"><span class="rank">#27</span><h2>LLY</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-15.85%</strong></div>
               </div>
               <div class="chips">
@@ -9226,7 +9395,7 @@
                 <img src="../charts/LLY-3Y-1.0Y-3M-generic-ga10-tuned-20260820-202607.png" alt="Strategy chart for LLY" loading="lazy"><span class="zoom-hint">Click to zoom</span>
               </button>
             </article><article class="rank-card">
-              <div class="card-head"><span class="rank">#27</span><h2>PWR</h2>
+              <div class="card-head"><span class="rank">#28</span><h2>PWR</h2>
                 <div class="headline neg"><small>Excess annualized</small><strong>-16.30%</strong></div>
               </div>
               <div class="chips">
@@ -9359,76 +9528,83 @@
               <td data-sort-value="21.247249402239387">+21.25%</td>
               <td data-sort-value="20.91035583223524">+20.91%</td>
               <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="17">17</td>
+              <td data-sort-value="GLD"><b>GLD</b></td>
+              <td class="neg" data-sort-value="-1.7970751002093444">-1.80%</td>
+              <td data-sort-value="2.9979466119096507">3.0Y</td>
+              <td data-sort-value="1.995893223819302">2.0Y</td>
+              <td data-sort-value="31.40025838596532">+31.40%</td>
+              <td data-sort-value="33.197333486174664">+33.20%</td>
+              <td data-sort-value="2026-08-20">2026-08-20</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
               <td data-sort-value="V"><b>V</b></td>
               <td class="neg" data-sort-value="-2.977690486736972">-2.98%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="16.057468222236437">+16.06%</td>
               <td data-sort-value="19.03515870897341">+19.04%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="18">18</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
               <td data-sort-value="AXON"><b>AXON</b></td>
               <td class="neg" data-sort-value="-4.7826311451420125">-4.78%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="22.54420168066462">+22.54%</td>
               <td data-sort-value="27.326832825806637">+27.33%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="19">19</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
               <td data-sort-value="JNJ"><b>JNJ</b></td>
               <td class="neg" data-sort-value="-5.496119422428183">-5.50%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="25.773691769608263">+25.77%</td>
               <td data-sort-value="31.26981119203645">+31.27%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="20">20</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
               <td data-sort-value="TPL"><b>TPL</b></td>
               <td class="neg" data-sort-value="-6.2405309356196925">-6.24%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="6.463378543209486">+6.46%</td>
               <td data-sort-value="12.703909478829178">+12.70%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="21">21</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
               <td data-sort-value="GOOGL"><b>GOOGL</b></td>
               <td class="neg" data-sort-value="-6.564491539666541">-6.56%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="33.53546951296824">+33.54%</td>
               <td data-sort-value="40.09996105263478">+40.10%</td>
-              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="22">22</td>
+              <td data-sort-value="2026-07-31">2026-07-31</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
               <td data-sort-value="NVDA"><b>NVDA</b></td>
               <td class="neg" data-sort-value="-6.753884728327229">-6.75%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="37.08570132226827">+37.09%</td>
               <td data-sort-value="43.8395860505955">+43.84%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="23">23</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
               <td data-sort-value="KLAC"><b>KLAC</b></td>
               <td class="neg" data-sort-value="-8.804733884481976">-8.80%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="54.7069745544164">+54.71%</td>
               <td data-sort-value="63.51170843889837">+63.51%</td>
-              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="24">24</td>
+              <td data-sort-value="2026-08-12">2026-08-12</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
               <td data-sort-value="TSM"><b>TSM</b></td>
               <td class="neg" data-sort-value="-11.455616631806542">-11.46%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="48.82139250760118">+48.82%</td>
               <td data-sort-value="60.27700913940773">+60.28%</td>
-              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="25">25</td>
+              <td data-sort-value="2026-08-10">2026-08-10</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
               <td data-sort-value="FIX"><b>FIX</b></td>
               <td class="neg" data-sort-value="-11.689238731028553">-11.69%</td>
               <td data-sort-value="3.0006844626967832">3.0Y</td>
               <td data-sort-value="1.998631074606434">2.0Y</td>
               <td data-sort-value="121.04365256131156">+121.04%</td>
               <td data-sort-value="132.73289129234013">+132.73%</td>
-              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="26">26</td>
+              <td data-sort-value="2026-08-14">2026-08-14</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
               <td data-sort-value="LLY"><b>LLY</b></td>
               <td class="neg" data-sort-value="-15.851430568296433">-15.85%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
               <td data-sort-value="1.9931553730321698">2.0Y</td>
               <td data-sort-value="0.9913636903521316">+0.99%</td>
               <td data-sort-value="16.842794258648563">+16.84%</td>
-              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="27">27</td>
+              <td data-sort-value="2026-08-19">2026-08-19</td></tr><tr><td class="table-rank" data-sort-value="28">28</td>
               <td data-sort-value="PWR"><b>PWR</b></td>
               <td class="neg" data-sort-value="-16.295633665579004">-16.30%</td>
               <td data-sort-value="2.9952087611225187">3.0Y</td>
