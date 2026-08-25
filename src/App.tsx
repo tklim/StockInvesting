@@ -62,6 +62,12 @@ import {
   type SignalSort,
   type SignalSortKey,
 } from "./signalRanking";
+import {
+  formatReturn,
+  getChartPointsForRange,
+  getLookbackIntervals,
+  type PriceRange,
+} from "./pricePerformance";
 
 type AppProps = {
   convexEnabled: boolean;
@@ -2555,7 +2561,7 @@ function ResearchShell({
               </p>
               <div className="price-row">
                 <strong>{stock.price.toFixed(2)}</strong>
-                <span>
+                <span className={stock.changePercent < 0 ? "down" : "up"}>
                   {formatSignedNumber(stock.change)} ({formatSignedNumber(stock.changePercent)}%)
                 </span>
               </div>
@@ -6533,9 +6539,7 @@ function PriceChart({ stock }: {
   stock: ResearchBundle["stock"];
 }) {
   const ticker = stock.ticker;
-  const [selectedRange, setSelectedRange] = useState<
-    "1D" | "5D" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "5Y" | "MAX"
-  >("3M");
+  const [selectedRange, setSelectedRange] = useState<PriceRange>("3M");
   const chartPoints = alignChartToLatestPrice(
     stock.chartPoints ?? chartSeriesByTicker[ticker],
     stock.price
@@ -6544,7 +6548,7 @@ function PriceChart({ stock }: {
     ? getChartPointsForRange(chartPoints, selectedRange)
     : chartPoints;
 
-  if (!displayedChartPoints || displayedChartPoints.length < 2) {
+  if (!chartPoints || !displayedChartPoints || displayedChartPoints.length < 2) {
     return (
       <section className="panel chart-panel">
         <div className="chart-header">
@@ -6657,7 +6661,7 @@ function PriceChart({ stock }: {
       }));
 
     if (selectedRange === "1D") {
-      return createTicks([today]);
+      return createTicks([1, 0].map(daysAgo));
     }
 
     if (selectedRange === "5D") {
@@ -6701,15 +6705,7 @@ function PriceChart({ stock }: {
     ]);
   };
   const xTicks = buildDateTicks();
-  const performanceRanges = [
-    ["1D", 1],
-    ["5D", 5],
-    ["1M", 21],
-    ["3M", 63],
-    ["6M", 126],
-    ["1Y", 252],
-    ["MAX", displayedChartPoints.length - 1],
-  ] as const;
+  const performanceRanges = ["1D", "5D", "1M", "3M", "6M", "1Y", "MAX"] as const;
 
   return (
     <section className="panel chart-panel">
@@ -6829,8 +6825,9 @@ function PriceChart({ stock }: {
       </div>
 
       <div className="performance-row">
-        {performanceRanges.map(([range, lookback]) => {
-          const value = formatReturn(displayedChartPoints, lookback);
+        {performanceRanges.map((range) => {
+          const lookback = getLookbackIntervals(range, chartPoints.length);
+          const value = formatReturn(chartPoints, lookback, true);
           return (
             <div
               className={`performance-range performance-range-${range.toLowerCase()}${range === selectedRange ? " selected" : ""}`}
@@ -7178,18 +7175,6 @@ function getPositionGainLossPercent(item: PortfolioItem) {
   return costBasis > 0 ? (getPositionGainLoss(item) / costBasis) * 100 : 0;
 }
 
-function formatReturn(points: number[], lookback: number) {
-  const latest = points[points.length - 1];
-  const baseline = points[Math.max(points.length - 1 - lookback, 0)];
-
-  if (!Number.isFinite(latest) || !Number.isFinite(baseline) || baseline === 0) {
-    return "N/A";
-  }
-
-  const changePercent = ((latest - baseline) / baseline) * 100;
-  return `${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%`;
-}
-
 function alignChartToLatestPrice(points: number[] | undefined, latestPrice: number) {
   if (!points || points.length < 2 || !Number.isFinite(latestPrice)) {
     return points;
@@ -7206,24 +7191,4 @@ function alignChartToLatestPrice(points: number[] | undefined, latestPrice: numb
   }
 
   return points.map((point) => point + delta);
-}
-
-function getChartPointsForRange(
-  points: number[],
-  range: "1D" | "5D" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "5Y" | "MAX"
-) {
-  const lookbackByRange: Record<typeof range, number> = {
-    "1D": 2,
-    "5D": 5,
-    "1M": 21,
-    "3M": 63,
-    "6M": 126,
-    YTD: 180,
-    "1Y": 252,
-    "5Y": points.length,
-    MAX: points.length,
-  };
-
-  const lookback = lookbackByRange[range];
-  return points.slice(-Math.min(lookback, points.length));
 }

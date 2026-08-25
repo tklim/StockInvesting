@@ -1503,6 +1503,10 @@ h1 {
   font-weight: 740;
 }
 
+.price-row span.down {
+  color: #dc2626;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(76px, 1fr));
@@ -6540,6 +6544,15 @@ h1 {
 .app-shell[data-theme="dark"] .check-row svg,
 .app-shell[data-theme="dark"] .signal-driver-panel.positive li::marker {
   color: #86efac;
+}
+
+.app-shell[data-theme="dark"] .price-row span.down {
+  color: #fca5a5;
+}
+
+.app-shell[data-theme="dark"] .signal-ranking-number.down,
+.app-shell[data-theme="dark"] .signal-ranking-mobile-meta .down {
+  color: #fca5a5;
 }
 
 .app-shell[data-theme="dark"] .data-source-card-header span.success,
