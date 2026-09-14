@@ -122,6 +122,17 @@ $ErrorActionPreference = "Stop"
 $Funds = @($Funds | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
 if ($Funds.Count -eq 0) { throw "No funds specified." }
 
+# A source slice with a lookback equal to its full source horizon has no
+# out-of-sample run period, so keep that cell in the plan for transparent
+# accounting but never launch the backtest. The source horizon is taken from
+# the explicit slice suffix (for example, -3Y); an unsuffixed file has no
+# reliable source-year label and is left unchanged.
+$sourceYears = $null
+$sourceSuffixMatch = [regex]::Match($DataSuffix, '^-?(?<years>\d+(?:\.\d+)?)Y$', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+if ($sourceSuffixMatch.Success) {
+    $sourceYears = [double]$sourceSuffixMatch.Groups['years'].Value
+}
+
 # An omitted -GaSeed means "let the backtester seed each window deterministically",
 # which it records as the literal string "deterministic".
 $useGaSeed = $PSBoundParameters.ContainsKey('GaSeed')
@@ -478,11 +489,17 @@ foreach ($fund in $Funds) {
     $dataHash = Get-DataFileHash $fundLabel
     foreach ($lb in $LookbackYears) {
         foreach ($off in $OffsetMonths) {
+            $skipReason = ""
+            if ($sourceYears -eq 3.0 -and [double]$lb -eq 3.0) {
+                $skipReason = "not applicable: 3Y source / 3Y lookback (no run period)"
+            }
             $plan += [pscustomobject]@{
                 Fund     = $fundLabel
                 Group    = $fund
                 Lookback = $lb
                 Offset   = $off
+                Skip     = ($skipReason -ne "")
+                SkipReason = $skipReason
                 Key      = "{0}|{1:0.0}|{2}|{3}" -f $fundLabel, [double]$lb, $off, $dataHash
             }
         }
@@ -522,6 +539,12 @@ $idx = 0
 foreach ($item in $plan) {
     $idx++
     $label = "$($item.Fund) $($item.Lookback)Y/$($item.Offset)M"
+
+    if ($item.Skip) {
+        $skipCount++
+        Write-Log "SKIP  [$idx/$total] $label ($($item.SkipReason))"
+        continue
+    }
 
     if ((-not $Force) -and $completed.Contains($item.Key)) {
         $skipCount++
