@@ -39,6 +39,7 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 from common import fund_group_from_label
+from dashboard_render import pdf_target_write_failed
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 # Self-contained module: data/ and outputs/ live inside backtest/ (see common.py).
@@ -446,9 +447,13 @@ GROUPED_EXCESS_STYLE = """
   :root{--ink:#172033;--muted:#667085;--line:#dce2ea;--surface:#fff;--accent:#176b5b;--accent-soft:#e8f4f1;--bg:#f3f5f7;--pos:#12855b;--neg:#c9362c}
   *{box-sizing:border-box} [hidden]{display:none!important}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+  body.dark{--ink:#edf2f7;--muted:#a8b3c2;--line:#344252;--surface:#18222d;--accent:#72d2bb;--accent-soft:#203e3c;--bg:#0d141c;--pos:#72d2bb;--neg:#ff8177}
+  body.dark header{background:rgba(13,20,28,.96)}body.dark .source code,body.dark .chips span{background:#22303d;color:var(--muted)}body.dark .rank-card,body.dark .table-wrap{box-shadow:0 8px 24px rgba(0,0,0,.24)}body.dark .ranking-table th{background:#202d39}body.dark .ranking-table td{border-bottom-color:#2b3947}body.dark .ranking-table tbody tr:hover{background:#22303d}body.dark .empty{background:rgba(24,34,45,.7)}
   header{position:sticky;top:0;z-index:10;padding:17px clamp(16px,4vw,48px) 13px;background:rgba(243,245,247,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
   h1{margin:0 0 4px;font-size:clamp(1.4rem,3vw,2.05rem)} header p{margin:0;color:var(--muted);font-size:.88rem}
   .master-link{display:inline-block;margin-bottom:8px;color:var(--accent);font-size:.83rem;font-weight:800;text-decoration:none}.master-link:hover,.master-link:focus-visible{text-decoration:underline}
+  .report-links{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.report-links .master-link{margin:0}.buyhold-link{display:inline-flex;padding:6px 10px;border:1px solid #8fc5b6;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:.76rem;font-weight:800;text-decoration:none}.buyhold-link:hover,.buyhold-link:focus-visible{text-decoration:underline}
+  .title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.theme-toggle{margin-left:auto;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:.76rem;font-weight:800;cursor:pointer}.theme-toggle:hover,.theme-toggle:focus-visible{border-color:var(--accent);color:var(--accent)}
   .source{margin-top:5px;font-size:.76rem}.source code{padding:1px 5px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
   .tabs,.run-tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}.tabs{margin-top:12px}.run-tabs{margin:0 0 14px}
   .tab,.run-tab{flex:0 0 auto;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:.8rem;font-weight:750;cursor:pointer}
@@ -460,6 +465,8 @@ GROUPED_EXCESS_STYLE = """
   h2{margin:0;font-size:1.12rem;overflow-wrap:anywhere}.headline{margin-left:auto;text-align:right}.headline small{display:block;color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}.headline strong{font-size:1.22rem}.headline.pos strong{color:var(--pos)}.headline.neg strong{color:var(--neg)}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0}.chips span{padding:6px 8px;border-radius:8px;background:#f7f8fa;color:var(--muted);font-size:.75rem}.chips b{color:var(--ink)}
   .chart-button{display:block;position:relative;width:100%;padding:0;border:0;border-radius:11px;overflow:hidden;background:#e8ebef;cursor:zoom-in}.chart-button img{display:block;width:100%;height:auto}.zoom-hint{position:absolute;right:9px;bottom:9px;padding:5px 8px;border-radius:7px;background:rgba(16,24,40,.78);color:#fff;font-size:.72rem;opacity:0;transition:opacity .18s}.chart-button:hover .zoom-hint,.chart-button:focus-visible .zoom-hint{opacity:1}
+  .view-switch{display:flex;gap:7px;margin:0 0 12px}.view-toggle{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:.76rem;font-weight:750;cursor:pointer}.view-toggle[aria-pressed="true"]{border-color:#8fc5b6;background:var(--accent-soft);color:var(--accent)}
+  .table-view{min-width:0}.table-wrap{overflow:visible;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 7px 22px rgba(19,33,55,.05)}.ranking-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}.ranking-table caption{padding:10px 12px;text-align:left;color:var(--muted);font-size:.75rem;font-weight:700}.ranking-table th{position:sticky;top:0;z-index:1;background:#f7f9fb;border-bottom:1px solid var(--line);text-align:left}.ranking-table td{padding:8px 10px;border-bottom:1px solid #edf0f4}.ranking-table tbody tr:last-child td{border-bottom:0}.ranking-table tbody tr:hover{background:#f8fafc}.ranking-table .table-rank{color:var(--muted);font-weight:800}.ranking-table .pos{color:var(--pos);font-weight:850}.ranking-table .neg{color:var(--neg);font-weight:850}.table-sort{width:100%;padding:8px 10px;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:800;text-align:left;cursor:pointer}.table-sort:hover,.table-sort:focus-visible{color:var(--accent)}
   .empty{padding:34px 18px;border:1px dashed #bcc5cf;border-radius:14px;background:rgba(255,255,255,.55);color:var(--muted);text-align:center}
   dialog{width:calc(100vw - 24px);height:calc(100vh - 24px);max-width:none;max-height:none;padding:0;border:0;border-radius:16px;background:#111827;overflow:hidden}dialog::backdrop{background:rgba(3,8,18,.82)}.viewer-bar{position:absolute;inset:0 0 auto 0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(17,24,39,.9);color:#fff}.viewer-bar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.controls{display:flex;gap:7px}.controls button{border:1px solid #667085;background:#263246;color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer}.viewport{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}#viewerImage{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}
   @media(min-width:1500px){.ranking-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rank-card{padding:12px}.chips{margin:8px 0;gap:5px}.chips span{padding:5px 7px;font-size:.72rem}}@media(min-width:2100px){.ranking-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.ranking-grid{grid-template-columns:1fr}}
@@ -497,6 +504,37 @@ def build_grouped_excess_cards(rows, cols):
     return "".join(cards)
 
 
+def build_grouped_excess_table(rows, cols):
+    table_rows = []
+    for rank, (_, row) in enumerate(rows.iterrows(), start=1):
+        ticker = html.escape(str(row.get("_ticker") or row.get("fund_label", "Unknown fund")))
+        excess = safe_float(row, cols["excess"])
+        adaptive = safe_float(row, cols["adaptive_annualized"])
+        buy_hold = safe_float(row, cols["buy_hold_annualized"])
+        source = safe_float(row, "_source_years")
+        run_text = run_years(row) or "n/a"
+        run_value = elapsed_years(row, "backtest_start", "backtest_end", "data_end")
+        through = html.escape(str(row.get(cols["through"], "n/a")))
+        tone = "neg" if np.isfinite(excess) and excess < 0 else "pos"
+        table_rows.append(
+            f'''<tr><td class="table-rank" data-sort-value="{rank}">{rank}</td>
+              <td data-sort-value="{ticker}"><b>{ticker}</b></td>
+              <td class="{tone}" data-sort-value="{excess if np.isfinite(excess) else ''}">{pct(row, cols["excess"])}</td>
+              <td data-sort-value="{source if np.isfinite(source) else ''}">{source:.1f}Y</td>
+              <td data-sort-value="{run_value if np.isfinite(run_value) else ''}">{run_text}</td>
+              <td data-sort-value="{adaptive if np.isfinite(adaptive) else ''}">{pct(row, cols["adaptive_annualized"])}</td>
+              <td data-sort-value="{buy_hold if np.isfinite(buy_hold) else ''}">{pct(row, cols["buy_hold_annualized"])}</td>
+              <td data-sort-value="{through}">{through}</td></tr>'''
+        )
+    return f'''<div class="table-view" data-view-content="table" hidden><div class="table-wrap" tabindex="0"><table class="ranking-table">
+      <caption>Stock ranking — compact sortable view</caption><thead><tr>
+      <th><button class="table-sort" data-sort-type="number">Rank</button></th><th><button class="table-sort" data-sort-type="text">Ticker</button></th>
+      <th><button class="table-sort" data-sort-type="number" data-sort-desc="true">Excess ann.</button></th><th><button class="table-sort" data-sort-type="number">Source years</button></th>
+      <th><button class="table-sort" data-sort-type="number">Run years</button></th><th><button class="table-sort" data-sort-type="number">Strategy ann.</button></th>
+      <th><button class="table-sort" data-sort-type="number">Buy &amp; hold ann.</button></th><th><button class="table-sort" data-sort-type="text">Through</button></th>
+      </tr></thead><tbody>{''.join(table_rows)}</tbody></table></div></div>'''
+
+
 def render_excess_horizon_dashboard(rankings, output_path, source_path, considered, cols=HISTORY_COLUMNS):
     """Render the run-history dashboard with independent Source and Run year controls."""
     source_name, source_built_at, source_full = source_provenance(source_path)
@@ -517,7 +555,17 @@ def render_excess_horizon_dashboard(rankings, output_path, source_path, consider
                 f'<button class="run-tab" type="button" role="tab" data-source="{key}" data-run="{bucket}" aria-controls="run-panel-{key}-{bucket}" aria-selected="{run_selected}">{run_label}</button>'
             )
             rows = group["views"][bucket]
-            content = f'<div class="ranking-grid">{build_grouped_excess_cards(rows, cols)}</div>' if not rows.empty else '<div class="empty">No valid completed runs match this Source years and Run years comparison.</div>'
+            cards_content = (
+                f'<div class="ranking-grid">{build_grouped_excess_cards(rows, cols)}</div>'
+                if not rows.empty
+                else '<div class="empty">No valid completed runs match this Source years and Run years comparison.</div>'
+            )
+            content = (
+                f'<div class="view-switch" role="group" aria-label="Display mode for {html.escape(run_label)}">'
+                '<button class="view-toggle" type="button" data-view="chart" aria-pressed="true">Chart cards</button>'
+                '<button class="view-toggle" type="button" data-view="table" aria-pressed="false">Compact table</button>'
+                f'</div><div data-view-content="chart">{cards_content}</div>{build_grouped_excess_table(rows, cols)}'
+            )
             run_panels.append(
                 f'<div role="tabpanel" class="run-panel" id="run-panel-{key}-{bucket}" data-run-panel="{bucket}" {"" if run_index == 0 else "hidden"}>{content}</div>'
             )
@@ -527,7 +575,7 @@ def render_excess_horizon_dashboard(rankings, output_path, source_path, consider
         )
 
     page = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fund Backtest Dashboard — Excess Annualized by Source Years</title><style>{GROUPED_EXCESS_STYLE}</style></head><body>
-<header><a class="master-link" href="dashboard.html">← Master dashboard</a><h1>Excess Annualized Ranking</h1><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated {generated_at}</p><p class="source">Source <code title="{html.escape(source_full, quote=True)}">{html.escape(source_name)}</code> last written {source_built_at} — ranking computed from {considered} run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years">{"".join(tabs)}</nav></header><main>{"".join(panels)}</main>
+<header><div class="report-links"><a class="master-link" href="dashboard.html">← Master dashboard</a><a class="buyhold-link" href="dashboard_top_annualized_buyhold.html">Buy &amp; hold annualized ranking</a></div><div class="title-row"><h1>Excess Annualized Ranking</h1><button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">Dark mode</button></div><p>Best strategy excess over buy &amp; hold, grouped by source-data horizon and scored run duration · generated {generated_at}</p><p class="source">Source <code title="{html.escape(source_full, quote=True)}">{html.escape(source_name)}</code> last written {source_built_at} — ranking computed from {considered} run(s) with existing charts.</p><nav class="tabs" role="tablist" aria-label="Source years">{"".join(tabs)}</nav></header><main>{"".join(panels)}</main>
 <dialog id="viewer"><div class="viewer-bar"><strong id="viewerTitle">Chart</strong><div class="controls"><button id="zoomOut" type="button">−</button><button id="resetZoom" type="button">Reset</button><button id="zoomIn" type="button">+</button><button id="closeViewer" type="button">Close</button></div></div><div class="viewport" id="viewport"><img id="viewerImage" alt=""></div></dialog>
 <script>
 const sourceTabs=[...document.querySelectorAll('.tab')],sourcePanels=[...document.querySelectorAll('.source-panel')];
@@ -537,6 +585,9 @@ function selectSource(source,focus=false,run=null){{if(!sourceTabs.some(tab=>tab
 sourceTabs.forEach(tab=>tab.addEventListener('click',()=>selectSource(tab.dataset.source)));document.querySelector('.tabs').addEventListener('keydown',event=>{{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const current=sourceTabs.findIndex(tab=>tab.getAttribute('aria-selected')==='true');const next=event.key==='Home'?0:event.key==='End'?sourceTabs.length-1:event.key==='ArrowRight'?(current+1)%sourceTabs.length:(current-1+sourceTabs.length)%sourceTabs.length;selectSource(sourceTabs[next].dataset.source,true);}});
 document.querySelectorAll('.run-tab').forEach(tab=>tab.addEventListener('click',()=>selectRun(tab.dataset.source,tab.dataset.run)));document.querySelectorAll('.run-tabs').forEach(nav=>nav.addEventListener('keydown',event=>{{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...nav.querySelectorAll('.run-tab')],current=tabs.findIndex(tab=>tab.getAttribute('aria-selected')==='true');const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:event.key==='ArrowRight'?(current+1)%tabs.length:(current-1+tabs.length)%tabs.length;selectRun(tabs[next].dataset.source,tabs[next].dataset.run,true);}}));
 const requested=location.hash.slice(1).split('/');selectSource(requested[0]||'mixed',false,requested[1]||'all');
+document.querySelectorAll('.view-toggle').forEach(button=>button.addEventListener('click',()=>{{const panel=button.closest('.run-panel'),view=button.dataset.view;panel.querySelectorAll('.view-toggle').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panel.querySelectorAll('[data-view-content]').forEach(item=>item.hidden=item.dataset.viewContent!==view);}}));
+document.querySelectorAll('.ranking-table').forEach(table=>table.querySelectorAll('.table-sort').forEach((button,index)=>button.addEventListener('click',()=>{{const body=table.tBodies[0],type=button.dataset.sortType;const descending=button.dataset.sortedDesc==='true'?false:button.dataset.sortDesc==='true';const rows=[...body.rows].sort((left,right)=>{{const a=left.cells[index].dataset.sortValue||'',b=right.cells[index].dataset.sortValue||'';const result=type==='number'?(Number(a||'-Infinity')-Number(b||'-Infinity')):a.localeCompare(b);return descending?-result:result;}});body.append(...rows);[...body.rows].forEach((row,rank)=>{{row.cells[0].textContent=rank+1;row.cells[0].dataset.sortValue=rank+1;}});table.querySelectorAll('.table-sort').forEach(item=>{{item.dataset.sortedDesc='';item.removeAttribute('aria-sort');}});button.dataset.sortedDesc=String(descending);button.setAttribute('aria-sort',descending?'descending':'ascending');}})));
+const themeToggle=document.getElementById('themeToggle');function setTheme(dark,save=true){{document.body.classList.toggle('dark',dark);themeToggle.setAttribute('aria-pressed',String(dark));themeToggle.textContent=dark?'Light mode':'Dark mode';if(save){{try{{localStorage.setItem('excess-theme',dark?'dark':'light')}}catch(error){{}}}}}}let savedTheme=null;try{{savedTheme=localStorage.getItem('excess-theme')}}catch(error){{}}setTheme(savedTheme?savedTheme==='dark':window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches,false);themeToggle.addEventListener('click',()=>setTheme(!document.body.classList.contains('dark')));
 const viewer=document.getElementById('viewer'),viewport=document.getElementById('viewport'),image=document.getElementById('viewerImage');let scale=1,x=0,y=0,drag=false,startX=0,startY=0;function render(){{image.style.transform=`translate(calc(-50% + ${{x}}px),calc(-50% + ${{y}}px)) scale(${{scale}})`;}}function fit(){{if(!image.naturalWidth)return;scale=Math.min(1,(viewport.clientWidth-36)/image.naturalWidth,(viewport.clientHeight-86)/image.naturalHeight);x=0;y=0;render();}}function zoom(factor){{scale=Math.min(8,Math.max(.5,scale*factor));render();}}image.addEventListener('load',fit);document.querySelectorAll('.chart-button').forEach(button=>button.addEventListener('click',()=>{{image.src=button.dataset.src;image.alt=button.dataset.title;document.getElementById('viewerTitle').textContent=button.dataset.title;viewer.showModal();if(image.complete)fit();}}));document.getElementById('closeViewer').onclick=()=>viewer.close();document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('resetZoom').onclick=fit;viewport.addEventListener('wheel',event=>{{event.preventDefault();zoom(event.deltaY<0?1.15:.87);}},{{passive:false}});viewport.addEventListener('pointerdown',event=>{{drag=true;startX=event.clientX-x;startY=event.clientY-y;viewport.setPointerCapture(event.pointerId);viewport.classList.add('dragging');}});viewport.addEventListener('pointermove',event=>{{if(!drag)return;x=event.clientX-startX;y=event.clientY-startY;render();}});viewport.addEventListener('pointerup',()=>{{drag=false;viewport.classList.remove('dragging');}});viewer.addEventListener('click',event=>{{if(event.target===viewer)viewer.close();}});
 </script></body></html>'''
     output_path.write_text(page, encoding="utf-8")
@@ -687,10 +738,12 @@ def write_pdf(df, cols, pdf_path, source_path):
     try:
         render(pdf_path)
         return pdf_path
-    except PermissionError:
+    except OSError as exc:
+        if not pdf_target_write_failed(exc):
+            raise
         fallback = REPORTS_DIR / f"{pdf_path.stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         render(fallback)
-        print(f"Warning: {pdf_path} is locked. Saved PDF to {fallback}")
+        print(f"Warning: {pdf_path} could not be replaced. Saved PDF to {fallback}")
         return fallback
 
 

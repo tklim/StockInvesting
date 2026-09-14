@@ -715,6 +715,7 @@ def load_or_build_continuation_schedule(
             row,
             initial_capital,
             strategy_profile,
+            fund_label,
         )
         schedule.to_csv(cache_path, index=False)
     return schedule, continuation_count, {
@@ -724,7 +725,28 @@ def load_or_build_continuation_schedule(
     }
 
 
-def build_adaptive_continuation_schedule(schedule, data, row, initial_capital, strategy_profile):
+def configure_backtester_context(fund_label, row, strategy_profile):
+    """Configure legacy backtester globals used by GA logging and seed derivation."""
+    canonical_label = fund_group_from_label(fund_label)
+    lookback_years = safe_float(row, "lookback_years", 0.0)
+    offset_months = safe_int(row, "offset_months", 0)
+
+    # backtest_stocks.py is also a CLI module and its GA functions retain a
+    # small amount of context in module globals. Final backtests call those
+    # functions directly, so initialize the context explicitly per fund.
+    bt.csv_name = canonical_label
+    bt.lookback_years = lookback_years
+    bt.offset_months = offset_months
+    bt.strategy_profile = strategy_profile
+    bt.batch_name = (
+        f"{canonical_label}, {lookback_years:g}Y, "
+        f"{offset_months}M, profile={strategy_profile}"
+    )
+
+
+def build_adaptive_continuation_schedule(
+    schedule, data, row, initial_capital, strategy_profile, fund_label
+):
     schedule_rows = normalize_schedule(schedule).to_dict("records")
     latest_end = pd.Timestamp(data.index.max())
     next_start = pd.Timestamp(schedule_rows[-1]["test_end_exclusive"])
@@ -736,6 +758,7 @@ def build_adaptive_continuation_schedule(schedule, data, row, initial_capital, s
     if lookback_months <= 0 or offset_months <= 0:
         raise ValueError("Adaptive continuation requires positive lookback and offset")
 
+    configure_backtester_context(fund_label, row, strategy_profile)
     pop_values = parse_number_list(row.get("pop_ranges", ""), integer=True)
     gen_values = parse_number_list(row.get("gen_ranges", ""), integer=True)
     bt.pop_ranges = pop_values or [safe_int(row, "best_ga_pop_size", 10)]

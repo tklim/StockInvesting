@@ -241,6 +241,7 @@ class WalkForwardReplayTests(unittest.TestCase):
         dates = pd.bdate_range("2024-01-01", "2025-04-04")
         data = pd.DataFrame({"NAV": range(len(dates))}, index=dates)
         row = {
+            "fund_label": "TEST-3Y",
             "lookback_years": 1,
             "offset_months": 3,
             "pop_ranges": "4",
@@ -265,12 +266,42 @@ class WalkForwardReplayTests(unittest.TestCase):
             return_value=((4, 2, 0.01, 0.8), params),
         ) as tune_mock:
             continued, count = final_report.build_adaptive_continuation_schedule(
-                schedule, data, row, 10000, "generic"
+                schedule, data, row, 10000, "generic", "TEST-3Y"
             )
         self.assertIsNone(tune_mock.call_args.kwargs["ga_seed_value"])
         self.assertEqual(count, 1)
         self.assertEqual(len(continued), 2)
         self.assertEqual(continued.iloc[-1]["test_start"], pd.Timestamp("2025-04-01"))
+        self.assertEqual(final_report.bt.csv_name, "TEST")
+        self.assertEqual(
+            final_report.bt.batch_name,
+            "TEST, 1Y, 3M, profile=generic",
+        )
+        self.assertNotIn("No-name", final_report.bt.batch_name)
+        self.assertEqual(
+            final_report.bt.build_deterministic_seed(
+                final_report.bt.csv_name,
+                "generic",
+                "2024-01-01",
+                "2025-01-01",
+                100,
+                4,
+                2,
+                0.01,
+                0.8,
+            ),
+            final_report.bt.build_deterministic_seed(
+                "TEST",
+                "generic",
+                "2024-01-01",
+                "2025-01-01",
+                100,
+                4,
+                2,
+                0.01,
+                0.8,
+            ),
+        )
 
         row["ga_seed"] = "42"
         with mock.patch.object(
@@ -279,7 +310,7 @@ class WalkForwardReplayTests(unittest.TestCase):
             return_value=((4, 2, 0.01, 0.8), params),
         ) as tune_mock:
             final_report.build_adaptive_continuation_schedule(
-                schedule, data, row, 10000, "generic"
+                schedule, data, row, 10000, "generic", "TEST-3Y"
             )
         self.assertEqual(tune_mock.call_args.kwargs["ga_seed_value"], 42)
 

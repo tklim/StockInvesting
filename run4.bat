@@ -8,9 +8,9 @@ REM run_grid.ps1 sweeps lookback 1/2/3Y x offset 3/6/9/12M for each fund.
 REM It makes one pass and stops (no infinite loop) and aborts on repeated
 REM failures instead of spinning. See run4-4Y.log for progress.
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0run_grid.ps1' -Funds TSM   -Population 4 -Generations 2 -GaSearchPreset grid -PriceColumn 'Adj Close' -LogFile 'tsm-run4.log' %*"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0run_grid.ps1' -Funds AMD  -DataSuffix '-3Y' -TransitionPolicy grandfather   -Population 2 -Generations 1 -GaSearchPreset grid -PriceColumn 'Adj Close' -LogFile 'amd-run4.log' %*"
 
-rem powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0run_grid.ps1' -Funds TSM  -DataSuffix '-10Y' -Population 4 -Generations 2 -GaSearchPreset grid -PriceColumn 'Adj Close' -LogFile 'tsm-run4.log' %*"
+REM powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0run_grid.ps1' -Funds TSM  -DataSuffix '-10Y' -Population 4 -Generations 2 -GaSearchPreset grid -PriceColumn 'Adj Close' -LogFile 'tsm-run4.log' %*"
 
 
 echo.

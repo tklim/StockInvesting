@@ -1,1 +1,1 @@
-dir/o:d
+dir/o:d %~1

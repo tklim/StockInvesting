@@ -102,6 +102,15 @@ class ExcessHorizonDashboardTests(unittest.TestCase):
         self.assertIn("hashFor(source,run)", page)
         self.assertIn(".empty{", page)
         self.assertIn('class="master-link" href="dashboard.html"', page)
+        self.assertIn('class="buyhold-link" href="dashboard_top_annualized_buyhold.html"', page)
+        self.assertIn('class="view-toggle"', page)
+        self.assertIn('class="ranking-table"', page)
+        self.assertIn('class="table-sort"', page)
+        self.assertIn("Compact table", page)
+        self.assertIn(".table-wrap{overflow:visible", page)
+        self.assertIn('id="themeToggle"', page)
+        self.assertIn("excess-theme", page)
+        self.assertIn("body.dark", page)
 
     def test_empty_source_horizon_renders_an_empty_state(self):
         with tempfile.TemporaryDirectory() as tmp:

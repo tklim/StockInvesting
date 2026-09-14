@@ -1,0 +1,1 @@
+C:\Users\tklim\AppData\Local\Programs\Python\Python312\python.exe dashboard_by_excess_annualized.py --top-fund 0

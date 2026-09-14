@@ -10,6 +10,7 @@ A dashboard supplies a `DashboardSpec` describing how to read one row, then call
 `render_html` / `render_pdf`.
 """
 
+import errno
 import html
 import os
 from dataclasses import dataclass, field
@@ -27,6 +28,21 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 POSITIVE_COLOR = "#12855b"
 NEGATIVE_COLOR = "#c9362c"
+
+
+def pdf_target_write_failed(error):
+    """Return whether Windows rejected the existing PDF target itself.
+
+    Some Windows file providers report a locked/syncing PDF as ``OSError(22)``
+    instead of ``PermissionError``.  Both cases are safe to handle by using a
+    timestamped sibling output; unrelated I/O errors should still propagate.
+    """
+
+    return isinstance(error, PermissionError) or getattr(error, "errno", None) in {
+        errno.EINVAL,
+        errno.EACCES,
+        errno.EPERM,
+    }
 
 
 @dataclass
@@ -72,11 +88,12 @@ STYLE = """
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
     header{position:sticky;top:0;z-index:10;padding:20px clamp(18px,4vw,52px);background:rgba(243,245,247,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .back-link{display:inline-flex;align-items:center;margin-bottom:7px;color:var(--accent);font-size:.8rem;font-weight:800;text-decoration:none}.back-link:hover{text-decoration:underline}
     header h1{margin:0 0 5px;font-size:clamp(1.45rem,3vw,2.2rem)}
     header p{margin:0;color:var(--muted)}
     .source{margin-top:6px!important;font-size:.82rem}
     .source code{padding:1px 5px;border-radius:5px;background:var(--accent-soft);color:var(--accent);font-size:.8rem}
-    main{display:grid;gap:22px;padding:28px clamp(16px,3vw,42px) 56px;max-width:1900px;margin:auto}
+    main{display:grid;gap:14px;padding:24px clamp(16px,4vw,48px) 56px;margin:0}
     .fund-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 26px rgba(19,33,55,.06)}
     .card-heading,.card-heading>div,.metrics{display:flex;align-items:center}
     .card-heading{justify-content:space-between;gap:18px;margin-bottom:13px}
@@ -107,7 +124,9 @@ STYLE = """
     .viewport{width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}
     .viewport.dragging{cursor:grabbing}
     #viewerImage{position:absolute;left:50%;top:50%;max-width:none;transform-origin:center;user-select:none;pointer-events:none}
-    @media (min-width:1200px){main{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (min-width:1500px){main{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.fund-card{padding:12px}.card-heading{margin-bottom:8px}.metrics{margin-bottom:10px;gap:5px}.metrics span{padding:5px 7px;font-size:.72rem}}
+    @media (min-width:2100px){main{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    @media (max-width:760px){main{grid-template-columns:1fr}}
     @page{size:A4 landscape;margin:8mm}
     @media print{
       body{background:#fff}
@@ -199,6 +218,7 @@ def render_html(df, spec, output_path, source_path, subtitle, provenance_note, r
 </head>
 <body>
   <header>
+    <a class="back-link" href="dashboard.html">← Master dashboard</a>
     <h1>{title}</h1>
     <p>{len(df)} funds · {html.escape(subtitle)} · generated {generated_at}</p>
     <p class="source">Source <code title="{html.escape(source_full, quote=True)}">{html.escape(source_name)}</code> last written {source_built_at} — {html.escape(provenance_note)}</p>
@@ -277,10 +297,12 @@ def render_pdf(df, spec, pdf_path, source_path, reports_dir=None):
     try:
         draw(pdf_path)
         return pdf_path
-    except PermissionError:
+    except OSError as exc:
+        if not pdf_target_write_failed(exc):
+            raise
         fallback = pdf_path.with_name(
             f"{pdf_path.stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{pdf_path.suffix}"
         )
         draw(fallback)
-        print(f"Warning: {pdf_path} is locked. Saved PDF to {fallback}")
+        print(f"Warning: {pdf_path} could not be replaced. Saved PDF to {fallback}")
         return fallback

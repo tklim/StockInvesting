@@ -1,94 +1,111 @@
-"""Build a portable static site from generated dashboard reports.
-
-The report HTML uses paths such as ``../charts/example.png``. This script
-preserves that relationship inside a deployable site and copies only the chart
-images that the reports actually reference.
-"""
-
-from __future__ import annotations
+"""Validate and build a portable static dashboard site from current reports."""
 
 import argparse
 import json
-import re
 import shutil
+import tempfile
 from pathlib import Path
 
-
-CHART_REFERENCE = re.compile(
-    r"(?:src|data-src)\s*=\s*['\"]\.\./charts/([^'\"]+\.png)['\"]",
-    re.IGNORECASE,
-)
+from chart_inventory import scan_reports, require_unchanged, sha256_file
 
 
-def parse_args() -> argparse.Namespace:
+MANAGED = ('reports', 'charts', 'index.html', 'chart-manifest.json')
+
+
+def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--reports-dir", type=Path, required=True)
-    parser.add_argument("--charts-dir", type=Path, required=True)
-    parser.add_argument("--site-dir", type=Path, required=True)
+    parser.add_argument('--reports-dir', type=Path, required=True)
+    parser.add_argument('--charts-dir', type=Path, required=True)
+    parser.add_argument('--site-dir', type=Path, required=True)
+    parser.add_argument('--check-only', action='store_true', help='Validate without writing files.')
     return parser.parse_args()
 
 
-def safe_chart_path(charts_dir: Path, reference: str) -> Path:
-    relative = Path(reference)
-    if relative.is_absolute() or ".." in relative.parts:
-        raise ValueError(f"Unsafe chart reference: {reference}")
-
-    candidate = (charts_dir / relative).resolve()
-    charts_root = charts_dir.resolve()
-    if not candidate.is_relative_to(charts_root):
-        raise ValueError(f"Chart reference escapes charts directory: {reference}")
-    return candidate
+def validate_roots(reports, charts, site):
+    for left, right in ((reports, charts), (reports, site), (charts, site)):
+        if left.is_relative_to(right) or right.is_relative_to(left):
+            raise ValueError(f'Source/destination directories overlap: {left}, {right}')
+    for name in MANAGED:
+        path = site / name
+        if path.is_symlink() or (hasattr(path, 'is_junction') and path.is_junction()):
+            raise ValueError(f'Managed destination is a filesystem link: {path}')
 
 
-def main() -> None:
-    args = parse_args()
-    reports_dir = args.reports_dir.resolve()
-    charts_dir = args.charts_dir.resolve()
-    site_dir = args.site_dir.resolve()
+def install_stage(stage, site, backup):
+    """Swap only managed entries, restoring the previous build on failure."""
+    saved, installed = [], []
+    site.mkdir(parents=True, exist_ok=True)
+    backup.mkdir()
+    try:
+        for name in MANAGED:
+            old = site / name
+            if old.exists():
+                old.rename(backup / name)
+                saved.append(name)
+            (stage / name).rename(old)
+            installed.append(name)
+    except BaseException as error:
+        try:
+            for name in reversed(installed):
+                (site / name).rename(stage / name)
+            for name in reversed(saved):
+                (backup / name).rename(site / name)
+        except BaseException as rollback_error:
+            raise RuntimeError(f'Publish rollback incomplete; recovery files at {backup.parent}: '
+                               f'{rollback_error}') from error
+        raise
 
-    if not reports_dir.is_dir():
-        raise FileNotFoundError(f"Reports directory not found: {reports_dir}")
-    if not charts_dir.is_dir():
-        raise FileNotFoundError(f"Charts directory not found: {charts_dir}")
 
-    site_reports = site_dir / "reports"
-    site_charts = site_dir / "charts"
-    shutil.copytree(reports_dir, site_reports, dirs_exist_ok=True)
-
-    references: set[str] = set()
-    for report in sorted(site_reports.rglob("*.html")):
-        references.update(CHART_REFERENCE.findall(report.read_text(encoding="utf-8")))
-
-    missing: list[str] = []
-    copied: list[str] = []
-    for reference in sorted(references):
-        source = safe_chart_path(charts_dir, reference)
-        if not source.is_file():
-            missing.append(reference)
-            continue
-        destination = site_charts / reference
+def build_site(reports_dir, charts_dir, site_dir, *, check_only=False):
+    reports, charts, site = (Path(p).resolve() for p in (reports_dir, charts_dir, site_dir))
+    validate_roots(reports, charts, site)
+    inventory = scan_reports(reports, charts).require_valid()
+    if not (reports / 'dashboard.html').is_file():
+        raise ValueError('Required landing report dashboard.html is missing')
+    if check_only:
+        return inventory
+    site.parent.mkdir(parents=True, exist_ok=True)
+    # Keep recovery files on failure, including an interrupted installation.
+    work = Path(tempfile.mkdtemp(prefix='.report-build-', dir=site.parent))
+    stage = work / 'stage'
+    stage.mkdir()
+    shutil.copytree(reports, stage / 'reports', ignore=shutil.ignore_patterns('~$*'))
+    (stage / 'charts').mkdir()
+    for name in sorted(inventory.charts):
+        source, destination = charts / name, stage / 'charts' / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
-        copied.append(reference)
-
-    if missing:
-        raise FileNotFoundError(
-            "Referenced chart files are missing:\n" + "\n".join(missing)
-        )
-
-    (site_dir / "index.html").write_text(
-        "<!doctype html>\n"
-        "<meta charset=\"utf-8\">\n"
-        "<meta http-equiv=\"refresh\" content=\"0; url=reports/dashboard.html\">\n"
-        "<title>StockInvesting dashboards</title>\n"
-        "<p><a href=\"reports/dashboard.html\">Open dashboards</a></p>\n",
-        encoding="utf-8",
-    )
-    (site_dir / "chart-manifest.json").write_text(
-        json.dumps({"charts": copied}, indent=2) + "\n", encoding="utf-8"
-    )
-    print(f"Built site with {len(copied)} chart images from {len(references)} references.")
+        if sha256_file(source) != sha256_file(destination):
+            raise ValueError(f'Chart changed while copying: {name}; staging retained at {work}')
+    staged = scan_reports(stage / 'reports', stage / 'charts').require_valid()
+    if staged.fingerprint() != inventory.fingerprint():
+        raise ValueError(f'Reports changed while copying; staging retained at {work}')
+    require_unchanged(inventory, reports, charts)
+    (stage / 'index.html').write_text(
+        '<!doctype html>\n<meta charset="utf-8">\n'
+        '<meta http-equiv="refresh" content="0; url=reports/dashboard.html">\n'
+        '<title>StockInvesting dashboards</title>\n'
+        '<p><a href="reports/dashboard.html">Open dashboards</a></p>\n', encoding='utf-8')
+    (stage / 'chart-manifest.json').write_text(
+        json.dumps(inventory.manifest(), indent=2) + '\n', encoding='utf-8')
+    install_stage(stage, site, work / 'backup')
+    # Exact mkdtemp-owned directory: only this build and the old managed outputs.
+    shutil.rmtree(work)
+    return inventory
 
 
-if __name__ == "__main__":
-    main()
+def main():
+    args = parse_args()
+    try:
+        inventory = build_site(args.reports_dir, args.charts_dir, args.site_dir,
+                               check_only=args.check_only)
+    except (OSError, ValueError, RuntimeError) as error:
+        print(f'ERROR: {error}')
+        return 2
+    verb = 'Validated' if args.check_only else 'Built site with'
+    print(f'{verb} {len(inventory.charts)} chart images from {len(inventory.reports)} reports.')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

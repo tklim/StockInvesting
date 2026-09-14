@@ -1,0 +1,1 @@
+python publish_reports_site.py --reports-dir outputs\reports --charts-dir outputs\charts --site-dir C:\tmp\stockinvesting-pages-site
