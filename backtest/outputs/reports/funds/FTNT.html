@@ -55,11 +55,12 @@
     dialog{width:calc(100vw - 20px);height:calc(100vh - 20px);max-width:none;max-height:none;border:0;
       border-radius:16px;padding:0;background:#101923;overflow:hidden}
     dialog::backdrop{background:rgba(4,10,18,.86)}
-    .viewer-bar{position:absolute;inset:0 0 auto;z-index:2;display:flex;justify-content:space-between;
+    .viewer-bar{position:relative;z-index:2;display:flex;justify-content:space-between;
       align-items:center;padding:11px 15px;color:#fff;background:rgba(16,25,35,.92)}
     .viewer-bar button{padding:7px 11px;border:1px solid #647181;border-radius:8px;background:#233242;color:#fff}
-    .viewport{width:100%;height:100%;overflow:auto;padding-top:54px}
-    #viewerImage{display:block;max-width:none;margin:auto}
+    dialog{display:grid;grid-template-rows:auto minmax(0,1fr)}
+    .viewport{min-width:0;min-height:0;display:grid;place-items:center;overflow:hidden;padding:12px}
+    #viewerImage{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
     @media(max-width:900px){.hero{grid-template-columns:1fr}.signal{justify-self:start;text-align:left}
       .metrics{grid-template-columns:repeat(2,1fr)}.compare{grid-template-columns:1fr}
       .section-heading{display:block}.section-heading>p{margin-top:8px}}
@@ -83,18 +84,18 @@
         <p class="eyebrow">Ticker intelligence</p><h1>FTNT</h1>
         <p class="hero-copy">The winning walk-forward schedule is reproduced from its archived
           source data, then adaptively continued on newer prices. Data source: FTNT-3Y.csv · through
-          2026-08-21.</p>
+          2026-09-11.</p>
       </div>
       <div class="signal neutral"><span>Current GA signal</span><strong>SELL/CASH</strong></div>
     </section>
 
     <section class="metrics" aria-label="Latest metrics">
-      <div class="metric"><span>Strategy annualized</span><strong>+112.27%</strong></div>
-      <div class="metric"><span>Excess annualized</span><strong>+16.01%</strong></div>
-      <div class="metric"><span>Strategy total</span><strong>+115.24%</strong></div>
-      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+96.26%</strong></div>
+      <div class="metric"><span>Strategy annualized</span><strong>+122.17%</strong></div>
+      <div class="metric"><span>Excess annualized</span><strong>+29.92%</strong></div>
+      <div class="metric"><span>Strategy total</span><strong>+136.06%</strong></div>
+      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+92.24%</strong></div>
       <div class="metric"><span>Max drawdown</span><strong>14.34%</strong></div>
-      <div class="metric"><span>Last trade</span><strong class="last-trade sell">SELL · 2026-08-04</strong></div>
+      <div class="metric"><span>Last trade</span><strong class="last-trade sell">SELL · 2026-08-27</strong></div>
     </section>
 
     <section class="compare">
@@ -107,9 +108,9 @@
       </dl></article>
       <article class="compare-card"><h2>Calibration versus latest replay</h2><dl>
         <dt>Historical annualized</dt><dd>+116.26%</dd>
-        <dt>Latest annualized</dt><dd>+112.27%</dd>
+        <dt>Latest annualized</dt><dd>+122.17%</dd>
         <dt>Best excess annualized</dt><dd>+7.11%</dd>
-        <dt>Latest excess</dt><dd>+16.01%</dd>
+        <dt>Latest excess</dt><dd>+29.92%</dd>
         <dt>Best excess run</dt><dd>20260815133848_FTNT-3Y_9cacc412</dd>
         <dt>Historical replay</dt><dd>exact_replay</dd>
         <dt>Latest replay</dt><dd>exact_replay</dd>
@@ -121,14 +122,14 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-08-21</h2></div>
-          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-08-22 09:05:41.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-09-11</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-09-14 15:01:38.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-latest-20260822-090532.png"
-                data-title="FTNT — Latest technical · data through 2026-08-21"
-                aria-label="Open Latest technical · data through 2026-08-21 chart for FTNT">
-          <img src="../../charts/FTNT-final-latest-20260822-090532.png" alt="FTNT Latest technical · data through 2026-08-21 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-latest-20260914-150129.png"
+                data-title="FTNT — Latest technical · data through 2026-09-11"
+                aria-label="Open Latest technical · data through 2026-09-11 chart for FTNT">
+          <img src="../../charts/FTNT-final-latest-20260914-150129.png" alt="FTNT Latest technical · data through 2026-09-11 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -142,7 +143,7 @@
                 data-title="FTNT — Best excess annualized · +7.11% · through 2026-08-12"
                 aria-label="Open Best excess annualized · +7.11% · through 2026-08-12 chart for FTNT">
           <img src="../../charts/FTNT-3Y-2.0Y-9M-generic-ga10-tuned-20260815-134847.png" alt="FTNT Best excess annualized · +7.11% · through 2026-08-12 chart" loading="lazy">
-          <span>Open full screen</span>
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -150,13 +151,13 @@
       <section class="chart-panel">
         <div class="section-heading">
           <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-08-12</h2></div>
-          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-08-22 09:05:41.</p>
+          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-09-14 15:01:38.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-technical-20260822-090532.png"
+        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-technical-20260914-150129.png"
                 data-title="FTNT — Historical technical · source through 2026-08-12"
                 aria-label="Open Historical technical · source through 2026-08-12 chart for FTNT">
-          <img src="../../charts/FTNT-final-technical-20260822-090532.png" alt="FTNT Historical technical · source through 2026-08-12 chart" loading="lazy">
-          <span>Open full screen</span>
+          <img src="../../charts/FTNT-final-technical-20260914-150129.png" alt="FTNT Historical technical · source through 2026-08-12 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -164,19 +165,19 @@
       <section class="chart-panel">
         <div class="section-heading">
           <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-08-12</h2></div>
-          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-08-22 09:05:41.</p>
+          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-09-14 15:01:38.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-simple-20260822-090532.png"
+        <button class="chart-button" type="button" data-src="../../charts/FTNT-final-simple-20260914-150129.png"
                 data-title="FTNT — Historical simple · source through 2026-08-12"
                 aria-label="Open Historical simple · source through 2026-08-12 chart for FTNT">
-          <img src="../../charts/FTNT-final-simple-20260822-090532.png" alt="FTNT Historical simple · source through 2026-08-12 chart" loading="lazy">
-          <span>Open full screen</span>
+          <img src="../../charts/FTNT-final-simple-20260914-150129.png" alt="FTNT Historical simple · source through 2026-08-12 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
     </section>
 
-    <footer>Generated 2026-08-22 09:23:29 from final_backtest_summary_20260822_085204.csv.</footer>
+    <footer>Generated 2026-09-14 15:03:45 from final_backtest_summary_20260914_145750.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>

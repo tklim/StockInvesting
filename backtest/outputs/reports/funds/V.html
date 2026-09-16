@@ -55,11 +55,12 @@
     dialog{width:calc(100vw - 20px);height:calc(100vh - 20px);max-width:none;max-height:none;border:0;
       border-radius:16px;padding:0;background:#101923;overflow:hidden}
     dialog::backdrop{background:rgba(4,10,18,.86)}
-    .viewer-bar{position:absolute;inset:0 0 auto;z-index:2;display:flex;justify-content:space-between;
+    .viewer-bar{position:relative;z-index:2;display:flex;justify-content:space-between;
       align-items:center;padding:11px 15px;color:#fff;background:rgba(16,25,35,.92)}
     .viewer-bar button{padding:7px 11px;border:1px solid #647181;border-radius:8px;background:#233242;color:#fff}
-    .viewport{width:100%;height:100%;overflow:auto;padding-top:54px}
-    #viewerImage{display:block;max-width:none;margin:auto}
+    dialog{display:grid;grid-template-rows:auto minmax(0,1fr)}
+    .viewport{min-width:0;min-height:0;display:grid;place-items:center;overflow:hidden;padding:12px}
+    #viewerImage{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
     @media(max-width:900px){.hero{grid-template-columns:1fr}.signal{justify-self:start;text-align:left}
       .metrics{grid-template-columns:repeat(2,1fr)}.compare{grid-template-columns:1fr}
       .section-heading{display:block}.section-heading>p{margin-top:8px}}
@@ -83,37 +84,37 @@
         <p class="eyebrow">Ticker intelligence</p><h1>V</h1>
         <p class="hero-copy">The winning walk-forward schedule is reproduced from its archived
           source data, then adaptively continued on newer prices. Data source: V-3Y.csv · through
-          2026-08-21.</p>
+          2026-09-11.</p>
       </div>
       <div class="signal positive"><span>Current GA signal</span><strong>BUY/HOLD invested</strong></div>
     </section>
 
     <section class="metrics" aria-label="Latest metrics">
-      <div class="metric"><span>Strategy annualized</span><strong>+13.30%</strong></div>
-      <div class="metric"><span>Excess annualized</span><strong>+2.28%</strong></div>
-      <div class="metric"><span>Strategy total</span><strong>+13.68%</strong></div>
-      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+11.02%</strong></div>
-      <div class="metric"><span>Max drawdown</span><strong>8.21%</strong></div>
+      <div class="metric"><span>Strategy annualized</span><strong>+9.31%</strong></div>
+      <div class="metric"><span>Excess annualized</span><strong>+2.83%</strong></div>
+      <div class="metric"><span>Strategy total</span><strong>+9.67%</strong></div>
+      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+6.48%</strong></div>
+      <div class="metric"><span>Max drawdown</span><strong>9.67%</strong></div>
       <div class="metric"><span>Last trade</span><strong class="last-trade buy">BUY · 2026-06-05</strong></div>
     </section>
 
     <section class="compare">
       <article class="compare-card"><h2>Final window parameters</h2><dl>
-        <dt>EMA pair</dt><dd>37 / 137</dd>
-        <dt>Stop loss</dt><dd>9.22%</dd>
+        <dt>EMA pair</dt><dd>40 / 116</dd>
+        <dt>Stop loss</dt><dd>9.56%</dd>
         <dt>Cooldown</dt><dd>3 days</dd>
-        <dt>RSI bounds</dt><dd>40 / 70</dd>
+        <dt>RSI bounds</dt><dd>21 / 89</dd>
         <dt>Exposure</dt><dd>1.00×</dd>
       </dl></article>
       <article class="compare-card"><h2>Calibration versus latest replay</h2><dl>
-        <dt>Historical annualized</dt><dd>+11.20%</dd>
-        <dt>Latest annualized</dt><dd>+13.30%</dd>
-        <dt>Best excess annualized</dt><dd>+2.32%</dd>
-        <dt>Latest excess</dt><dd>+2.28%</dd>
-        <dt>Best excess run</dt><dd>20260812225623_V-3Y_5f56a8e6</dd>
+        <dt>Historical annualized</dt><dd>+12.98%</dd>
+        <dt>Latest annualized</dt><dd>+9.31%</dd>
+        <dt>Best excess annualized</dt><dd>+3.03%</dd>
+        <dt>Latest excess</dt><dd>+2.83%</dd>
+        <dt>Best excess run</dt><dd>20260829134601_V-3Y_ffec4178</dd>
         <dt>Historical replay</dt><dd>exact_replay</dd>
-        <dt>Latest replay</dt><dd>adaptive_continuation</dd>
-        <dt>Schedule windows</dt><dd>2 + 1 continuation</dd>
+        <dt>Latest replay</dt><dd>exact_replay</dd>
+        <dt>Schedule windows</dt><dd>2 + 0 continuation</dd>
       </dl></article>
     </section>
 
@@ -121,62 +122,62 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-08-21</h2></div>
-          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-08-22 09:14:42.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-09-11</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-09-14 15:03:10.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/V-final-latest-20260822-091333.png"
-                data-title="V — Latest technical · data through 2026-08-21"
-                aria-label="Open Latest technical · data through 2026-08-21 chart for V">
-          <img src="../../charts/V-final-latest-20260822-091333.png" alt="V Latest technical · data through 2026-08-21 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/V-final-latest-20260914-150303.png"
+                data-title="V — Latest technical · data through 2026-09-11"
+                aria-label="Open Latest technical · data through 2026-09-11 chart for V">
+          <img src="../../charts/V-final-latest-20260914-150303.png" alt="V Latest technical · data through 2026-09-11 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Best excess annualized · +2.32% · through 2026-08-10</h2></div>
+          <div><p class="eyebrow">Chart view</p><h2>Best excess annualized · +3.03% · through 2026-08-28</h2></div>
           <p>The highest non-zero annualized-excess historical run selected from the run history.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png"
-                data-title="V — Best excess annualized · +2.32% · through 2026-08-10"
-                aria-label="Open Best excess annualized · +2.32% · through 2026-08-10 chart for V">
-          <img src="../../charts/V-3Y-2.0Y-6M-generic-ga10-tuned-20260812-230344.png" alt="V Best excess annualized · +2.32% · through 2026-08-10 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/V-3Y-2.0Y-9M-generic-ga10-tuned-20260829-135116.png"
+                data-title="V — Best excess annualized · +3.03% · through 2026-08-28"
+                aria-label="Open Best excess annualized · +3.03% · through 2026-08-28 chart for V">
+          <img src="../../charts/V-3Y-2.0Y-9M-generic-ga10-tuned-20260829-135116.png" alt="V Best excess annualized · +3.03% · through 2026-08-28 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-08-07</h2></div>
-          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-08-22 09:14:42.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-08-28</h2></div>
+          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-09-14 15:03:10.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/V-final-technical-20260822-091333.png"
-                data-title="V — Historical technical · source through 2026-08-07"
-                aria-label="Open Historical technical · source through 2026-08-07 chart for V">
-          <img src="../../charts/V-final-technical-20260822-091333.png" alt="V Historical technical · source through 2026-08-07 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/V-final-technical-20260914-150303.png"
+                data-title="V — Historical technical · source through 2026-08-28"
+                aria-label="Open Historical technical · source through 2026-08-28 chart for V">
+          <img src="../../charts/V-final-technical-20260914-150303.png" alt="V Historical technical · source through 2026-08-28 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-08-07</h2></div>
-          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-08-22 09:14:42.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-08-28</h2></div>
+          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-09-14 15:03:10.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/V-final-simple-20260822-091333.png"
-                data-title="V — Historical simple · source through 2026-08-07"
-                aria-label="Open Historical simple · source through 2026-08-07 chart for V">
-          <img src="../../charts/V-final-simple-20260822-091333.png" alt="V Historical simple · source through 2026-08-07 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/V-final-simple-20260914-150303.png"
+                data-title="V — Historical simple · source through 2026-08-28"
+                aria-label="Open Historical simple · source through 2026-08-28 chart for V">
+          <img src="../../charts/V-final-simple-20260914-150303.png" alt="V Historical simple · source through 2026-08-28 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
     </section>
 
-    <footer>Generated 2026-08-22 09:23:29 from final_backtest_summary_20260822_085204.csv.</footer>
+    <footer>Generated 2026-09-14 15:03:45 from final_backtest_summary_20260914_145750.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>

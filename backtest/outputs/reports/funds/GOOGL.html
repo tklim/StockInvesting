@@ -55,11 +55,12 @@
     dialog{width:calc(100vw - 20px);height:calc(100vh - 20px);max-width:none;max-height:none;border:0;
       border-radius:16px;padding:0;background:#101923;overflow:hidden}
     dialog::backdrop{background:rgba(4,10,18,.86)}
-    .viewer-bar{position:absolute;inset:0 0 auto;z-index:2;display:flex;justify-content:space-between;
+    .viewer-bar{position:relative;z-index:2;display:flex;justify-content:space-between;
       align-items:center;padding:11px 15px;color:#fff;background:rgba(16,25,35,.92)}
     .viewer-bar button{padding:7px 11px;border:1px solid #647181;border-radius:8px;background:#233242;color:#fff}
-    .viewport{width:100%;height:100%;overflow:auto;padding-top:54px}
-    #viewerImage{display:block;max-width:none;margin:auto}
+    dialog{display:grid;grid-template-rows:auto minmax(0,1fr)}
+    .viewport{min-width:0;min-height:0;display:grid;place-items:center;overflow:hidden;padding:12px}
+    #viewerImage{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
     @media(max-width:900px){.hero{grid-template-columns:1fr}.signal{justify-self:start;text-align:left}
       .metrics{grid-template-columns:repeat(2,1fr)}.compare{grid-template-columns:1fr}
       .section-heading{display:block}.section-heading>p{margin-top:8px}}
@@ -83,16 +84,16 @@
         <p class="eyebrow">Ticker intelligence</p><h1>GOOGL</h1>
         <p class="hero-copy">The winning walk-forward schedule is reproduced from its archived
           source data, then adaptively continued on newer prices. Data source: GOOGL-3Y.csv · through
-          2026-08-21.</p>
+          2026-09-11.</p>
       </div>
       <div class="signal positive"><span>Current GA signal</span><strong>BUY/HOLD invested</strong></div>
     </section>
 
     <section class="metrics" aria-label="Latest metrics">
-      <div class="metric"><span>Strategy annualized</span><strong>+81.68%</strong></div>
-      <div class="metric"><span>Excess annualized</span><strong>+12.04%</strong></div>
-      <div class="metric"><span>Strategy total</span><strong>+84.60%</strong></div>
-      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+69.63%</strong></div>
+      <div class="metric"><span>Strategy annualized</span><strong>+73.04%</strong></div>
+      <div class="metric"><span>Excess annualized</span><strong>+10.88%</strong></div>
+      <div class="metric"><span>Strategy total</span><strong>+81.21%</strong></div>
+      <div class="metric"><span>Buy &amp; hold annualized</span><strong>+62.15%</strong></div>
       <div class="metric"><span>Max drawdown</span><strong>20.37%</strong></div>
       <div class="metric"><span>Last trade</span><strong class="last-trade buy">BUY · 2026-06-16</strong></div>
     </section>
@@ -107,9 +108,9 @@
       </dl></article>
       <article class="compare-card"><h2>Calibration versus latest replay</h2><dl>
         <dt>Historical annualized</dt><dd>+91.11%</dd>
-        <dt>Latest annualized</dt><dd>+81.68%</dd>
+        <dt>Latest annualized</dt><dd>+73.04%</dd>
         <dt>Best excess annualized</dt><dd>+13.14%</dd>
-        <dt>Latest excess</dt><dd>+12.04%</dd>
+        <dt>Latest excess</dt><dd>+10.88%</dd>
         <dt>Best excess run</dt><dd>20260811214644_GOOGL-3Y_4a25387a</dd>
         <dt>Historical replay</dt><dd>exact_replay</dd>
         <dt>Latest replay</dt><dd>adaptive_continuation</dd>
@@ -121,14 +122,14 @@
       
       <section class="chart-panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-08-21</h2></div>
-          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-08-22 09:00:10.</p>
+          <div><p class="eyebrow">Chart view</p><h2>Latest technical · data through 2026-09-11</h2></div>
+          <p>The archived winning schedule reproduced exactly, then adaptively retuned on newer prices. Chart generated: 2026-09-14 15:00:05.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-latest-20260822-085834.png"
-                data-title="GOOGL — Latest technical · data through 2026-08-21"
-                aria-label="Open Latest technical · data through 2026-08-21 chart for GOOGL">
-          <img src="../../charts/GOOGL-final-latest-20260822-085834.png" alt="GOOGL Latest technical · data through 2026-08-21 chart" loading="lazy">
-          <span>Open full screen</span>
+        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-latest-20260914-145958.png"
+                data-title="GOOGL — Latest technical · data through 2026-09-11"
+                aria-label="Open Latest technical · data through 2026-09-11 chart for GOOGL">
+          <img src="../../charts/GOOGL-final-latest-20260914-145958.png" alt="GOOGL Latest technical · data through 2026-09-11 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -142,7 +143,7 @@
                 data-title="GOOGL — Best excess annualized · +13.14% · through 2026-08-10"
                 aria-label="Open Best excess annualized · +13.14% · through 2026-08-10 chart for GOOGL">
           <img src="../../charts/GOOGL-3Y-2.0Y-6M-generic-ga10-tuned-20260811-215310.png" alt="GOOGL Best excess annualized · +13.14% · through 2026-08-10 chart" loading="lazy">
-          <span>Open full screen</span>
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -150,13 +151,13 @@
       <section class="chart-panel">
         <div class="section-heading">
           <div><p class="eyebrow">Chart view</p><h2>Historical technical · source through 2026-08-07</h2></div>
-          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-08-22 09:00:10.</p>
+          <p>Exact walk-forward reproduction over the winning historical window. Chart generated: 2026-09-14 15:00:05.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-technical-20260822-085834.png"
+        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-technical-20260914-145958.png"
                 data-title="GOOGL — Historical technical · source through 2026-08-07"
                 aria-label="Open Historical technical · source through 2026-08-07 chart for GOOGL">
-          <img src="../../charts/GOOGL-final-technical-20260822-085834.png" alt="GOOGL Historical technical · source through 2026-08-07 chart" loading="lazy">
-          <span>Open full screen</span>
+          <img src="../../charts/GOOGL-final-technical-20260914-145958.png" alt="GOOGL Historical technical · source through 2026-08-07 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
@@ -164,19 +165,19 @@
       <section class="chart-panel">
         <div class="section-heading">
           <div><p class="eyebrow">Chart view</p><h2>Historical simple · source through 2026-08-07</h2></div>
-          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-08-22 09:00:10.</p>
+          <p>A focused view of the same exact historical reproduction. Chart generated: 2026-09-14 15:00:05.</p>
         </div>
-        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-simple-20260822-085834.png"
+        <button class="chart-button" type="button" data-src="../../charts/GOOGL-final-simple-20260914-145958.png"
                 data-title="GOOGL — Historical simple · source through 2026-08-07"
                 aria-label="Open Historical simple · source through 2026-08-07 chart for GOOGL">
-          <img src="../../charts/GOOGL-final-simple-20260822-085834.png" alt="GOOGL Historical simple · source through 2026-08-07 chart" loading="lazy">
-          <span>Open full screen</span>
+          <img src="../../charts/GOOGL-final-simple-20260914-145958.png" alt="GOOGL Historical simple · source through 2026-08-07 chart" loading="lazy">
+          <span>Open chart</span>
         </button>
       </section>
     
     </section>
 
-    <footer>Generated 2026-08-22 09:23:29 from final_backtest_summary_20260822_085204.csv.</footer>
+    <footer>Generated 2026-09-14 15:03:45 from final_backtest_summary_20260914_145750.csv.</footer>
   </main>
   <dialog id="viewer">
     <div class="viewer-bar"><strong id="viewerTitle">Chart</strong><button id="closeViewer" type="button">Close</button></div>

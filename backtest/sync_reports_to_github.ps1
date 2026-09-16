@@ -21,6 +21,34 @@ function Invoke-Git {
     }
 }
 
+function Invoke-GitAddPaths {
+    param([Parameter(Mandatory)][string[]]$Paths)
+
+    if ($Paths.Count -eq 0) {
+        return
+    }
+
+    # Passing hundreds of report/chart paths as command-line arguments exceeds
+    # Windows' process command-line limit. Git's NUL-delimited pathspec file is
+    # exact, handles unusual filename characters, and keeps staging narrowly
+    # scoped to the validated publication set.
+    $pathspecFile = [IO.Path]::GetTempFileName()
+    try {
+        $literalPathspecs = $Paths | ForEach-Object { ":(literal)$_" }
+        $pathspecContent = [string]::Join([char]0, $literalPathspecs) + [char]0
+        $utf8WithoutBom = [Text.UTF8Encoding]::new($false)
+        [IO.File]::WriteAllText($pathspecFile, $pathspecContent, $utf8WithoutBom)
+        Invoke-Git -Arguments @(
+            "add",
+            "--pathspec-from-file=$pathspecFile",
+            "--pathspec-file-nul"
+        )
+    }
+    finally {
+        Remove-Item -LiteralPath $pathspecFile -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Get-RepositoryRelativePath {
     param([Parameter(Mandatory)][string]$Path)
 
@@ -93,8 +121,7 @@ if ($unexpectedStaged) {
     throw "Refusing to commit unrelated files already staged:`n$($unexpectedStaged -join "`n")"
 }
 
-$gitAddArguments = @("add", "--") + $publishPaths
-Invoke-Git -Arguments $gitAddArguments
+Invoke-GitAddPaths -Paths $publishPaths
 $staged = @(& git diff --cached --name-only)
 if ($LASTEXITCODE -ne 0) {
     throw "Could not inspect the staged publication files."
